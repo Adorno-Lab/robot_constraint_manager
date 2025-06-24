@@ -6,6 +6,13 @@ project(robot_constraint_manager LANGUAGES CXX)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
+#
+#Add custom (non compiling) targets so launch scripts and python files show up in QT Creator's project view.
+file(GLOB_RECURSE EXTRA_FILES */*)
+#add_custom_target(${PROJECT_NAME}_OTHER_FILES ALL WORKING_DIRECTORY ${PROJECT_SOURCE_DIR} SOURCES ${EXTRA_FILES})
+add_custom_target(cfg ALL WORKING_DIRECTORY ${PROJECT_SOURCE_DIR} SOURCES ${EXTRA_FILES})
+#
+
 find_package(Eigen3 REQUIRED)
 if (APPLE)
     find_package(cppzmq REQUIRED)
@@ -34,4 +41,9 @@ target_link_libraries(${PROJECT_NAME}
 )
 
 add_executable(test src/test.cpp)
-target_link_libraries(test PRIVATE ${PROJECT_NAME})
+target_link_libraries(test PRIVATE
+    dqrobotics
+    dqrobotics-interface-coppeliasim-zmq
+    yaml-cpp
+    qpOASES
+    ${PROJECT_NAME})

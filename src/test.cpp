@@ -1,46 +1,78 @@
-#include <dqrobotics_extensions/robot_constraint_manager/numpy.hpp>
+#include <dqrobotics/DQ.h>
+#include <dqrobotics/interfaces/coppeliasim/DQ_CoppeliaSimInterfaceZMQ.h>
+#include <dqrobotics/interfaces/coppeliasim/robots/FrankaEmikaPandaCoppeliaSimZMQRobot.h>
+#include <dqrobotics/utils/DQ_Constants.h>
+#include <dqrobotics/utils/DQ_Math.h>
+#include <memory>
+#include <dqrobotics/robot_control/DQ_ClassicQPController.h>
+#include <dqrobotics/solvers/DQ_QPOASESSolver.h>
+#include <dqrobotics_extensions/robot_constraint_manager/robot_constraint_manager.hpp>
 
-
-#include <iostream>
-
-#ifdef _WIN32
-#include <Eigen/Dense>
-#else
-#include <eigen3/Eigen/Dense>
-#endif
-
-using namespace Eigen;
+/*********************************************
+ * SIGNAL HANDLER
+ * *******************************************/
+#include<signal.h>
+static std::atomic_bool kill_this_process(false);
+void sig_int_handler(int);
+void sig_int_handler(int)
+{
+    kill_this_process = true;
+}
 
 int main()
 {
-    auto A = MatrixXd::Identity(3,3);
-    auto B = MatrixXd(3,3);
+    if(signal(SIGINT, sig_int_handler) == SIG_ERR)
+        throw std::runtime_error("::Error setting the signal int handler.");
 
-    auto flag = DQ_robotics_extensions::Checkers::check_column_matrix_sizes(A,B, DQ_robotics_extensions::Checkers::MODE::PANIC);
-    std::cout<<"flag: "<<flag<<std::endl;
 
-    auto flag2 = DQ_robotics_extensions::Checkers::check_row_matrix_sizes(A,B, DQ_robotics_extensions::Checkers::MODE::PANIC);
-    std::cout<<"flag2: "<<flag2<<std::endl;
+    auto cs = std::make_shared<DQ_CoppeliaSimInterfaceZMQ>();
+    try {
+        cs->connect("localhost", 23000, 1500);
+        auto panda = std::make_shared<FrankaEmikaPandaCoppeliaSimZMQRobot>("Franka", cs);
+        auto panda_model =  std::make_shared<DQ_SerialManipulatorMDH>(panda->kinematics());
+        auto solver = std::make_shared<DQ_QPOASESSolver>();
 
-    std::vector<MatrixXd> VM = {A,B};
-    auto C = DQ_robotics_extensions::Numpy::block_diag({A,B});
-    std::cout<<C<<std::endl;
+        DQ_ClassicQPController controller(panda_model, solver);
+        controller.set_control_objective(ControlObjective::Translation);
+        controller.set_gain(1.0);
+        controller.set_damping(0.01);
 
-    std::cout<<DQ_robotics_extensions::Numpy::linspace(0,10,5).transpose()<<std::endl;
+        std::string yaml_path = "/home/juanjqo/git/robot_constraint_manager/cfg/vfi_constraints.yaml";
+        const VectorXd q_max = ((VectorXd(7) <<  2.3093, 1.5133, 2.4937, -0.4461, 2.4800, 4.2094,  2.6895).finished());
+        const VectorXd q_min = ((VectorXd(7) << -2.3093,-1.5133,-2.4937, -2.7478,-2.4800, 0.8521, -2.6895).finished());
+        const VectorXd q_dot_min = ((VectorXd(7) << -2, -1, -1.5, -1.25, -3, -1.5, -3).finished());
+        const VectorXd q_dot_max = ((VectorXd(7) <<  2,  1,  1.5,  1.25,  3,  1.5,  3).finished());
 
-    VectorXd v1 = (VectorXd(4)<<1,2,3,4).finished();
-    VectorXd v2 = (VectorXd(4)<<10,20,30,40).finished();
-    std::vector<VectorXd> VV = {v1,v2};
+        MatrixXd A;
+        VectorXd b;
+        MatrixXd Aeq;
+        VectorXd beq;
+        DQ_robotics_extensions::RobotConstraintManager
+            rcm{cs, panda, panda_model, yaml_path, {q_min, q_max}, {q_dot_min, q_dot_max}, 1.0};
 
-    std::cout<<DQ_robotics_extensions::Numpy::linspace(v1, v2, 5)<<std::endl;
-    std::cout<<DQ_robotics_extensions::Conversions::std_vector_vectorxd_to_vectorxd(VV)<<std::endl;
 
-    std::vector<std::string> names = {"joint1", "joint2", "joint3"};
+        cs->start_simulation();
 
-    std::cout<<DQ_robotics_extensions::Checkers::check_equal_sizes(VV,VM, names, DQ_robotics_extensions::Checkers::MODE::DO_NOT_PANIC)<<std::endl;
+        std::cout<<"Starting teleoperation "<<std::endl;
+        while ( not kill_this_process)
+        {
+            DQ xd = cs->get_object_pose("ReferenceFrame");
+            auto q = panda->get_configuration();
+            auto ineq_constraints = rcm.get_inequality_constraints(q);
+            A = std::get<0>(ineq_constraints);
+            b = std::get<1>(ineq_constraints);
+            controller.set_inequality_constraint(A,b);
+            auto u = controller.compute_setpoint_control_signal(q, xd.translation().vec4());
+            panda->set_target_configuration_velocities(u);
+        }
+        std::cout<<"Teleoperation finished."<<std::endl;
 
-    auto v3 = DQ_robotics_extensions::Numpy::vstack(v1, v2);
-    std::cout<<"v3: "<<v3<<std::endl;
-
-    return 0;
+        cs->stop_simulation();
+    }
+    catch (const std::runtime_error& e)
+    {
+        std::cerr<<e.what()<<std::endl;
+    }
 }
+
+

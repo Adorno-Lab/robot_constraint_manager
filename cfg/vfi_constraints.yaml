@@ -1,0 +1,16 @@
+
+
+- Description: End-effector cone constraint
+  Parameters:
+     - vfi_mode: ENVIRONMENT_TO_ROBOT
+       cs_entity_environment: x_inertial
+       cs_entity_robot: rline
+       entity_environment_primitive_type: LINE_ANGLE
+       entity_robot_primitive_type: LINE_ANGLE
+       joint_index: 7
+       safe_distance: 5
+       vfi_gain: 5.0
+       direction: KEEP_ROBOT_INSIDE
+       entity_robot_attached_direction: k_
+       entity_environment_attached_direction: k_
+       tag: C1

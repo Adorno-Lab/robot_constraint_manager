@@ -10,30 +10,50 @@ using namespace DQ_robotics;
 
 namespace DQ_robotics_extensions
 {
+
+
 class RobotConstraintManager
 {
 private:
     class Impl;
     std::shared_ptr<Impl> impl_;
+
+protected:
+    struct VFI_DATA{
+        VFI_Framework::VFI_MODE vfi_mode;
+        VFI_Framework::VFI_TYPE vfi_type;
+        VFI_Framework::DIRECTION direction;
+        double safe_distance;
+        double vfi_gain;
+        int joint_index_one;
+        int joint_index_two;
+        DQ primitive_offset_one;
+        DQ primitive_offset_two;
+        DQ robot_attached_direction;
+        DQ environment_attached_direction;
+        DQ workspace_derivative;
+        DQ cs_entity_environment_pose;
+        std::string tag;
+    };
+    std::vector<VFI_DATA> vfi_data_list_;
 protected:
     std::shared_ptr<DQ_CoppeliaSimInterfaceZMQ> cs_;
     std::string config_path_;
-    VFI_manager::LEVEL level_;
+    VFI_Framework::LEVEL level_;
     std::shared_ptr<DQ_Kinematics> robot_;
     std::shared_ptr<DQ_CoppeliaSimRobot> coppelia_robot_;
     std::shared_ptr<DQ_robotics_extensions::VFI_manager> VFI_M_;
     double configuration_limit_constraint_gain_;
 
-    std::vector<std::string> robot_jointnames_;
 
 
     VectorXd initial_robot_configuration_;
     int number_of_constraints_;
 
 
-    std::vector<VFI_manager::VFI_MODE> vfi_mode_list_;
-    std::vector<VFI_manager::VFI_TYPE> vfi_type_list_;
-    std::vector<VFI_manager::DIRECTION> direction_list_;
+    std::vector<VFI_Framework::VFI_MODE> vfi_mode_list_;
+    std::vector<VFI_Framework::VFI_TYPE> vfi_type_list_;
+    std::vector<VFI_Framework::DIRECTION> direction_list_;
     std::vector<double> safe_distance_list_;
     std::vector<DQ> robot_attached_dir_list_;
     std::vector<DQ> envir_attached_dir_list_;
@@ -47,7 +67,12 @@ protected:
     std::vector<DQ> dq_offset_list_one_;
     std::vector<DQ> dq_offset_list_two_;
 
+    std::vector<std::string> tag_list_;
+
     std::vector<std::tuple<double, double>> distances_and_error_distances_;
+    bool verbosity_{false};
+
+    void _show_constraints();
 
     DQ _get_robot_primitive_offset_from_coppeliasim(const std::string& object_name, const int& joint_index);
     void _initial_settings();
@@ -59,6 +84,7 @@ public:
                            const std::tuple<VectorXd, VectorXd>& configuration_limits,
                            const std::tuple<VectorXd, VectorXd>& configuration_velocity_limits,
                            const double&  configuration_limit_constraint_gain,
+                           const bool& verbosity = false,
                            const VFI_manager::LEVEL& level = VFI_manager::LEVEL::VELOCITIES);
 
     void set_vfi_position_constraints_gain(const double& vfi_position_constraints_gain);

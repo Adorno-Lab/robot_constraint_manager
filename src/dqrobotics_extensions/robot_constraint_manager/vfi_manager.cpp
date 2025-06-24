@@ -20,6 +20,9 @@ VFI_manager::VFI_manager(const int &dim_configuration,
     constraint_manager_ = std::make_shared<DQ_robotics_extensions::ConstraintsManager>(dim_configuration_);
     I_ = MatrixXd::Identity(dim_configuration_, dim_configuration_);
 
+    set_configuration_limits(configuration_limits);
+    set_configuration_velocity_limits(configuration_velocity_limits);
+
     if (level_ == VFI_Framework::LEVEL::ACCELERATIONS)
         throw std::runtime_error("VFI_manager::VFI_manager Accelerations are unsupported!");
 }
@@ -63,7 +66,7 @@ void VFI_manager::_check_vector_initialization(const VectorXd &q, const std::str
  */
 void VFI_manager::add_configuration_limits(const double &gain, const VectorXd &configuration)
 {
-    _check_vector_initialization(q_min_, std::string("The joint position limits were not defined."));
+    _check_vector_initialization(q_min_, std::string("The configuration limits were not defined."));
     constraint_manager_->add_inequality_constraint(-I_,   gain*(configuration - q_min_));
     constraint_manager_->add_inequality_constraint( I_,  -gain*(configuration - q_max_));
 
@@ -135,7 +138,7 @@ std::tuple<double, double> VFI_manager::add_vfi_rpoint_to_rpoint(const double &s
  * @param workspace_pose
  * @param workspace_attached_direction
  * @param workspace_derivative
- * @return
+ * @return A tuple containing the variables related to the distance and the error. {f(d) , f(error)}
  */
 std::tuple<double, double> VFI_manager::add_vfi_constraint(const DIRECTION &direction,
                                      const VFI_TYPE &vfi_type,
