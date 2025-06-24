@@ -118,11 +118,12 @@ std::tuple<MatrixXd, VectorXd> RobotConstraintManager::get_inequality_constraint
         else{ //vfi_mode_list_.at(i) == VFI_manager::VFI_MODE::ROBOT_TO_ROBOT
             const int index_1 = vfi_data_list_.at(i).joint_index_one;
             const DQ offset_1 = vfi_data_list_.at(i).primitive_offset_one;
-            const int index_2 = vfi_data_list_.at(i).joint_index_one;
-            const DQ offset_2 = vfi_data_list_.at(i).primitive_offset_one;
 
             DQ x1 =  (robot_->fkm(q, index_1))*offset_1;
             MatrixXd J1 = haminus8(offset_1)*robot_->pose_jacobian(q, index_1);
+
+            const int index_2 = vfi_data_list_.at(i).joint_index_two;
+            const DQ offset_2 = vfi_data_list_.at(i).primitive_offset_two;
 
             DQ x2 =  (robot_->fkm(q, index_2))*offset_2;
             MatrixXd J2 = haminus8(offset_2)*robot_->pose_jacobian(q, index_2);
