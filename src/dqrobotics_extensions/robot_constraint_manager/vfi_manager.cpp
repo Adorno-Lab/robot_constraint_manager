@@ -78,6 +78,14 @@ void VFI_manager::add_configuration_velocity_limits()
 }
 
 
+/**
+ * @brief VFI_manager::add_vfi_rpoint_to_rpoint adds the rpoint-to-rpoint VFI constraint to the stack.
+ * @param safe_distance The safe distance
+ * @param vfi_gain  The vfi gain
+ * @param robot_pose_jacobian_and_pose_one The tuple containing the pose Jacobian and pose of the first point attached to the robot
+ * @param robot_pose_jacobian_and_pose_two The tuple containing the pose Jacobian and pose of the second point attached to the robot
+ * @return A tuple containing the square distance and the square error. {square_d , square_error}
+ */
 std::tuple<double, double> VFI_manager::add_vfi_rpoint_to_rpoint(const double &safe_distance,
                                                          const double &vfi_gain,
                                                          const std::tuple<MatrixXd, DQ> &robot_pose_jacobian_and_pose_one,
@@ -108,7 +116,20 @@ std::tuple<double, double> VFI_manager::add_vfi_rpoint_to_rpoint(const double &s
     return {square_d , square_error};
 }
 
-
+/**
+ * @brief VFI_manager::add_vfi_constraint adds the VFI constraint to the stack.
+ * @param direction
+ * @param vfi_type
+ * @param safe_distance
+ * @param vfi_gain
+ * @param robot_pose_jacobian
+ * @param robot_pose
+ * @param robot_attached_direction
+ * @param workspace_pose
+ * @param workspace_attached_direction
+ * @param workspace_derivative
+ * @return
+ */
 std::tuple<double, double> VFI_manager::add_vfi_constraint(const DIRECTION &direction,
                                      const VFI_TYPE &vfi_type,
                                      const double &safe_distance,
@@ -188,9 +209,6 @@ std::tuple<double, double> VFI_manager::add_vfi_constraint(const DIRECTION &dire
         const MatrixXd Jfphi = DQ_Kinematics::line_to_line_angle_jacobian(Jl,robot_line,workspace_line);
         const double fsafe = 2-2*cos(safe_angle);
         const double phi = DQ_Geometry::line_to_line_angle(robot_line, workspace_line);
-        robot_line_ = robot_line;
-        workspace_line_ = workspace_line;
-        line_to_line_angle_ = phi;
         const double f = 2-2*cos(phi);
         const double ferror = f-fsafe;
         const double residual = DQ_Kinematics::line_to_line_angle_residual(robot_line,workspace_line,-workspace_derivative);
@@ -215,8 +233,12 @@ std::tuple<double, double> VFI_manager::add_vfi_constraint(const DIRECTION &dire
 }
 
 
-
-void VFI_manager::set_joint_position_limits(const VectorXd &q_lower_bound, const VectorXd &q_upper_bound)
+/**
+ * @brief VFI_manager::set_configuration_limits
+ * @param q_lower_bound
+ * @param q_upper_bound
+ */
+void VFI_manager::set_configuration_limits(const VectorXd &q_lower_bound, const VectorXd &q_upper_bound)
 {
     DQ_robotics_extensions::Checkers::check_equal_sizes(q_lower_bound, q_upper_bound, DQ_robotics_extensions::Checkers::MODE::PANIC,
                               std::string("The sizes are incompatibles. q_lower_bound has size ") + std::to_string(q_lower_bound.size())
@@ -229,7 +251,12 @@ void VFI_manager::set_joint_position_limits(const VectorXd &q_lower_bound, const
 
 }
 
-void VFI_manager::set_joint_velocity_limits(const VectorXd &q_dot_lower_bound, const VectorXd &q_dot_upper_bound)
+/**
+ * @brief VFI_manager::set_configuration_velocity_limits
+ * @param q_dot_lower_bound
+ * @param q_dot_upper_bound
+ */
+void VFI_manager::set_configuration_velocity_limits(const VectorXd &q_dot_lower_bound, const VectorXd &q_dot_upper_bound)
 {
     DQ_robotics_extensions::Checkers::check_equal_sizes(q_dot_lower_bound, q_dot_upper_bound, DQ_robotics_extensions::Checkers::MODE::PANIC,
                         std::string("The sizes are incompatibles. q_dot_lower_bound has size ") + std::to_string(q_dot_lower_bound.size())

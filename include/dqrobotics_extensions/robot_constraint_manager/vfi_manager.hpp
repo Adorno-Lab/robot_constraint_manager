@@ -57,9 +57,6 @@ protected:
     VectorXd q_max_ = VectorXd::Zero(0);
     MatrixXd I_;
 
-    double line_to_line_angle_;
-    DQ robot_line_{1};
-    DQ workspace_line_{1};
 
     void _check_vector_initialization(const VectorXd& q, const std::string &msg);
 
@@ -85,8 +82,8 @@ public:
                                                 const std::tuple<MatrixXd, DQ>& robot_pose_jacobian_and_pose_two
                                                 );
 
-    void set_joint_position_limits(const VectorXd& q_lower_bound, const VectorXd& q_upper_bound);
-    void set_joint_velocity_limits(const VectorXd& q_dot_lower_bound, const VectorXd& q_dot_upper_bound);
+    void set_configuration_limits(const VectorXd& q_lower_bound, const VectorXd& q_upper_bound);
+    void set_configuration_velocity_limits(const VectorXd& q_dot_lower_bound, const VectorXd& q_dot_upper_bound);
     //void add_sovfi_constraint();
 
 
