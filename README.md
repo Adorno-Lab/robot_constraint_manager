@@ -2,7 +2,7 @@
 
 
 This project implements the VFIs constraints using a yaml configuration file.
-A version is described in in this [publication](https://ieeexplore.ieee.org/document/10399868)
+A version is described in this [publication](https://ieeexplore.ieee.org/document/10399868)
 
 ```bibtext
 @Article{marinho2023multiarm,
@@ -18,5 +18,24 @@ A version is described in in this [publication](https://ieeexplore.ieee.org/docu
   doi          = {10.1109/MRA.2023.3336472},
   volume       = {31},
   number       = {4}
+}
+```
+
+The VFIs are described in this [publication](https://ieeexplore.ieee.org/document/8742769)
+
+```bibtext
+@Article{marinho2019dynamic,
+  author       = {Marinho, Murilo M and Adorno, Bruno V and Harada, Kanako and Mitsuishi, Mamoru},
+  title        = {Dynamic Active Constraints for Surgical Robots using Vector Field Inequalities},
+  journal      = {IEEE Transactions on Robotics (T-RO)},
+  year         = {2019},
+  month        = oct,
+  volume       = {35}, 
+  number       = {5}, 
+  pages        = {1166--1185},
+  url          = {https://arxiv.org/pdf/1804.11270},
+  url_video    = {https://youtu.be/tB6moMfeacs},
+  doi          = {10.1109/TRO.2019.2920078},
+  custom_type  = {1. Journal Paper},
 }
 ```
