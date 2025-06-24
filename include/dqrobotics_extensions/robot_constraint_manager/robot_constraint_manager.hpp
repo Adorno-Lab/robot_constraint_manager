@@ -1,7 +1,7 @@
 #pragma once
 #include <dqrobotics/robot_modeling/DQ_Kinematics.h>
 #include <dqrobotics/interfaces/coppeliasim/DQ_CoppeliaSimInterfaceZMQ.h>
-//#include <dqrobotics/interfaces/coppeliasim/DQ_CoppeliaSimRobotZMQ.h>
+#include <dqrobotics/interfaces/coppeliasim/DQ_CoppeliaSimRobot.h>
 #include <dqrobotics_extensions/robot_constraint_manager/vfi_manager.hpp>
 #include <memory>
 
@@ -20,9 +20,11 @@ protected:
     std::string config_path_;
     VFI_manager::LEVEL level_;
     std::shared_ptr<DQ_Kinematics> robot_;
-    std::shared_ptr<DQ_CoppeliaSimRobotZMQ> coppelia_robot_;
+    std::shared_ptr<DQ_CoppeliaSimRobot> coppelia_robot_;
     std::shared_ptr<DQ_robotics_extensions::VFI_manager> VFI_M_;
     double vfi_position_constraints_gain_{8.0};
+
+    std::vector<std::string> robot_jointnames_;
 
     VectorXd q_max_;
     VectorXd q_min_;
@@ -54,13 +56,11 @@ protected:
     void _initial_settings();
 public:
     RobotConstraintManager(const std::shared_ptr<DQ_CoppeliaSimInterfaceZMQ>& coppelia_interface,
-                           const std::shared_ptr<DQ_CoppeliaSimRobotZMQ>& coppeliasim_robot,
+                           const std::shared_ptr<DQ_CoppeliaSimRobot>& coppeliasim_robot,
                            const std::shared_ptr<DQ_Kinematics>& robot,
-                           const VectorXd& q_min,
-                           const VectorXd& q_max,
-                           const VectorXd& q_min_dot,
-                           const VectorXd& q_max_dot,
-                           const std::string &config_path,
+                           const std::string &yaml_file_path,
+                           const std::tuple<VectorXd, VectorXd>& configuration_limits,
+                           const std::tuple<VectorXd, VectorXd>& configuration_velocity_limits,
                            const VFI_manager::LEVEL& level = VFI_manager::LEVEL::VELOCITIES);
 
     void set_vfi_position_constraints_gain(const double& vfi_position_constraints_gain);

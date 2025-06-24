@@ -79,7 +79,7 @@ public:
                             const DQ& workspace_attached_direction,
                             const DQ& workspace_derivative = DQ(0));
 
-    std::tuple<double, double> _experimental_add_vfi_rpoint_to_rpoint(const double& safe_distance,
+    std::tuple<double, double> add_vfi_rpoint_to_rpoint(const double& safe_distance,
                                                 const double& vfi_gain,
                                                 const std::tuple<MatrixXd, DQ>& robot_pose_jacobian_and_pose_one,
                                                 const std::tuple<MatrixXd, DQ>& robot_pose_jacobian_and_pose_two
@@ -90,16 +90,14 @@ public:
     //void add_sovfi_constraint();
 
 
-    void add_vfi_joint_position_constraints(const double& gain, const VectorXd& current_joint_positions);
-    void add_vfi_joint_velocity_constraints();
+    void add_configuration_limits(const double& gain, const VectorXd& configuration);
+    void add_configuration_velocity_limits();
 
 
     std::tuple<MatrixXd, VectorXd> get_inequality_constraints();
-    std::tuple<MatrixXd, VectorXd> get_equality_constraints();
+    //std::tuple<MatrixXd, VectorXd> get_equality_constraints();
 
-    double get_line_to_line_angle();
-    DQ get_robot_line();
-    DQ get_workspace_line();
+
 
 
 };

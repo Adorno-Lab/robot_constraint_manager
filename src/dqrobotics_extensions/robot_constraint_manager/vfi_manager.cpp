@@ -2,7 +2,12 @@
 
 namespace DQ_robotics_extensions  {
 
-
+/**
+ * @brief VFI_manager::VFI_manager constructor of the class.
+ * @param dim_configuration The dimension of the configuration space
+ * @param level The desired level. Use VELOCITIES for first order kinematics, or
+                                   ACCELERATIONS for second order kinematics.
+ */
 VFI_manager::VFI_manager(const int &dim_configuration, const LEVEL &level)
     :dim_configuration_(dim_configuration),level_(level)
 {
@@ -12,6 +17,12 @@ VFI_manager::VFI_manager(const int &dim_configuration, const LEVEL &level)
         throw std::runtime_error("VFI_manager::VFI_manager Accelerations are unsupported!");
 }
 
+/**
+ * @brief VFI_manager::_add_vfi_constraint adds the inequality constraint in the stack
+ * @param Jd The distance Jacobian
+ * @param b  The vector term in the vfi inequality. For instance b = vfi_gain*(error) + residual
+ * @param direction Use KEEP_ROBOT_OUTSIDE, or  KEEP_ROBOT_INSIDE to define the VFI behaviour.
+ */
 void VFI_manager::_add_vfi_constraint(const MatrixXd &Jd, const VectorXd &b, const DIRECTION &direction)
 {
     if(direction == DIRECTION::KEEP_ROBOT_OUTSIDE)
@@ -20,33 +31,54 @@ void VFI_manager::_add_vfi_constraint(const MatrixXd &Jd, const VectorXd &b, con
         constraint_manager_->add_inequality_constraint(Jd, -b);
 }
 
+/**
+ * @brief VFI_manager::_check_vector_initialization throws an exception with a custom message if
+ *                     the given vector is not initialized.
+ * @param q The vector to be checked.
+ * @param msg The custom message to be displayed.
+ */
 void VFI_manager::_check_vector_initialization(const VectorXd &q, const std::string &msg)
 {
     if (q.size() == 0)
-    {
         throw std::runtime_error(msg);
-    }
-
 }
 
-void VFI_manager::add_vfi_joint_position_constraints(const double &gain, const VectorXd &current_joint_positions)
+/**
+ * @brief VFI_manager::add_vfi_joint_position_constraints adds configuration limits using the
+ *                     inequality constraints (10) defined in
+ *                     Adaptive Constrained Kinematic Control using Partial or Complete Task-Space Measurements.
+ *                     Marinho, M. M. & Adorno, B. V.
+ *                     IEEE Transactions on Robotics (T-RO),
+ *                     38(6):3498–3513, December, 2022. Presented at ICRA'23.
+ *
+ * @param gain
+ * @param configuration
+ */
+void VFI_manager::add_configuration_limits(const double &gain, const VectorXd &configuration)
 {
     _check_vector_initialization(q_min_, std::string("The joint position limits were not defined."));
-    constraint_manager_->add_inequality_constraint(-I_,   gain*(current_joint_positions - q_min_));
-    constraint_manager_->add_inequality_constraint( I_,  -gain*(current_joint_positions - q_max_));
+    constraint_manager_->add_inequality_constraint(-I_,   gain*(configuration - q_min_));
+    constraint_manager_->add_inequality_constraint( I_,  -gain*(configuration - q_max_));
 
 }
 
-void VFI_manager::add_vfi_joint_velocity_constraints()
+/**
+ * @brief VFI_manager::add_configuration_velocity_limits adds the configuration velocity limits using the
+ *                     inequality constraints (7) defined in
+ *                     Adaptive Constrained Kinematic Control using Partial or Complete Task-Space Measurements.
+ *                     Marinho, M. M. & Adorno, B. V.
+ *                     IEEE Transactions on Robotics (T-RO),
+ *                     38(6):3498–3513, December, 2022. Presented at ICRA'23.
+ */
+void VFI_manager::add_configuration_velocity_limits()
 {
     _check_vector_initialization(q_dot_min_, std::string("The joint velocity limits were not defined."));
     constraint_manager_->add_inequality_constraint(-I_, -q_dot_min_);
     constraint_manager_->add_inequality_constraint( I_,  q_dot_max_);
-
 }
 
 
-std::tuple<double, double> VFI_manager::_experimental_add_vfi_rpoint_to_rpoint(const double &safe_distance,
+std::tuple<double, double> VFI_manager::add_vfi_rpoint_to_rpoint(const double &safe_distance,
                                                          const double &vfi_gain,
                                                          const std::tuple<MatrixXd, DQ> &robot_pose_jacobian_and_pose_one,
                                                          const std::tuple<MatrixXd, DQ> &robot_pose_jacobian_and_pose_two)
@@ -210,32 +242,22 @@ void VFI_manager::set_joint_velocity_limits(const VectorXd &q_dot_lower_bound, c
 
 }
 
+/**
+ * @brief VFI_manager::get_inequality_constraints returns a tuple with the inequality constraints given by
+ *                                                 Ax <= b
+ * @return A tuple containing the inequality constraints {A,b}.
+ */
 std::tuple<MatrixXd, VectorXd> VFI_manager::get_inequality_constraints()
 {
     return constraint_manager_->get_inequality_constraints();
 }
 
+/*
 std::tuple<MatrixXd, VectorXd> VFI_manager::get_equality_constraints()
 {
     return constraint_manager_->get_equality_constraints();
-}
+}*/
 
-double VFI_manager::get_line_to_line_angle()
-{
-    return line_to_line_angle_;
+
 
 }
-
-DQ VFI_manager::get_robot_line()
-{
-    return robot_line_;
-}
-
-DQ VFI_manager::get_workspace_line()
-{
-    return workspace_line_;
-}
-
-
-
-} // capybara namespace

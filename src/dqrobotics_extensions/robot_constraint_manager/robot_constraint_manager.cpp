@@ -15,32 +15,33 @@ public:
     };
 };
 
+// * @brief RobotConstraintManager::RobotConstraintManager constructor of the class
+// @param coppelia_interface The smartpointer of the DQ_CoppeliaSimInterfaceZMQ object
 
 /**
- * @brief RobotConstraintManager::RobotConstraintManager constructor of the class
- * @param coppelia_interface The smartpointer of the DQ_CoppeliaSimInterfaceZMQ object
- * @param robot_jointnames The
+ * @brief RobotConstraintManager::RobotConstraintManager
+ * @param coppelia_interface
+ * @param coppeliasim_robot
  * @param robot
- * @param q_min
- * @param q_max
- * @param q_min_dot
- * @param q_max_dot
- * @param config_path
+ * @param yaml_file_path
+ * @param configuration_limits
+ * @param configuration_velocity_limits
  * @param level
  */
 RobotConstraintManager::RobotConstraintManager(const std::shared_ptr<DQ_CoppeliaSimInterfaceZMQ> &coppelia_interface,
-                                               const std::shared_ptr<DQ_CoppeliaSimRobotZMQ>& coppeliasim_robot,
+                                               const std::shared_ptr<DQ_CoppeliaSimRobot> &coppeliasim_robot,
                                                const std::shared_ptr<DQ_Kinematics> &robot,
-                                               const VectorXd &q_min,
-                                               const VectorXd &q_max,
-                                               const VectorXd &q_min_dot,
-                                               const VectorXd &q_max_dot,
-                                               const std::string &config_path,
+                                               const std::string &yaml_file_path,
+                                               const std::tuple<VectorXd, VectorXd> &configuration_limits,
+                                               const std::tuple<VectorXd, VectorXd> &configuration_velocity_limits,
                                                const VFI_Framework::LEVEL &level)
-    :coppelia_robot_{coppeliasim_robot}, cs_{coppelia_interface}, config_path_{config_path}, level_{level}, robot_{robot},
-    q_max_{q_max}, q_min_{q_min}, q_min_dot_{q_min_dot}, q_max_dot_{q_max_dot}
+    :coppelia_robot_{coppeliasim_robot}, cs_{coppelia_interface}, config_path_{yaml_file_path}, level_{level}, robot_{robot}
 {
     impl_ = std::make_shared<RobotConstraintManager::Impl>();
+    q_min_ = std::get<0>(configuration_limits);
+    q_max_ = std::get<1>(configuration_limits);
+    q_min_dot_ = std::get<0>(configuration_velocity_limits);
+    q_max_dot_ = std::get<1>(configuration_velocity_limits);
 }
 
 void RobotConstraintManager::set_vfi_position_constraints_gain(const double &vfi_position_constraints_gain)
