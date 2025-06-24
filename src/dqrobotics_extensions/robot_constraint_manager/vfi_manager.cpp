@@ -2,17 +2,24 @@
 
 namespace DQ_robotics_extensions  {
 
+
 /**
  * @brief VFI_manager::VFI_manager constructor of the class.
  * @param dim_configuration The dimension of the configuration space
+ * @param configuration_limits The configuration limits: {q_lower_bound, q_upper_bound}
+ * @param configuration_velocity_limits The configuration velocity limits: {q_dot_lower_bound, q_dot_upper_bound}
  * @param level The desired level. Use VELOCITIES for first order kinematics, or
                                    ACCELERATIONS for second order kinematics.
  */
-VFI_manager::VFI_manager(const int &dim_configuration, const LEVEL &level)
+VFI_manager::VFI_manager(const int &dim_configuration,
+                         const std::tuple<VectorXd, VectorXd> &configuration_limits,
+                         const std::tuple<VectorXd, VectorXd> &configuration_velocity_limits,
+                         const LEVEL &level)
     :dim_configuration_(dim_configuration),level_(level)
 {
     constraint_manager_ = std::make_shared<DQ_robotics_extensions::ConstraintsManager>(dim_configuration_);
     I_ = MatrixXd::Identity(dim_configuration_, dim_configuration_);
+
     if (level_ == VFI_Framework::LEVEL::ACCELERATIONS)
         throw std::runtime_error("VFI_manager::VFI_manager Accelerations are unsupported!");
 }
@@ -234,12 +241,13 @@ std::tuple<double, double> VFI_manager::add_vfi_constraint(const DIRECTION &dire
 
 
 /**
- * @brief VFI_manager::set_configuration_limits
- * @param q_lower_bound
- * @param q_upper_bound
+ * @brief VFI_manager::set_configuration_limits sets the configuration limits
+ * @param configuration_limits A tuple containing the configuration limits. Example: {q_lower_bound, q_upper_bound}
  */
-void VFI_manager::set_configuration_limits(const VectorXd &q_lower_bound, const VectorXd &q_upper_bound)
+void VFI_manager::set_configuration_limits(const std::tuple<VectorXd, VectorXd>& configuration_limits)
 {
+    const VectorXd q_lower_bound = std::get<0>(configuration_limits);
+    const VectorXd q_upper_bound = std::get<1>(configuration_limits);
     DQ_robotics_extensions::Checkers::check_equal_sizes(q_lower_bound, q_upper_bound, DQ_robotics_extensions::Checkers::MODE::PANIC,
                               std::string("The sizes are incompatibles. q_lower_bound has size ") + std::to_string(q_lower_bound.size())
                             + std::string(" and q_upper_bound has size ") + std::to_string(q_upper_bound.size()));
@@ -252,12 +260,14 @@ void VFI_manager::set_configuration_limits(const VectorXd &q_lower_bound, const 
 }
 
 /**
- * @brief VFI_manager::set_configuration_velocity_limits
- * @param q_dot_lower_bound
- * @param q_dot_upper_bound
+ * @brief VFI_manager::set_configuration_velocity_limits sets the configuration velocity limits
+ * @param configuration_velocity_limits. A tuple containing the configuration velocity limits.
+ *                      Example: {q_dot_lower_bound, q_dot_upper_bound}
  */
-void VFI_manager::set_configuration_velocity_limits(const VectorXd &q_dot_lower_bound, const VectorXd &q_dot_upper_bound)
+void VFI_manager::set_configuration_velocity_limits(const std::tuple<VectorXd, VectorXd> &configuration_velocity_limits)
 {
+    const VectorXd q_dot_lower_bound = std::get<0>(configuration_velocity_limits);
+    const VectorXd q_dot_upper_bound = std::get<1>(configuration_velocity_limits);
     DQ_robotics_extensions::Checkers::check_equal_sizes(q_dot_lower_bound, q_dot_upper_bound, DQ_robotics_extensions::Checkers::MODE::PANIC,
                         std::string("The sizes are incompatibles. q_dot_lower_bound has size ") + std::to_string(q_dot_lower_bound.size())
                             + std::string(" and q_dot_upper_bound has size ") + std::to_string(q_dot_upper_bound.size()));

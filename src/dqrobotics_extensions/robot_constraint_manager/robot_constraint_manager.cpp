@@ -34,19 +34,21 @@ RobotConstraintManager::RobotConstraintManager(const std::shared_ptr<DQ_Coppelia
                                                const std::string &yaml_file_path,
                                                const std::tuple<VectorXd, VectorXd> &configuration_limits,
                                                const std::tuple<VectorXd, VectorXd> &configuration_velocity_limits,
+                                               const double& configuration_limit_constraint_gain,
                                                const VFI_Framework::LEVEL &level)
-    :coppelia_robot_{coppeliasim_robot}, cs_{coppelia_interface}, config_path_{yaml_file_path}, level_{level}, robot_{robot}
+    :coppelia_robot_{coppeliasim_robot}, cs_{coppelia_interface}, config_path_{yaml_file_path},
+    level_{level}, robot_{robot}, configuration_limit_constraint_gain_{configuration_limit_constraint_gain}
 {
     impl_ = std::make_shared<RobotConstraintManager::Impl>();
-    q_min_ = std::get<0>(configuration_limits);
-    q_max_ = std::get<1>(configuration_limits);
-    q_min_dot_ = std::get<0>(configuration_velocity_limits);
-    q_max_dot_ = std::get<1>(configuration_velocity_limits);
+
+    VFI_M_ = std::make_shared<DQ_robotics_extensions::VFI_manager>(robot->get_dim_configuration_space(),
+                                                                   configuration_limits,
+                                                                   configuration_velocity_limits);
 }
 
 void RobotConstraintManager::set_vfi_position_constraints_gain(const double &vfi_position_constraints_gain)
 {
-    vfi_position_constraints_gain_ = vfi_position_constraints_gain;
+    configuration_limit_constraint_gain_ = vfi_position_constraints_gain;
 }
 
 std::vector<std::tuple<double, double> > RobotConstraintManager::get_distances_and_error_distances() const
@@ -64,8 +66,8 @@ std::tuple<MatrixXd, VectorXd> RobotConstraintManager::get_inequality_constraint
     const int n = vfi_mode_list_.size();
     const int robot_dim = robot_->get_dim_configuration_space();
 
-    VFI_M_->add_vfi_joint_position_constraints(vfi_position_constraints_gain_, q);
-    VFI_M_->add_vfi_joint_velocity_constraints();
+    VFI_M_->add_configuration_limits(configuration_limit_constraint_gain_, q);
+    VFI_M_->add_configuration_velocity_limits();
 
     std::vector<std::tuple<double, double>> distances_and_error_distances;
 
@@ -101,7 +103,7 @@ std::tuple<MatrixXd, VectorXd> RobotConstraintManager::get_inequality_constraint
             MatrixXd J2 = haminus8(dq_offset_list_two_.at(i))*robot_->pose_jacobian(q, joint_index_list_two_.at(i));
 
             distances_and_error_distances.push_back(
-                VFI_M_->_experimental_add_vfi_rpoint_to_rpoint(safe_distance_list_.at(i), vfi_gain_list_.at(i), {J1, x1}, {J2, x2})
+                VFI_M_->add_vfi_rpoint_to_rpoint(safe_distance_list_.at(i), vfi_gain_list_.at(i), {J1, x1}, {J2, x2})
                 );
 
 

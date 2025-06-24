@@ -63,6 +63,8 @@ protected:
 public:
     VFI_manager()=delete;
     VFI_manager(const int& dim_configuration,
+                const std::tuple<VectorXd, VectorXd>& configuration_limits,
+                const std::tuple<VectorXd, VectorXd>& configuration_velocity_limits,
                 const LEVEL& level = LEVEL::VELOCITIES);
 
     std::tuple<double, double> add_vfi_constraint(const DIRECTION& direction,
@@ -82,8 +84,8 @@ public:
                                                 const std::tuple<MatrixXd, DQ>& robot_pose_jacobian_and_pose_two
                                                 );
 
-    void set_configuration_limits(const VectorXd& q_lower_bound, const VectorXd& q_upper_bound);
-    void set_configuration_velocity_limits(const VectorXd& q_dot_lower_bound, const VectorXd& q_dot_upper_bound);
+    void set_configuration_limits(const std::tuple<VectorXd, VectorXd>& configuration_limits);
+    void set_configuration_velocity_limits(const std::tuple<VectorXd, VectorXd> &configuration_velocity_limits);
     //void add_sovfi_constraint();
 
 

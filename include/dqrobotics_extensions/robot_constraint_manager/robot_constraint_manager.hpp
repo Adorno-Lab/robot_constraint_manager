@@ -22,14 +22,11 @@ protected:
     std::shared_ptr<DQ_Kinematics> robot_;
     std::shared_ptr<DQ_CoppeliaSimRobot> coppelia_robot_;
     std::shared_ptr<DQ_robotics_extensions::VFI_manager> VFI_M_;
-    double vfi_position_constraints_gain_{8.0};
+    double configuration_limit_constraint_gain_;
 
     std::vector<std::string> robot_jointnames_;
 
-    VectorXd q_max_;
-    VectorXd q_min_;
-    VectorXd q_min_dot_;
-    VectorXd q_max_dot_;
+
     VectorXd initial_robot_configuration_;
     int number_of_constraints_;
 
@@ -61,6 +58,7 @@ public:
                            const std::string &yaml_file_path,
                            const std::tuple<VectorXd, VectorXd>& configuration_limits,
                            const std::tuple<VectorXd, VectorXd>& configuration_velocity_limits,
+                           const double&  configuration_limit_constraint_gain,
                            const VFI_manager::LEVEL& level = VFI_manager::LEVEL::VELOCITIES);
 
     void set_vfi_position_constraints_gain(const double& vfi_position_constraints_gain);
