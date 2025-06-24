@@ -70,7 +70,7 @@ protected:
     std::vector<std::string> tag_list_;
 
     std::vector<std::tuple<double, double>> distances_and_error_distances_;
-    bool verbosity_{false};
+    bool verbosity_{true};
 
     void _show_constraints();
 

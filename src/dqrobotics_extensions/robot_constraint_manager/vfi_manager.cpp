@@ -113,8 +113,8 @@ std::tuple<double, double> VFI_manager::add_vfi_rpoint_to_rpoint(const double &s
     const MatrixXd& J2 = robot_pose_jacobian_two;
     const DQ t1 = x1.translation();
     const DQ t2 = x2.translation();
-    const MatrixXd Jt1 = DQ_Kinematics::translation_jacobian(J1, x1);
-    const MatrixXd Jt2 = DQ_Kinematics::translation_jacobian(J2, x2);
+    const MatrixXd Jt1 = DQ_robotics_extensions::Numpy::resize(DQ_Kinematics::translation_jacobian(J1, x1), 4, dim_configuration_);
+    const MatrixXd Jt2 = DQ_robotics_extensions::Numpy::resize(DQ_Kinematics::translation_jacobian(J2, x2), 4, dim_configuration_);
 
     const MatrixXd Jd = 2*vec4(x1.translation()-x2.translation()).transpose()*(Jt1-Jt2);
 

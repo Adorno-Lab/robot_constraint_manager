@@ -77,14 +77,20 @@ std::tuple<MatrixXd, VectorXd> RobotConstraintManager::get_inequality_constraint
     {
         if (vfi_mode_list_.at(i) == VFI_manager::VFI_MODE::ENVIRONMENT_TO_ROBOT)
         {
-            DQ x = (robot_->fkm(q, joint_index_list_one_.at(i)))*dq_offset_list_one_.at(i);
-            MatrixXd J = haminus8(dq_offset_list_one_.at(i))*robot_->pose_jacobian(q, joint_index_list_one_.at(i));
+
+            //DQ x = (robot_->fkm(q, joint_index_list_one_.at(i)))*dq_offset_list_one_.at(i);
+            // MatrixXd J = haminus8(dq_offset_list_one_.at(i))*robot_->pose_jacobian(q, joint_index_list_one_.at(i));
+            const int index = vfi_data_list_.at(i).joint_index_one;
+            const DQ offset = vfi_data_list_.at(i).primitive_offset_one;
+            DQ x = (robot_->fkm(q, index))*offset;
+            MatrixXd J = haminus8(offset)*robot_->pose_jacobian(q, index);
             if (J.cols() != robot_dim)
                 J = DQ_robotics_extensions::Numpy::resize(J, J.rows(), robot_dim);
-            DQ x_workspace = cs_entity_environment_DQ_list_.at(i);
+            // DQ x_workspace = cs_entity_environment_DQ_list_.at(i);
+
 
             distances_and_error_distances.push_back(
-
+                /*
                 VFI_M_->add_vfi_constraint(direction_list_.at(i),
                                            vfi_type_list_.at(i),
                                            safe_distance_list_.at(i),
@@ -95,17 +101,37 @@ std::tuple<MatrixXd, VectorXd> RobotConstraintManager::get_inequality_constraint
                                            x_workspace,
                                            envir_attached_dir_list_.at(i),
                                            workspace_derivative_list_.at(i))
+                );*/
+                VFI_M_->add_vfi_constraint(vfi_data_list_.at(i).direction,
+                                           vfi_data_list_.at(i).vfi_type,
+                                           vfi_data_list_.at(i).safe_distance,
+                                           vfi_data_list_.at(i).vfi_gain,
+                                           J,
+                                           x,
+                                           vfi_data_list_.at(i).robot_attached_direction,
+                                           vfi_data_list_.at(i).cs_entity_environment_pose, // x_workspace
+                                           vfi_data_list_.at(i).environment_attached_direction,
+                                           vfi_data_list_.at(i).workspace_derivative)
                 );
 
         }
         else{ //vfi_mode_list_.at(i) == VFI_manager::VFI_MODE::ROBOT_TO_ROBOT
-            DQ x1 =  (robot_->fkm(q, joint_index_list_one_.at(i)))*dq_offset_list_one_.at(i);
-            MatrixXd J1 = haminus8(dq_offset_list_one_.at(i))*robot_->pose_jacobian(q, joint_index_list_one_.at(i));
-            DQ x2 =  (robot_->fkm(q, joint_index_list_two_.at(i)))*dq_offset_list_two_.at(i);
-            MatrixXd J2 = haminus8(dq_offset_list_two_.at(i))*robot_->pose_jacobian(q, joint_index_list_two_.at(i));
+            const int index_1 = vfi_data_list_.at(i).joint_index_one;
+            const DQ offset_1 = vfi_data_list_.at(i).primitive_offset_one;
+            const int index_2 = vfi_data_list_.at(i).joint_index_one;
+            const DQ offset_2 = vfi_data_list_.at(i).primitive_offset_one;
+
+            DQ x1 =  (robot_->fkm(q, index_1))*offset_1;
+            MatrixXd J1 = haminus8(offset_1)*robot_->pose_jacobian(q, index_1);
+
+            DQ x2 =  (robot_->fkm(q, index_2))*offset_2;
+            MatrixXd J2 = haminus8(offset_2)*robot_->pose_jacobian(q, index_2);
 
             distances_and_error_distances.push_back(
-                VFI_M_->add_vfi_rpoint_to_rpoint(safe_distance_list_.at(i), vfi_gain_list_.at(i), {J1, x1}, {J2, x2})
+                VFI_M_->add_vfi_rpoint_to_rpoint(vfi_data_list_.at(i).safe_distance,
+                                                 vfi_data_list_.at(i).vfi_gain,
+                                                 {J1, x1},
+                                                 {J2, x2})
                 );
 
 

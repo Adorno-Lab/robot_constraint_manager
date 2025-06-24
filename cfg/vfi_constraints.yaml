@@ -14,3 +14,17 @@
        entity_robot_attached_direction: k_
        entity_environment_attached_direction: k_
        tag: C1
+
+
+- Description: End-effector and Base self-collision
+  Parameters:
+     - vfi_mode: ROBOT_TO_ROBOT
+       cs_entity_one: r_base_sphere
+       cs_entity_two: rsphere
+       entity_one_primitive_type: POINT
+       entity_two_primitive_type: POINT
+       joint_index_one: 1
+       joint_index_two: 7
+       safe_distance: 0.3
+       vfi_gain: 5.0
+       tag: C2
