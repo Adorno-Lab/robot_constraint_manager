@@ -1,3 +1,4 @@
+
 #include <dqrobotics/DQ.h>
 #include <dqrobotics/interfaces/coppeliasim/DQ_CoppeliaSimInterfaceZMQ.h>
 #include <dqrobotics/interfaces/coppeliasim/robots/FrankaEmikaPandaCoppeliaSimZMQRobot.h>
@@ -6,6 +7,8 @@
 #include <memory>
 #include <dqrobotics/robot_control/DQ_ClassicQPController.h>
 #include <dqrobotics/solvers/DQ_QPOASESSolver.h>
+//#include <dqrobotics/solvers/DQ_PROXQPSolver.h>
+//#include <dqrobotics/solvers/DQ_OSQPSolver.h>
 #include <dqrobotics_extensions/robot_constraint_manager/robot_constraint_manager.hpp>
 
 /*********************************************
