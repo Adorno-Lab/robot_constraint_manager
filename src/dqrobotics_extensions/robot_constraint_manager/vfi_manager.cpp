@@ -28,6 +28,55 @@ VFI_manager::VFI_manager(const int &dim_configuration,
 }
 
 /**
+ * @brief VFI_manager::_update_map
+ * @param tag
+ * @param vfi_parameters
+ */
+void VFI_manager::_update_vfi_parameters_map(const std::string &tag, const VFI_PARAMETERS &vfi_parameters)
+{
+    auto search = vfi_parameters_map_.find(tag);
+    if (search != vfi_parameters_map_.end())
+    { // tag found in map. Updated the map with
+        vfi_parameters_map_.at(tag) = vfi_parameters;
+    }
+    else
+    {   // tag not found in map. Add the gag
+        vfi_parameters_map_.try_emplace(tag, vfi_parameters);
+    }
+}
+
+void VFI_manager::_update_vfi_parameters_map(const std::string &tag,
+                                             const VFI_TYPE &vfi_type,
+                                             const double &distance,
+                                             const double &square_distance,
+                                             const double &distance_error,
+                                             const double &square_distance_error)
+{
+    VFI_PARAMETERS data;
+    data.vfi_type = vfi_type;
+    data.distance = distance;
+    data.square_distance = square_distance;
+    data.distance_error = distance_error;
+    data.square_distance_error = square_distance_error;
+    _update_vfi_parameters_map(tag, data);
+}
+
+VFI_manager::VFI_PARAMETERS VFI_manager::_get_data_from_vfi_parameters_map(const std::string tag)
+{
+    auto search = vfi_parameters_map_.find(tag);
+    // returns a tuple <bool, VFI_manager::VFI_PARAMETERS>
+    //If the handle is found in the map, returns <true, VFI_manager::VFI_PARAMETERS>.
+    if (search != vfi_parameters_map_.end())
+    { // handle found in map
+        return search->second;
+    }
+    else
+    {   // handle not found in map.
+        throw std::runtime_error("VFI TAG not found!");
+    }
+}
+
+/**
  * @brief VFI_manager::_add_vfi_constraint adds the inequality constraint in the stack
  * @param Jd The distance Jacobian
  * @param b  The vector term in the vfi inequality. For instance b = vfi_gain*(error) + residual
@@ -96,10 +145,11 @@ void VFI_manager::add_configuration_velocity_limits()
  * @param robot_pose_jacobian_and_pose_two The tuple containing the pose Jacobian and pose of the second point attached to the robot
  * @return A tuple containing the square distance and the square error. {square_d , square_error}
  */
-std::tuple<double, double> VFI_manager::add_vfi_rpoint_to_rpoint(const double &safe_distance,
-                                                         const double &vfi_gain,
-                                                         const std::tuple<MatrixXd, DQ> &robot_pose_jacobian_and_pose_one,
-                                                         const std::tuple<MatrixXd, DQ> &robot_pose_jacobian_and_pose_two)
+std::tuple<double, double> VFI_manager::add_vfi_rpoint_to_rpoint(const std::string &tag,
+                                                                 const double &safe_distance,
+                                                                 const double &vfi_gain,
+                                                                 const std::tuple<MatrixXd, DQ> &robot_pose_jacobian_and_pose_one,
+                                                                 const std::tuple<MatrixXd, DQ> &robot_pose_jacobian_and_pose_two)
 {
     const double square_safe_distance = pow(safe_distance, 2);
     const MatrixXd robot_pose_jacobian_one = std::get<0>(robot_pose_jacobian_and_pose_one);
@@ -123,6 +173,7 @@ std::tuple<double, double> VFI_manager::add_vfi_rpoint_to_rpoint(const double &s
     const double square_error = square_d- square_safe_distance;
     VectorXd b = DQ_robotics_extensions::CVectorXd({vfi_gain*(square_error) + residual});
     _add_vfi_constraint(Jd, b, VFI_Framework::DIRECTION::KEEP_ROBOT_OUTSIDE);
+    _update_vfi_parameters_map(tag, VFI_TYPE::RPOINT_TO_POINT, std::sqrt(square_d), square_d, -1, square_error);
     return {square_d , square_error};
 }
 
@@ -140,16 +191,17 @@ std::tuple<double, double> VFI_manager::add_vfi_rpoint_to_rpoint(const double &s
  * @param workspace_derivative
  * @return A tuple containing the variables related to the distance and the error. {f(d) , f(error)}
  */
-std::tuple<double, double> VFI_manager::add_vfi_constraint(const DIRECTION &direction,
-                                     const VFI_TYPE &vfi_type,
-                                     const double &safe_distance,
-                                     const double &vfi_gain,
-                                     const MatrixXd &robot_pose_jacobian,
-                                     const DQ &robot_pose,
-                                     const DQ &robot_attached_direction,
-                                     const DQ &workspace_pose,
-                                     const DQ &workspace_attached_direction,
-                                     const DQ &workspace_derivative)
+std::tuple<double, double> VFI_manager::add_vfi_constraint(const std::string &tag,
+                                                           const DIRECTION &direction,
+                                                           const VFI_TYPE &vfi_type,
+                                                           const double &safe_distance,
+                                                           const double &vfi_gain,
+                                                           const MatrixXd &robot_pose_jacobian,
+                                                           const DQ &robot_pose,
+                                                           const DQ &robot_attached_direction,
+                                                           const DQ &workspace_pose,
+                                                           const DQ &workspace_attached_direction,
+                                                           const DQ &workspace_derivative)
 {
     std::tuple<double, double> rtn = {0,0};
     switch(vfi_type)
@@ -170,6 +222,9 @@ std::tuple<double, double> VFI_manager::add_vfi_constraint(const DIRECTION &dire
         VectorXd b = DQ_robotics_extensions::CVectorXd({vfi_gain*(square_error) + residual});
         _add_vfi_constraint(Jd, b, direction);
         rtn = {square_d, square_error};
+
+        _update_vfi_parameters_map(tag, VFI_TYPE::RPOINT_TO_POINT, std::sqrt(square_d), square_d, -1, square_error);
+
         break;
     }
     case VFI_TYPE::RPOINT_TO_PLANE:
@@ -187,6 +242,7 @@ std::tuple<double, double> VFI_manager::add_vfi_constraint(const DIRECTION &dire
         VectorXd b = DQ_robotics_extensions::CVectorXd({vfi_gain*(error) + residual});
         _add_vfi_constraint(Jd, b, direction);
         rtn = {d, error};
+        _update_vfi_parameters_map(tag, VFI_TYPE::RPOINT_TO_PLANE, d, d*d, error, -1);
         break;
     }
 
@@ -206,6 +262,7 @@ std::tuple<double, double> VFI_manager::add_vfi_constraint(const DIRECTION &dire
         VectorXd b = DQ_robotics_extensions::CVectorXd({vfi_gain*(square_error) + residual});
         _add_vfi_constraint(Jd, b, direction);
         rtn = {square_d, square_error};
+        _update_vfi_parameters_map(tag, VFI_TYPE::RPOINT_TO_LINE, std::sqrt(square_d), square_d, -1, square_error);
         break;
     }
     case VFI_TYPE::RLINE_TO_LINE_ANGLE:
@@ -225,6 +282,7 @@ std::tuple<double, double> VFI_manager::add_vfi_constraint(const DIRECTION &dire
         VectorXd b = DQ_robotics_extensions::CVectorXd({vfi_gain*(ferror) + residual});
         _add_vfi_constraint(Jfphi, b, direction);
         rtn = {f, ferror};
+        _update_vfi_parameters_map(tag, VFI_TYPE::RLINE_TO_LINE_ANGLE, f, phi, ferror, -1);
         break;
     }
     case VFI_TYPE::RLINE_TO_LINE:
@@ -290,6 +348,12 @@ void VFI_manager::set_configuration_velocity_limits(const std::tuple<VectorXd, V
 std::tuple<MatrixXd, VectorXd> VFI_manager::get_inequality_constraints()
 {
     return constraint_manager_->get_inequality_constraints();
+}
+
+double VFI_manager::get_vfi_distance_error(const std::string &tag)
+{
+    auto data = _get_data_from_vfi_parameters_map(tag);
+    return data.distance_error;
 }
 
 /*

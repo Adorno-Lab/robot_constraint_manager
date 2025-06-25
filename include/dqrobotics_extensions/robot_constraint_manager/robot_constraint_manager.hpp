@@ -19,7 +19,7 @@ private:
     std::shared_ptr<Impl> impl_;
 
 protected:
-    struct VFI_DATA{
+    struct VFI_BUILD_DATA{
         VFI_Framework::VFI_MODE vfi_mode;
         VFI_Framework::VFI_TYPE vfi_type;
         VFI_Framework::DIRECTION direction;
@@ -35,7 +35,7 @@ protected:
         DQ cs_entity_environment_pose;
         std::string tag;
     };
-    std::vector<VFI_DATA> vfi_data_list_;
+    std::vector<VFI_BUILD_DATA> vfi_data_list_;
 protected:
     std::shared_ptr<DQ_CoppeliaSimInterfaceZMQ> cs_;
     std::string config_path_;
@@ -49,25 +49,6 @@ protected:
 
     VectorXd initial_robot_configuration_;
     int number_of_constraints_;
-
-
-    std::vector<VFI_Framework::VFI_MODE> vfi_mode_list_;
-    std::vector<VFI_Framework::VFI_TYPE> vfi_type_list_;
-    std::vector<VFI_Framework::DIRECTION> direction_list_;
-    std::vector<double> safe_distance_list_;
-    std::vector<DQ> robot_attached_dir_list_;
-    std::vector<DQ> envir_attached_dir_list_;
-    std::vector<DQ> workspace_derivative_list_;
-    std::vector<DQ> cs_entity_environment_DQ_list_;
-
-    std::vector<double> vfi_gain_list_;
-    std::vector<int> joint_index_list_one_;
-    std::vector<int> joint_index_list_two_;
-
-    std::vector<DQ> dq_offset_list_one_;
-    std::vector<DQ> dq_offset_list_two_;
-
-    std::vector<std::string> tag_list_;
 
     std::vector<std::tuple<double, double>> distances_and_error_distances_;
     bool verbosity_{true};
@@ -93,5 +74,7 @@ public:
     //std::vector<std::tuple<double, double>> get_distance_and_error_distance(const std::string& tag);
 
     std::tuple<MatrixXd, VectorXd> get_inequality_constraints(const VectorXd& q);
+
+    double get_vfi_distance_error(const std::string& tag);
 };
 }

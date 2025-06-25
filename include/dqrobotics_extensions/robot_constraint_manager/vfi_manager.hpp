@@ -35,6 +35,7 @@
 #include <dqrobotics_extensions/robot_constraint_manager/constraints_manager.hpp>
 #include <dqrobotics_extensions/robot_constraint_manager/utils.hpp>
 #include <memory>
+#include <unordered_map>
 
 using namespace Eigen;
 using namespace DQ_robotics;
@@ -43,6 +44,26 @@ namespace DQ_robotics_extensions  {
 
 class VFI_manager: public VFI_Framework
 {
+protected:
+    struct VFI_PARAMETERS{
+        double distance;
+        double square_distance;
+        double distance_error;
+        double square_distance_error;
+        VFI_Framework::VFI_TYPE vfi_type;
+    };
+    //std::vector<VFI_PARAMETERS> vfi_parameters_;
+    std::unordered_map<std::string, VFI_PARAMETERS> vfi_parameters_map_;
+    void _update_vfi_parameters_map(const std::string& tag, const VFI_PARAMETERS& vfi_parameters);
+    void _update_vfi_parameters_map(const std::string& tag,
+                                    const VFI_Framework::VFI_TYPE& vfi_type,
+                                    const double& distance,
+                                    const double& square_distance,
+                                    const double& distance_error,
+                                    const double& square_distance_error
+                                    );
+    VFI_PARAMETERS _get_data_from_vfi_parameters_map(const std::string tag);
+
 protected:
     int dim_configuration_;
     LEVEL level_;
@@ -67,7 +88,9 @@ public:
                 const std::tuple<VectorXd, VectorXd>& configuration_velocity_limits,
                 const LEVEL& level = LEVEL::VELOCITIES);
 
-    std::tuple<double, double> add_vfi_constraint(const DIRECTION& direction,
+    std::tuple<double, double> add_vfi_constraint(
+                            const std::string& tag,
+                            const DIRECTION& direction,
                             const VFI_TYPE& vfi_type,
                             const double& safe_distance,
                             const double& vfi_gain,
@@ -78,7 +101,9 @@ public:
                             const DQ& workspace_attached_direction,
                             const DQ& workspace_derivative = DQ(0));
 
-    std::tuple<double, double> add_vfi_rpoint_to_rpoint(const double& safe_distance,
+    std::tuple<double, double> add_vfi_rpoint_to_rpoint(
+                                                const std::string& tag,
+                                                const double& safe_distance,
                                                 const double& vfi_gain,
                                                 const std::tuple<MatrixXd, DQ>& robot_pose_jacobian_and_pose_one,
                                                 const std::tuple<MatrixXd, DQ>& robot_pose_jacobian_and_pose_two
@@ -95,6 +120,8 @@ public:
 
     std::tuple<MatrixXd, VectorXd> get_inequality_constraints();
     //std::tuple<MatrixXd, VectorXd> get_equality_constraints();
+
+    double get_vfi_distance_error(const std::string& tag);
 
 
 
