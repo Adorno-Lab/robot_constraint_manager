@@ -167,21 +167,14 @@ void RobotConstraintManager::_initial_settings()
 {
     try {
         impl_->config_ = YAML::LoadFile(config_path_);
-        //const int size = config.size();
 
         if (verbosity_)
         {
-        std::cout << "----------------------------------------------" <<std::endl;
-        std::cout << "Config file path: " << config_path_ <<std::endl;
-        std::cout << "Constraints found in the config file: " << impl_->config_.size() <<std::endl;
-        number_of_constraints_ =  impl_->config_.size() ;
-        std::cout << "----------------------------------------------" <<std::endl;
-        //----------------------------------------------------------------------------------
-        std::cout<<"----------data----------------"<<std::endl;
-        std::cout<<"      VFI MODE     "<<"   CS entity env/one  "<<" CS entity robot/two "<<" env/one type "<<
-            " entv/two type " << " joint index 1 "<<" joint index 2 "<<" safe dist "<< "dir" <<" ent dir1 "<<" ent dir2 "<<std::endl;
+            std::cout << "----------------------------------------------" <<std::endl;
+            std::cout << "Config file path: " << config_path_ <<std::endl;
+            std::cout << "Constraints found in the config file: " << impl_->config_.size() <<std::endl;
         }
-
+        number_of_constraints_ =  impl_->config_.size() ;
 
         int i = 0;
         // The outer element is an array

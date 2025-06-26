@@ -51,7 +51,7 @@ int main()
         MatrixXd Aeq;
         VectorXd beq;
         DQ_robotics_extensions::RobotConstraintManager
-            rcm{cs, panda, panda_model, yaml_path, {q_min, q_max}, {q_dot_min, q_dot_max}, 1.0};
+            rcm{cs, panda, panda_model, yaml_path, {q_min, q_max}, {q_dot_min, q_dot_max}, 1.0, true};
 
 
         cs->start_simulation();
@@ -67,7 +67,8 @@ int main()
             controller.set_inequality_constraint(A,b);
             auto u = controller.compute_setpoint_control_signal(q, xd.translation().vec4());
             panda->set_target_configuration_velocities(u);
-            std::cout<<"Angle: "<<DQ_robotics::rad2deg(rcm.get_line_to_line_angle("C2"))<<std::endl;
+            std::string tag = "C2";
+            std::cout<<"Constraint tag="+tag+". distance_error: "<<rcm.get_vfi_distance_error("C2")<<std::endl;
         }
         std::cout<<"Teleoperation finished."<<std::endl;
 

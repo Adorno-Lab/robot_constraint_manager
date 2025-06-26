@@ -159,11 +159,12 @@ void VFI_manager::add_vfi_rpoint_to_rpoint(const std::string &tag,
     VectorXd b = DQ_robotics_extensions::CVectorXd({vfi_gain*(square_error) + residual});
     _add_vfi_constraint(Jd, b, VFI_Framework::DIRECTION::KEEP_ROBOT_OUTSIDE);
     //#############-log data-###############
+    const double d = std::sqrt(square_d);
     VFI_LOG_DATA data;
     data.vfi_type = VFI_TYPE::RPOINT_TO_POINT;
-    data.distance = std::sqrt(square_d);
+    data.distance = d;
     data.square_distance = square_d;
-    data.distance_error = -1;
+    data.distance_error = d-safe_distance;
     data.square_distance_error = square_error;
     data.line_to_line_angle_rad = -1;
     _update_vfi_parameters_map(tag, data);
@@ -214,11 +215,12 @@ void VFI_manager::add_vfi_constraint(const std::string &tag,
         VectorXd b = DQ_robotics_extensions::CVectorXd({vfi_gain*(square_error) + residual});
         _add_vfi_constraint(Jd, b, direction);
         //#############-log data-###############
+        const double d = std::sqrt(square_d);
         VFI_LOG_DATA data;
         data.vfi_type = VFI_TYPE::RPOINT_TO_POINT;
-        data.distance = std::sqrt(square_d);
+        data.distance = d;
         data.square_distance = square_d;
-        data.distance_error = -1;
+        data.distance_error = d-safe_distance;
         data.square_distance_error = square_error;
         data.line_to_line_angle_rad = -1;
         _update_vfi_parameters_map(tag, data);
@@ -268,11 +270,12 @@ void VFI_manager::add_vfi_constraint(const std::string &tag,
         VectorXd b = DQ_robotics_extensions::CVectorXd({vfi_gain*(square_error) + residual});
         _add_vfi_constraint(Jd, b, direction);
         //#############-log data-###############
+        const double d = std::sqrt(square_d);
         VFI_LOG_DATA data;
         data.vfi_type = VFI_TYPE::RPOINT_TO_POINT;
-        data.distance = std::sqrt(square_d);
+        data.distance = d;
         data.square_distance = square_d;
-        data.distance_error = -1;
+        data.distance_error = d-safe_distance;
         data.square_distance_error = square_error;
         data.line_to_line_angle_rad = -1;
         _update_vfi_parameters_map(tag, data);
