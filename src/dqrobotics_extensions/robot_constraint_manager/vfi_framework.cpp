@@ -1,7 +1,7 @@
 #include <dqrobotics_extensions/robot_constraint_manager/vfi_framework.hpp>
 
 namespace DQ_robotics_extensions  {
-VFI_Framework::DIRECTION VFI_Framework::map_string_to_direction(const std::string &str)
+VFI_Framework::DIRECTION VFI_Framework::map_string_to_vfiDirection(const std::string &str)
 {
     DIRECTION direction;
     if (str == std::string("KEEP_ROBOT_OUTSIDE"))
@@ -84,7 +84,20 @@ VFI_Framework::VFI_TYPE VFI_Framework::map_strings_to_vfiType(const std::string 
 
 }
 
-std::string VFI_Framework::map_vfyType_to_string(const VFI_TYPE &vfi_type)
+std::string VFI_Framework::map_vfiDirection_to_string(const DIRECTION &direction)
+{
+    switch(direction){
+
+    case DIRECTION::KEEP_ROBOT_OUTSIDE:
+        return "KEEP_ROBOT_OUTSIDE";
+    case DIRECTION::KEEP_ROBOT_INSIDE:
+        return "KEEP_ROBOT_INSIDE";
+    default:
+        throw std::runtime_error("VFI_Framework::map_direction_to_string: Wrong argument!");
+    }
+}
+
+std::string VFI_Framework::map_vfiType_to_string(const VFI_TYPE &vfi_type)
 {
     std::string str;
     switch (vfi_type) {
@@ -107,6 +120,18 @@ std::string VFI_Framework::map_vfyType_to_string(const VFI_TYPE &vfi_type)
         str = std::string("RLINE_TO_POINT");
     }
     return str;
+}
+
+std::string VFI_Framework::map_vfiMode_to_string(const VFI_MODE &vfi_mode)
+{
+    switch (vfi_mode) {
+    case VFI_MODE::ENVIRONMENT_TO_ROBOT:
+        return "ENVIRONMENT_TO_ROBOT";
+    case VFI_MODE::ROBOT_TO_ROBOT:
+        return "ROBOT_TO_ROBOT";
+    default:
+        throw std::runtime_error("VFI_Framework::map_vfyMode_to_string: Wrong argument!");
+    }
 }
 
 std::string VFI_Framework::map_primitive_to_string(const PRIMITIVE &primitive)

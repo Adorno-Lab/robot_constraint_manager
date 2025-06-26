@@ -1,9 +1,33 @@
+/*
+#    Copyright (c) 2024 Adorno-Lab
+#
+#    robot_constraint_manager is free software: you can redistribute it and/or modify
+#    it under the terms of the GNU Lesser General Public License as published by
+#    the Free Software Foundation, either version 3 of the License, or
+#    (at your option) any later version.
+#
+#    robot_constraint_manager is distributed in the hope that it will be useful,
+#    but WITHOUT ANY WARRANTY; without even the implied warranty of
+#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#    GNU Lesser General Public License for more details.
+#
+#    You should have received a copy of the GNU Lesser General Public License
+#    along with robot_constraint_manager.  If not, see <https://www.gnu.org/licenses/>.
+#
+# ################################################################
+#
+#   Author: Juan Jose Quiroz Omana (email: juanjose.quirozomana@manchester.ac.uk)
+#
+# ################################################################
+*/
+
 #pragma once
 #include <dqrobotics/robot_modeling/DQ_Kinematics.h>
 #include <dqrobotics/interfaces/coppeliasim/DQ_CoppeliaSimInterfaceZMQ.h>
 #include <dqrobotics/interfaces/coppeliasim/DQ_CoppeliaSimRobot.h>
 #include <dqrobotics_extensions/robot_constraint_manager/vfi_manager.hpp>
 #include <memory>
+#include <unordered_map>
 
 using namespace Eigen;
 using namespace DQ_robotics;
@@ -35,7 +59,9 @@ protected:
         DQ cs_entity_environment_pose;
         std::string tag;
     };
-    std::vector<VFI_BUILD_DATA> vfi_data_list_;
+    std::vector<VFI_BUILD_DATA> vfi_build_data_list_;
+    std::unordered_map<std::string, VFI_BUILD_DATA> vfi_build_data_map_;
+
 protected:
     std::shared_ptr<DQ_CoppeliaSimInterfaceZMQ> cs_;
     std::string config_path_;
@@ -45,15 +71,11 @@ protected:
     std::shared_ptr<DQ_robotics_extensions::VFI_manager> VFI_M_;
     double configuration_limit_constraint_gain_;
 
-
-
     VectorXd initial_robot_configuration_;
     int number_of_constraints_;
 
     bool verbosity_{true};
-
     void _show_constraints();
-
     DQ _get_robot_primitive_offset_from_coppeliasim(const std::string& object_name, const int& joint_index);
     void _initial_settings();
 public:
@@ -75,5 +97,6 @@ public:
 
     double get_vfi_distance_error(const std::string& tag);
     double get_line_to_line_angle(const std::string& tag);
+    void show_vfi_build_data(const std::string& tag);
 };
 }

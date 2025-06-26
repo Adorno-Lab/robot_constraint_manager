@@ -1,3 +1,26 @@
+/*
+#    Copyright (c) 2024 Adorno-Lab
+#
+#    robot_constraint_manager is free software: you can redistribute it and/or modify
+#    it under the terms of the GNU Lesser General Public License as published by
+#    the Free Software Foundation, either version 3 of the License, or
+#    (at your option) any later version.
+#
+#    robot_constraint_manager is distributed in the hope that it will be useful,
+#    but WITHOUT ANY WARRANTY; without even the implied warranty of
+#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#    GNU Lesser General Public License for more details.
+#
+#    You should have received a copy of the GNU Lesser General Public License
+#    along with robot_constraint_manager.  If not, see <https://www.gnu.org/licenses/>.
+#
+# ################################################################
+#
+#   Author: Juan Jose Quiroz Omana (email: juanjose.quirozomana@manchester.ac.uk)
+#
+# ################################################################
+*/
+
 #include <dqrobotics_extensions/robot_constraint_manager/vfi_manager.hpp>
 
 namespace DQ_robotics_extensions  {
@@ -446,10 +469,10 @@ double VFI_manager::get_line_to_line_angle(const std::string &tag)
         return _get_data_from_vfi_parameters_map(tag).line_to_line_angle_rad;
     case VFI_Framework::VFI_TYPE::RLINE_TO_LINE:
         throw std::runtime_error("VFI_manager::get_line_to_line_angle: not supported for RLINE_TO_LINE. "
-                                 "However, your constraint TAG=\""+tag+"\" is "+map_vfyType_to_string(data.vfi_type));
+                                 "However, your constraint TAG=\""+tag+"\" is "+map_vfiType_to_string(data.vfi_type));
     default:
         throw std::runtime_error("VFI_manager::get_line_to_line_angle is available for RLINE_TO_LINE_ANGLE only. "
-                                 "However, your constraint TAG=\""+tag+"\" is "+map_vfyType_to_string(data.vfi_type));
+                                 "However, your constraint TAG=\""+tag+"\" is "+map_vfiType_to_string(data.vfi_type));
     }
 
 }

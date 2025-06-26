@@ -1,3 +1,26 @@
+/*
+#    Copyright (c) 2024 Adorno-Lab
+#
+#    robot_constraint_manager is free software: you can redistribute it and/or modify
+#    it under the terms of the GNU Lesser General Public License as published by
+#    the Free Software Foundation, either version 3 of the License, or
+#    (at your option) any later version.
+#
+#    robot_constraint_manager is distributed in the hope that it will be useful,
+#    but WITHOUT ANY WARRANTY; without even the implied warranty of
+#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#    GNU Lesser General Public License for more details.
+#
+#    You should have received a copy of the GNU Lesser General Public License
+#    along with robot_constraint_manager.  If not, see <https://www.gnu.org/licenses/>.
+#
+# ################################################################
+#
+#   Author: Juan Jose Quiroz Omana (email: juanjose.quirozomana@manchester.ac.uk)
+#
+# ################################################################
+*/
+
 #include <dqrobotics_extensions/robot_constraint_manager/robot_constraint_manager.hpp>
 #include <yaml-cpp/yaml.h>
 
@@ -61,7 +84,7 @@ void RobotConstraintManager::set_vfi_configuration_constraints_gain(const double
  */
 std::tuple<MatrixXd, VectorXd> RobotConstraintManager::get_inequality_constraints(const VectorXd &q)
 {
-    const int n = vfi_data_list_.size();
+    const int n = vfi_build_data_list_.size();
     const int robot_dim = robot_->get_dim_configuration_space();
 
     VFI_M_->add_configuration_limits(configuration_limit_constraint_gain_, q);
@@ -69,48 +92,48 @@ std::tuple<MatrixXd, VectorXd> RobotConstraintManager::get_inequality_constraint
 
     for (int i = 0; i<n; i++)
     {
-        if (vfi_data_list_.at(i).vfi_mode == VFI_manager::VFI_MODE::ENVIRONMENT_TO_ROBOT)
+        if (vfi_build_data_list_.at(i).vfi_mode == VFI_manager::VFI_MODE::ENVIRONMENT_TO_ROBOT)
         {
-            const int index = vfi_data_list_.at(i).joint_index_one;
-            const DQ offset = vfi_data_list_.at(i).primitive_offset_one;
+            const int index = vfi_build_data_list_.at(i).joint_index_one;
+            const DQ offset = vfi_build_data_list_.at(i).primitive_offset_one;
             DQ x = (robot_->fkm(q, index))*offset;
             MatrixXd J = haminus8(offset)*robot_->pose_jacobian(q, index);
             if (J.cols() != robot_dim)
                 J = DQ_robotics_extensions::Numpy::resize(J, J.rows(), robot_dim);
 
-            VFI_M_->add_vfi_constraint(vfi_data_list_.at(i).tag,
+            VFI_M_->add_vfi_constraint(vfi_build_data_list_.at(i).tag,
                                        i,
-                                       vfi_data_list_.at(i).direction,
-                                       vfi_data_list_.at(i).vfi_type,
-                                       vfi_data_list_.at(i).safe_distance,
-                                       vfi_data_list_.at(i).vfi_gain,
+                                       vfi_build_data_list_.at(i).direction,
+                                       vfi_build_data_list_.at(i).vfi_type,
+                                       vfi_build_data_list_.at(i).safe_distance,
+                                       vfi_build_data_list_.at(i).vfi_gain,
                                        J,
                                        x,
-                                       vfi_data_list_.at(i).robot_attached_direction,
-                                       vfi_data_list_.at(i).cs_entity_environment_pose, // x_workspace
-                                       vfi_data_list_.at(i).environment_attached_direction,
-                                       vfi_data_list_.at(i).workspace_derivative);
+                                       vfi_build_data_list_.at(i).robot_attached_direction,
+                                       vfi_build_data_list_.at(i).cs_entity_environment_pose, // x_workspace
+                                       vfi_build_data_list_.at(i).environment_attached_direction,
+                                       vfi_build_data_list_.at(i).workspace_derivative);
 
 
         }
         else{ //vfi_mode_list_.at(i) == VFI_manager::VFI_MODE::ROBOT_TO_ROBOT
-            const int index_1 = vfi_data_list_.at(i).joint_index_one;
-            const DQ offset_1 = vfi_data_list_.at(i).primitive_offset_one;
+            const int index_1 = vfi_build_data_list_.at(i).joint_index_one;
+            const DQ offset_1 = vfi_build_data_list_.at(i).primitive_offset_one;
 
             DQ x1 =  (robot_->fkm(q, index_1))*offset_1;
             MatrixXd J1 = haminus8(offset_1)*robot_->pose_jacobian(q, index_1);
 
-            const int index_2 = vfi_data_list_.at(i).joint_index_two;
-            const DQ offset_2 = vfi_data_list_.at(i).primitive_offset_two;
+            const int index_2 = vfi_build_data_list_.at(i).joint_index_two;
+            const DQ offset_2 = vfi_build_data_list_.at(i).primitive_offset_two;
 
             DQ x2 =  (robot_->fkm(q, index_2))*offset_2;
             MatrixXd J2 = haminus8(offset_2)*robot_->pose_jacobian(q, index_2);
 
 
-            VFI_M_->add_vfi_rpoint_to_rpoint(vfi_data_list_.at(i).tag,
+            VFI_M_->add_vfi_rpoint_to_rpoint(vfi_build_data_list_.at(i).tag,
                                              i,
-                                             vfi_data_list_.at(i).safe_distance,
-                                             vfi_data_list_.at(i).vfi_gain,
+                                             vfi_build_data_list_.at(i).safe_distance,
+                                             vfi_build_data_list_.at(i).vfi_gain,
                                              {J1, x1},
                                              {J2, x2});
         }
@@ -119,14 +142,66 @@ std::tuple<MatrixXd, VectorXd> RobotConstraintManager::get_inequality_constraint
     return VFI_M_->get_inequality_constraints();
 }
 
+
+/**
+ * @brief RobotConstraintManager::get_vfi_distance_error gets the distance error computed in the tag-specified VFI. Some VFIs are implemented
+ *                      using the square distance error, which is computed as
+ *                              square_distance_error = square_d - square_safe_distance.
+ *                      In such cases however, this method is going to return
+ *                      distance_error = sqrt(square_d) - sqrt(square_safe_distance).
+ *
+ * @param tag The tag of the constraint.
+ * @return The desired distance error.
+ */
 double RobotConstraintManager::get_vfi_distance_error(const std::string &tag)
 {
     return VFI_M_->get_vfi_distance_error(tag);
 }
 
+
+/**
+ * @brief RobotConstraintManager::::get_line_to_line_angle gets the angle between the two Plücker line orientations when the VFI used is RLINE_TO_LINE_ANGLE.
+ *              For other VFI types, an exception is thrown.
+ *              Note that the safe angle is not taken into account. If you want to include the safe angle, consider using
+ *              ferror = get_vfi_distance_error(tag), which will return
+ *                          ferror = f-fsafe,
+ *              where f = 2-2*cos(phi) and fsafe = 2-2*cos(safe_angle).
+ *
+ * @param tag The tag of the constraint.
+ * @return the two Plücker line orientations.
+ */
 double RobotConstraintManager::get_line_to_line_angle(const std::string &tag)
 {
     return VFI_M_->get_line_to_line_angle(tag);
+}
+
+void RobotConstraintManager::show_vfi_build_data(const std::string &tag)
+{
+    try {
+        auto data = vfi_build_data_map_.at(tag);
+        std::cout<<"---------------------------------------------"<<std::endl;
+        std::cout<<"TAG:                             "<<tag<<std::endl;
+        std::cout<<"VFI mode:                        "<<VFI_Framework::map_vfiMode_to_string(data.vfi_mode)<<std::endl;
+        std::cout<<"VFI type:                        "<<VFI_Framework::map_vfiType_to_string(data.vfi_type)<<std::endl;
+        std::cout<<"Direction:                       "<<VFI_Framework::map_vfiDirection_to_string(data.direction)<<std::endl;
+        std::cout<<"Safe distance:                   "<<data.safe_distance<<std::endl;
+        std::cout<<"VFI gain:                        "<<data.vfi_gain<<std::endl;
+        std::cout<<"Joint index one:                 "<<data.joint_index_one<<std::endl;
+        std::cout<<"Joint index two:                 "<<data.joint_index_two<<std::endl;
+        std::cout<<"primitive_offset_one:            "<<data.primitive_offset_one<<std::endl;
+        std::cout<<"primitive_offset_two:            "<<data.primitive_offset_two<<std::endl;
+        std::cout<<"robot_attached_direction:        "<<data.robot_attached_direction<<std::endl;
+        std::cout<<"environment_attached_direction:  "<<data.environment_attached_direction<<std::endl;
+        std::cout<<"workspace derivative:            "<<data.workspace_derivative<<std::endl;
+        std::cout<<"cs_entity_environment_pose:      "<<data.cs_entity_environment_pose<<std::endl;
+
+
+        std::cout<<"---------------------------------------------"<<std::endl;
+    } catch (const std::runtime_error& e) {
+        std::cerr<<e.what()<<std::endl;
+        throw std::runtime_error("RobotConstraintManager::show_vfi_build_data: VFI TAG not found!");
+    }
+
 }
 
 
@@ -153,7 +228,7 @@ DQ RobotConstraintManager::_get_robot_primitive_offset_from_coppeliasim(const st
     DQ x_offset;
     DQ xprimitive;
     VectorXd q;
-    for (int i=0;i<5;i++)
+    for (int i=0;i<5;i++) // Read the data from CoppeliaSim five times.
     {
         q = coppelia_robot_->get_configuration();
         xprimitive = cs_->get_object_pose(object_name);
@@ -206,7 +281,7 @@ void RobotConstraintManager::_initial_settings()
                     vfi_data.vfi_mode = VFI_manager::VFI_MODE::ENVIRONMENT_TO_ROBOT;
                     vfi_data.vfi_type = VFI_Framework::map_strings_to_vfiType(raw_entity_robot_primitive_type,
                                                                               raw_entity_environment_primitive_type);
-                    vfi_data.direction = VFI_Framework::map_string_to_direction(raw_direction);
+                    vfi_data.direction = VFI_Framework::map_string_to_vfiDirection(raw_direction);
                     vfi_data.safe_distance = raw_safe_distance;
                     vfi_data.vfi_gain = raw_vfi_gain;
                     vfi_data.joint_index_one = raw_joint_index;
@@ -221,8 +296,10 @@ void RobotConstraintManager::_initial_settings()
                     vfi_data.cs_entity_environment_pose = cs_->get_object_pose(raw_cs_entity_environment);
                     vfi_data.tag = raw_tag;
 
-                    vfi_data_list_.push_back(vfi_data);
-
+                    vfi_build_data_list_.push_back(vfi_data);
+                    vfi_build_data_map_.try_emplace(vfi_data.tag, vfi_data);
+                    if (verbosity_)
+                        show_vfi_build_data(vfi_data.tag);
 
                 }else if (raw_vfi_mode == "ROBOT_TO_ROBOT"){
 
@@ -261,8 +338,10 @@ void RobotConstraintManager::_initial_settings()
                     vfi_data.cs_entity_environment_pose = DQ(-1);
                     vfi_data.tag = raw_tag;
 
-                    vfi_data_list_.push_back(vfi_data);
-
+                    vfi_build_data_list_.push_back(vfi_data);
+                    vfi_build_data_map_.try_emplace(vfi_data.tag, vfi_data);
+                    if (verbosity_)
+                        show_vfi_build_data(vfi_data.tag);
 
 
                 }else{
