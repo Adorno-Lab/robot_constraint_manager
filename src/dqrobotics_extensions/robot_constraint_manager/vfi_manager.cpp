@@ -430,7 +430,7 @@ double VFI_manager::get_vfi_distance_error(const std::string &tag)
 /**
  * @brief VFI_manager::get_line_to_line_angle gets the angle between the two Plücker line orientations when the VFI used is RLINE_TO_LINE_ANGLE.
  *              For other VFI types, an exception is thrown.
- *              Note that the safe angle is not taken into account. If you want to take into account the safe angle, consider using
+ *              Note that the safe angle is not taken into account. If you want to include the safe angle, consider using
  *              ferror = get_vfi_distance_error(tag), which will return
  *                          ferror = f-fsafe,
  *              where f = 2-2*cos(phi) and fsafe = 2-2*cos(safe_angle).

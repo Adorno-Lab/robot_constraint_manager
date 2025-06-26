@@ -16,7 +16,7 @@
 #
 # ################################################################
 #
-#   Author: Juan Jose Quiroz Omana, (email: juanjqogm@gmail.com)
+#   Author: Juan Jose Quiroz Omana (email: juanjose.quirozomana@manchester.ac.uk)
 #
 # ################################################################
 */
