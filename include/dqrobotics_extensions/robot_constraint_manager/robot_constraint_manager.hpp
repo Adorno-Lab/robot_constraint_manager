@@ -75,7 +75,6 @@ protected:
     int number_of_constraints_;
 
     bool verbosity_{true};
-    void _show_constraints();
     DQ _get_robot_primitive_offset_from_coppeliasim(const std::string& object_name, const int& joint_index);
     void _initial_settings();
 public:

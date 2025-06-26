@@ -205,30 +205,16 @@ void RobotConstraintManager::show_vfi_build_data(const std::string &tag)
 }
 
 
-void RobotConstraintManager::_show_constraints()
-{
-/*
- *                     std::cout << raw_vfi_mode << ",\t"
-                              << raw_cs_entity_environment  << ",\t"
-                              << raw_cs_entity_robot << ",\t"
-                              << raw_entity_robot_primitive_type<< ",\t"
-                              << raw_entity_environment_primitive_type <<  ",     \t"
-                              << joint_index_list_one_.at(i) << ",    \t"
-                              << joint_index_list_two_.at(i) << ",     \t"
-                              << raw_safe_distance << ",\t"
-                              << robot_attached_dir_list_.at(i) << ",\t"
-                              << envir_attached_dir_list_.at(i) <<
-                        std::endl;
- */
-}
-
 DQ RobotConstraintManager::_get_robot_primitive_offset_from_coppeliasim(const std::string &object_name, const int &joint_index)
 {
     DQ x;
     DQ x_offset;
     DQ xprimitive;
     VectorXd q;
-    for (int i=0;i<5;i++) // Read the data from CoppeliaSim five times.
+
+    // In some versions of CoppeliaSim, the first simulation step could
+    // return invalid data. I read the data five times just in case.
+    for (int i=0;i<5;i++)    // Read the data from CoppeliaSim five times.
     {
         q = coppelia_robot_->get_configuration();
         xprimitive = cs_->get_object_pose(object_name);
