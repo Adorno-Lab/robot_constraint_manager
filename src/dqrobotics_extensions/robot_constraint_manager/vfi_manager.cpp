@@ -32,16 +32,24 @@ VFI_manager::VFI_manager(const int &dim_configuration,
  * @param tag
  * @param vfi_parameters
  */
-void VFI_manager::_update_vfi_parameters_map(const std::string &tag, const VFI_LOG_DATA &vfi_parameters)
+void VFI_manager::_update_vfi_parameters_map(const std::string &tag,
+                                             const int &stack_position,
+                                             const VFI_LOG_DATA &vfi_parameters)
 {
     auto search = vfi_parameters_map_.find(tag);
     if (search != vfi_parameters_map_.end())
-    { // tag found in map. Updated the map with
+    { // tag found in map. Updated the map.
+        int expected_stack_position = tag_stack_position_list_.at(tag);
+        if (stack_position != expected_stack_position)
+            throw std::runtime_error("VFI_manager:: The TAG=\""+tag+"\" is duplicated? Check your config file.");
         vfi_parameters_map_.at(tag) = vfi_parameters;
     }
     else
-    {   // tag not found in map. Add the gag
+    {   // tag not found in map. Add to the map
         vfi_parameters_map_.try_emplace(tag, vfi_parameters);
+        // Added to the vector list to keep control if the tag is
+        // used by mistake more than one time.
+        tag_stack_position_list_.try_emplace(tag, stack_position);
     }
 }
 
@@ -131,10 +139,11 @@ void VFI_manager::add_configuration_velocity_limits()
  * @return A tuple containing the square distance and the square error. {square_d , square_error}
  */
 void VFI_manager::add_vfi_rpoint_to_rpoint(const std::string &tag,
-                                                                 const double &safe_distance,
-                                                                 const double &vfi_gain,
-                                                                 const std::tuple<MatrixXd, DQ> &robot_pose_jacobian_and_pose_one,
-                                                                 const std::tuple<MatrixXd, DQ> &robot_pose_jacobian_and_pose_two)
+                                           const int &stack_position,
+                                           const double &safe_distance,
+                                           const double &vfi_gain,
+                                           const std::tuple<MatrixXd, DQ> &robot_pose_jacobian_and_pose_one,
+                                           const std::tuple<MatrixXd, DQ> &robot_pose_jacobian_and_pose_two)
 {
     const double square_safe_distance = pow(safe_distance, 2);
     const MatrixXd robot_pose_jacobian_one = std::get<0>(robot_pose_jacobian_and_pose_one);
@@ -167,7 +176,7 @@ void VFI_manager::add_vfi_rpoint_to_rpoint(const std::string &tag,
     data.distance_error = d-safe_distance;
     data.square_distance_error = square_error;
     data.line_to_line_angle_rad = -1;
-    _update_vfi_parameters_map(tag, data);
+    _update_vfi_parameters_map(tag, stack_position, data);
     //######################################
 }
 
@@ -186,6 +195,7 @@ void VFI_manager::add_vfi_rpoint_to_rpoint(const std::string &tag,
  * @param workspace_derivative
  */
 void VFI_manager::add_vfi_constraint(const std::string &tag,
+                                     const int& stack_position,
                                                            const DIRECTION &direction,
                                                            const VFI_TYPE &vfi_type,
                                                            const double &safe_distance,
@@ -223,7 +233,7 @@ void VFI_manager::add_vfi_constraint(const std::string &tag,
         data.distance_error = d-safe_distance;
         data.square_distance_error = square_error;
         data.line_to_line_angle_rad = -1;
-        _update_vfi_parameters_map(tag, data);
+        _update_vfi_parameters_map(tag, stack_position, data);
         //######################################
         break;
     }
@@ -249,7 +259,7 @@ void VFI_manager::add_vfi_constraint(const std::string &tag,
         data.distance_error = error;
         data.square_distance_error = -1;
         data.line_to_line_angle_rad = -1;
-        _update_vfi_parameters_map(tag, data);
+        _update_vfi_parameters_map(tag, stack_position, data);
         //######################################
         break;
     }
@@ -278,7 +288,7 @@ void VFI_manager::add_vfi_constraint(const std::string &tag,
         data.distance_error = d-safe_distance;
         data.square_distance_error = square_error;
         data.line_to_line_angle_rad = -1;
-        _update_vfi_parameters_map(tag, data);
+        _update_vfi_parameters_map(tag, stack_position, data);
         //######################################
         break;
     }
@@ -306,7 +316,7 @@ void VFI_manager::add_vfi_constraint(const std::string &tag,
         data.distance_error = ferror;
         data.square_distance_error = -1;
         data.line_to_line_angle_rad = phi;
-        _update_vfi_parameters_map(tag, data);
+        _update_vfi_parameters_map(tag, stack_position, data);
         //######################################
         break;
     }
@@ -395,12 +405,6 @@ double VFI_manager::get_line_to_line_angle(const std::string &tag)
     }
 
 }
-
-/*
-std::tuple<MatrixXd, VectorXd> VFI_manager::get_equality_constraints()
-{
-    return constraint_manager_->get_equality_constraints();
-}*/
 
 
 

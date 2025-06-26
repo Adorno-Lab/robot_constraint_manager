@@ -53,9 +53,12 @@ protected:
         double line_to_line_angle_rad;
         VFI_Framework::VFI_TYPE vfi_type;
     };
-    //std::vector<VFI_LOG_DATA> vfi_parameters_;
+
+    std::unordered_map<std::string, int> tag_stack_position_list_;
     std::unordered_map<std::string, VFI_LOG_DATA> vfi_parameters_map_;
-    void _update_vfi_parameters_map(const std::string& tag, const VFI_LOG_DATA& vfi_parameters);
+    void _update_vfi_parameters_map(const std::string& tag,
+                                    const int& stack_position,
+                                    const VFI_LOG_DATA& vfi_parameters);
     VFI_LOG_DATA _get_data_from_vfi_parameters_map(const std::string tag);
 
 protected:
@@ -84,6 +87,7 @@ public:
 
     void add_vfi_constraint(
                             const std::string& tag,
+                            const int& stack_position,
                             const DIRECTION& direction,
                             const VFI_TYPE& vfi_type,
                             const double& safe_distance,
@@ -96,16 +100,17 @@ public:
                             const DQ& workspace_derivative = DQ(0));
 
     void add_vfi_rpoint_to_rpoint(
-                                                const std::string& tag,
-                                                const double& safe_distance,
-                                                const double& vfi_gain,
-                                                const std::tuple<MatrixXd, DQ>& robot_pose_jacobian_and_pose_one,
-                                                const std::tuple<MatrixXd, DQ>& robot_pose_jacobian_and_pose_two
+                                const std::string& tag,
+                                const int& stack_position,
+                                const double& safe_distance,
+                                const double& vfi_gain,
+                                const std::tuple<MatrixXd, DQ>& robot_pose_jacobian_and_pose_one,
+                                const std::tuple<MatrixXd, DQ>& robot_pose_jacobian_and_pose_two
                                                 );
 
     void set_configuration_limits(const std::tuple<VectorXd, VectorXd>& configuration_limits);
     void set_configuration_velocity_limits(const std::tuple<VectorXd, VectorXd> &configuration_velocity_limits);
-    //void add_sovfi_constraint();
+
 
 
     void add_configuration_limits(const double& gain, const VectorXd& configuration);
@@ -113,7 +118,6 @@ public:
 
 
     std::tuple<MatrixXd, VectorXd> get_inequality_constraints();
-    //std::tuple<MatrixXd, VectorXd> get_equality_constraints();
 
     double get_vfi_distance_error(const std::string& tag);
     double get_line_to_line_angle(const std::string& tag);

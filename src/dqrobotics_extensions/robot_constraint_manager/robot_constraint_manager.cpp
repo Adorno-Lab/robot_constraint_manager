@@ -48,7 +48,7 @@ RobotConstraintManager::RobotConstraintManager(const std::shared_ptr<DQ_Coppelia
     _initial_settings();
 }
 
-void RobotConstraintManager::set_vfi_position_constraints_gain(const double &vfi_position_constraints_gain)
+void RobotConstraintManager::set_vfi_configuration_constraints_gain(const double &vfi_position_constraints_gain)
 {
     configuration_limit_constraint_gain_ = vfi_position_constraints_gain;
 }
@@ -67,8 +67,6 @@ std::tuple<MatrixXd, VectorXd> RobotConstraintManager::get_inequality_constraint
     VFI_M_->add_configuration_limits(configuration_limit_constraint_gain_, q);
     VFI_M_->add_configuration_velocity_limits();
 
-    std::vector<std::tuple<double, double>> distances_and_error_distances;
-
     for (int i = 0; i<n; i++)
     {
         if (vfi_data_list_.at(i).vfi_mode == VFI_manager::VFI_MODE::ENVIRONMENT_TO_ROBOT)
@@ -81,6 +79,7 @@ std::tuple<MatrixXd, VectorXd> RobotConstraintManager::get_inequality_constraint
                 J = DQ_robotics_extensions::Numpy::resize(J, J.rows(), robot_dim);
 
             VFI_M_->add_vfi_constraint(vfi_data_list_.at(i).tag,
+                                       i,
                                        vfi_data_list_.at(i).direction,
                                        vfi_data_list_.at(i).vfi_type,
                                        vfi_data_list_.at(i).safe_distance,
@@ -109,6 +108,7 @@ std::tuple<MatrixXd, VectorXd> RobotConstraintManager::get_inequality_constraint
 
 
             VFI_M_->add_vfi_rpoint_to_rpoint(vfi_data_list_.at(i).tag,
+                                             i,
                                              vfi_data_list_.at(i).safe_distance,
                                              vfi_data_list_.at(i).vfi_gain,
                                              {J1, x1},

@@ -67,7 +67,7 @@ public:
                            const bool& verbosity = false,
                            const VFI_manager::LEVEL& level = VFI_manager::LEVEL::VELOCITIES);
 
-    void set_vfi_position_constraints_gain(const double& vfi_position_constraints_gain);
+    void set_vfi_configuration_constraints_gain(const double& vfi_position_constraints_gain);
 
 
 
