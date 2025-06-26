@@ -50,8 +50,7 @@ int main()
         VectorXd b;
         MatrixXd Aeq;
         VectorXd beq;
-        DQ_robotics_extensions::RobotConstraintManager
-            rcm{cs, panda, panda_model, yaml_path, {q_min, q_max}, {q_dot_min, q_dot_max}, 1.0, true};
+        DQ_robotics_extensions::RobotConstraintManager rcm{cs, panda, panda_model, yaml_path, true};
 
 
         cs->start_simulation();
@@ -68,7 +67,7 @@ int main()
             auto u = controller.compute_setpoint_control_signal(q, xd.translation().vec4());
             panda->set_target_configuration_velocities(u);
             std::string tag = "C3";
-            std::cout<<"Constraint tag="+tag+". distance_error: "<<rcm.get_vfi_distance_error(tag)<<std::endl;
+            //std::cout<<"Constraint tag="+tag+". distance_error: "<<rcm.get_vfi_distance_error(tag)<<std::endl;
         }
         std::cout<<"Teleoperation finished."<<std::endl;
 

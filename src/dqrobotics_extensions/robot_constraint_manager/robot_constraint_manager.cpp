@@ -54,33 +54,40 @@ public:
 RobotConstraintManager::RobotConstraintManager(const std::shared_ptr<DQ_CoppeliaSimInterfaceZMQ> &coppelia_interface,
                                                const std::shared_ptr<DQ_CoppeliaSimRobot> &coppeliasim_robot,
                                                const std::shared_ptr<DQ_Kinematics> &robot,
-                                               const std::string &yaml_file_path,
-                                               const std::tuple<VectorXd, VectorXd> &configuration_limits,
-                                               const std::tuple<VectorXd, VectorXd> &configuration_velocity_limits,
-                                               const double& configuration_limit_constraint_gain, const bool &verbosity,
+                                               const std::string &yaml_file_path, const bool &verbosity,
                                                const VFI_Framework::LEVEL &level)
     :coppelia_robot_{coppeliasim_robot}, cs_{coppelia_interface}, config_path_{yaml_file_path},
-    level_{level}, robot_{robot}, configuration_limit_constraint_gain_{configuration_limit_constraint_gain},
+    level_{level}, robot_{robot},
     verbosity_{verbosity}
 {
     impl_ = std::make_shared<RobotConstraintManager::Impl>();
 
-    VFI_M_ = std::make_shared<DQ_robotics_extensions::VFI_manager>(robot->get_dim_configuration_space(),
-                                                                   configuration_limits,
-                                                                   configuration_velocity_limits);
+    VFI_M_ = std::make_shared<DQ_robotics_extensions::VFI_manager>(robot->get_dim_configuration_space());
     _initial_settings();
 }
 
-void RobotConstraintManager::set_vfi_configuration_constraints_gain(const double &vfi_position_constraints_gain)
+
+/**
+ * @brief RobotConstraintManager::set_vfi_configuration_constraints_gain sets the gain for the configuration constraints.
+ * @param vfi_position_constraints_gain
+ */
+void RobotConstraintManager::_set_vfi_configuration_constraints_gain(const double &vfi_position_constraints_gain)
 {
     configuration_limit_constraint_gain_ = vfi_position_constraints_gain;
 }
 
 
 /**
- * @brief RobotConstraintManager::get_inequality_constraints
- * @param q
- * @return
+ * @brief RobotConstraintManager::get_inequality_constraints creates and returns the VFIs inequalities. This set of constraints
+ *                     include configuration and configuration velocity limits using the
+ *                     inequality constraints (10) and (7), defined in
+ *                     Adaptive Constrained Kinematic Control using Partial or Complete Task-Space Measurements.
+ *                     Marinho, M. M. & Adorno, B. V.
+ *                     IEEE Transactions on Robotics (T-RO),
+ *                     38(6):3498–3513, December, 2022. Presented at ICRA'23.
+ *
+ * @param q The robot configuration.
+ * @return A tuple containing the  desired VFIs constraints. For instance, given the constraints A*x <= b, this method returns {A,b}.
  */
 std::tuple<MatrixXd, VectorXd> RobotConstraintManager::get_inequality_constraints(const VectorXd &q)
 {
@@ -175,6 +182,11 @@ double RobotConstraintManager::get_line_to_line_angle(const std::string &tag)
     return VFI_M_->get_line_to_line_angle(tag);
 }
 
+
+/**
+ * @brief RobotConstraintManager::show_vfi_build_data shows the data extracted from the config yaml file.
+ * @param tag The tag of the constraint.
+ */
 void RobotConstraintManager::show_vfi_build_data(const std::string &tag)
 {
     try {
@@ -205,6 +217,13 @@ void RobotConstraintManager::show_vfi_build_data(const std::string &tag)
 }
 
 
+
+/**
+ * @brief RobotConstraintManager::_get_robot_primitive_offset_from_coppeliasim computes the primitive offsets
+ * @param object_name The object name on CoppeliaSim
+ * @param joint_index The joint index in which the primitive is kinematically attached.
+ * @return The desired offset.
+ */
 DQ RobotConstraintManager::_get_robot_primitive_offset_from_coppeliasim(const std::string &object_name, const int &joint_index)
 {
     DQ x;
@@ -224,6 +243,9 @@ DQ RobotConstraintManager::_get_robot_primitive_offset_from_coppeliasim(const st
     return x_offset;
 }
 
+/**
+ * @brief RobotConstraintManager::_initial_settings reads the yaml file used to build the VFIs.
+ */
 void RobotConstraintManager::_initial_settings()
 {
     try {
@@ -330,8 +352,59 @@ void RobotConstraintManager::_initial_settings()
                         show_vfi_build_data(vfi_data.tag);
 
 
-                }else{
-                    throw std::runtime_error("Wrong vfi mode. USE ENVIRONMENT_TO_ROBOT or ROBOT_TO_ROBOT");
+                }else if(raw_vfi_mode =="CONFIGURATION_LIMITS"){
+                    auto q_min_raw = pos["q_min"].as<std::vector<double>>();
+                    auto q_max_raw = pos["q_max"].as<std::vector<double>>();
+                    auto unit_raw  = pos["unit"].as<std::string>();
+                    auto vfi_gain  = pos["vfi_gain"].as<double>();
+
+                    VectorXd q_min = DQ_robotics_extensions::Conversions::std_vector_double_to_vectorxd(q_min_raw);
+                    VectorXd q_max = DQ_robotics_extensions::Conversions::std_vector_double_to_vectorxd(q_max_raw);
+                    if (unit_raw == "DEG")
+                    {
+                        q_min = DQ_robotics::deg2rad(q_min);
+                        q_max = DQ_robotics::deg2rad(q_max);
+                    }
+                    VFI_M_->set_configuration_limits({q_min, q_max});
+                    _set_vfi_configuration_constraints_gain(vfi_gain);
+                    if (verbosity_)
+                    {
+                        std::cout<<"---------------------------------------------"<<std::endl;
+                        std::cout<<"Configuration limits  (Radians)              "<<std::endl;
+                        std::cout<<"q_min:    "<<q_min.transpose()<<std::endl;
+                        std::cout<<"q_max:    "<<q_max.transpose()<<std::endl;
+                        std::cout<<"vfi_gain: "<<vfi_gain<<std::endl;
+                        std::cout<<"---------------------------------------------"<<std::endl;
+                    }
+
+                }else if(raw_vfi_mode =="CONFIGURATION_VELOCITY_LIMITS"){
+                    auto q_dot_min_raw = pos["q_dot_min"].as<std::vector<double>>();
+                    auto q_dot_max_raw = pos["q_dot_max"].as<std::vector<double>>();
+                    auto unit_raw  = pos["unit"].as<std::string>();
+
+
+                    VectorXd q_dot_min = DQ_robotics_extensions::Conversions::std_vector_double_to_vectorxd(q_dot_min_raw);
+                    VectorXd q_dot_max = DQ_robotics_extensions::Conversions::std_vector_double_to_vectorxd(q_dot_max_raw);
+                    if (unit_raw == "DEG")
+                    {
+                        q_dot_min = DQ_robotics::deg2rad(q_dot_min);
+                        q_dot_max = DQ_robotics::deg2rad(q_dot_max);
+                    }
+                    VFI_M_->set_configuration_velocity_limits({q_dot_min, q_dot_max});
+                    if (verbosity_)
+                    {
+                        std::cout<<"---------------------------------------------"<<std::endl;
+                        std::cout<<"Configuration velocity limits  (Rad/s)    "<<std::endl;
+                        std::cout<<"q_dot_min:    "<<q_dot_min.transpose()<<std::endl;
+                        std::cout<<"q_dot_max:    "<<q_dot_max.transpose()<<std::endl;
+                        std::cout<<"---------------------------------------------"<<std::endl;
+                    }
+
+
+                }
+                else{
+                    throw std::runtime_error("Wrong vfi mode. USE ENVIRONMENT_TO_ROBOT, ROBOT_TO_ROBOT, CONFIGURATION_LIMITS or"
+                                             "CONFIGURATION_VELOCITY_LIMITS");
                 }
                 i++;
             }

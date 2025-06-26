@@ -81,8 +81,6 @@ protected:
 public:
     VFI_manager()=delete;
     VFI_manager(const int& dim_configuration,
-                const std::tuple<VectorXd, VectorXd>& configuration_limits,
-                const std::tuple<VectorXd, VectorXd>& configuration_velocity_limits,
                 const LEVEL& level = LEVEL::VELOCITIES);
 
 

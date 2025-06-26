@@ -26,6 +26,7 @@
 #include <dqrobotics/interfaces/coppeliasim/DQ_CoppeliaSimInterfaceZMQ.h>
 #include <dqrobotics/interfaces/coppeliasim/DQ_CoppeliaSimRobot.h>
 #include <dqrobotics_extensions/robot_constraint_manager/vfi_manager.hpp>
+#include <dqrobotics/utils/DQ_Math.h>
 #include <memory>
 #include <unordered_map>
 
@@ -77,18 +78,16 @@ protected:
     bool verbosity_{true};
     DQ _get_robot_primitive_offset_from_coppeliasim(const std::string& object_name, const int& joint_index);
     void _initial_settings();
+    void _set_vfi_configuration_constraints_gain(const double& vfi_position_constraints_gain);
 public:
     RobotConstraintManager(const std::shared_ptr<DQ_CoppeliaSimInterfaceZMQ>& coppelia_interface,
                            const std::shared_ptr<DQ_CoppeliaSimRobot>& coppeliasim_robot,
                            const std::shared_ptr<DQ_Kinematics>& robot,
                            const std::string &yaml_file_path,
-                           const std::tuple<VectorXd, VectorXd>& configuration_limits,
-                           const std::tuple<VectorXd, VectorXd>& configuration_velocity_limits,
-                           const double&  configuration_limit_constraint_gain,
                            const bool& verbosity = false,
                            const VFI_manager::LEVEL& level = VFI_manager::LEVEL::VELOCITIES);
 
-    void set_vfi_configuration_constraints_gain(const double& vfi_position_constraints_gain);
+
 
 
 
@@ -97,5 +96,6 @@ public:
     double get_vfi_distance_error(const std::string& tag);
     double get_line_to_line_angle(const std::string& tag);
     void show_vfi_build_data(const std::string& tag);
+
 };
 }
