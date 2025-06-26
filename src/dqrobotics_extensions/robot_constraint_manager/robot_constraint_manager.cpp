@@ -53,10 +53,6 @@ void RobotConstraintManager::set_vfi_position_constraints_gain(const double &vfi
     configuration_limit_constraint_gain_ = vfi_position_constraints_gain;
 }
 
-std::vector<std::tuple<double, double> > RobotConstraintManager::get_distances_and_error_distances() const
-{
-    return distances_and_error_distances_;
-}
 
 /**
  * @brief RobotConstraintManager::get_inequality_constraints
@@ -84,20 +80,18 @@ std::tuple<MatrixXd, VectorXd> RobotConstraintManager::get_inequality_constraint
             if (J.cols() != robot_dim)
                 J = DQ_robotics_extensions::Numpy::resize(J, J.rows(), robot_dim);
 
+            VFI_M_->add_vfi_constraint(vfi_data_list_.at(i).tag,
+                                       vfi_data_list_.at(i).direction,
+                                       vfi_data_list_.at(i).vfi_type,
+                                       vfi_data_list_.at(i).safe_distance,
+                                       vfi_data_list_.at(i).vfi_gain,
+                                       J,
+                                       x,
+                                       vfi_data_list_.at(i).robot_attached_direction,
+                                       vfi_data_list_.at(i).cs_entity_environment_pose, // x_workspace
+                                       vfi_data_list_.at(i).environment_attached_direction,
+                                       vfi_data_list_.at(i).workspace_derivative);
 
-            distances_and_error_distances.push_back(
-                VFI_M_->add_vfi_constraint(vfi_data_list_.at(i).tag,
-                                           vfi_data_list_.at(i).direction,
-                                           vfi_data_list_.at(i).vfi_type,
-                                           vfi_data_list_.at(i).safe_distance,
-                                           vfi_data_list_.at(i).vfi_gain,
-                                           J,
-                                           x,
-                                           vfi_data_list_.at(i).robot_attached_direction,
-                                           vfi_data_list_.at(i).cs_entity_environment_pose, // x_workspace
-                                           vfi_data_list_.at(i).environment_attached_direction,
-                                           vfi_data_list_.at(i).workspace_derivative)
-                );
 
         }
         else{ //vfi_mode_list_.at(i) == VFI_manager::VFI_MODE::ROBOT_TO_ROBOT
@@ -113,17 +107,14 @@ std::tuple<MatrixXd, VectorXd> RobotConstraintManager::get_inequality_constraint
             DQ x2 =  (robot_->fkm(q, index_2))*offset_2;
             MatrixXd J2 = haminus8(offset_2)*robot_->pose_jacobian(q, index_2);
 
-            distances_and_error_distances.push_back(
-                VFI_M_->add_vfi_rpoint_to_rpoint(vfi_data_list_.at(i).tag,
-                                                 vfi_data_list_.at(i).safe_distance,
-                                                 vfi_data_list_.at(i).vfi_gain,
-                                                 {J1, x1},
-                                                 {J2, x2})
-                );
 
-
+            VFI_M_->add_vfi_rpoint_to_rpoint(vfi_data_list_.at(i).tag,
+                                             vfi_data_list_.at(i).safe_distance,
+                                             vfi_data_list_.at(i).vfi_gain,
+                                             {J1, x1},
+                                             {J2, x2});
         }
-        distances_and_error_distances_ = distances_and_error_distances;
+
     }
     return VFI_M_->get_inequality_constraints();
 }
@@ -133,12 +124,11 @@ double RobotConstraintManager::get_vfi_distance_error(const std::string &tag)
     return VFI_M_->get_vfi_distance_error(tag);
 }
 
-
-/*
-std::vector<std::tuple<double, double> > RobotConstraintManager::get_distance_and_error_distance(const std::string &tag)
+double RobotConstraintManager::get_line_to_line_angle(const std::string &tag)
 {
+    return VFI_M_->get_line_to_line_angle(tag);
+}
 
-}*/
 
 void RobotConstraintManager::_show_constraints()
 {

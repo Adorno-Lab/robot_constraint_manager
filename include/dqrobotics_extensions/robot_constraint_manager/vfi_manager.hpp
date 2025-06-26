@@ -45,24 +45,18 @@ namespace DQ_robotics_extensions  {
 class VFI_manager: public VFI_Framework
 {
 protected:
-    struct VFI_PARAMETERS{
+    struct VFI_LOG_DATA{
         double distance;
         double square_distance;
         double distance_error;
         double square_distance_error;
+        double line_to_line_angle_rad;
         VFI_Framework::VFI_TYPE vfi_type;
     };
-    //std::vector<VFI_PARAMETERS> vfi_parameters_;
-    std::unordered_map<std::string, VFI_PARAMETERS> vfi_parameters_map_;
-    void _update_vfi_parameters_map(const std::string& tag, const VFI_PARAMETERS& vfi_parameters);
-    void _update_vfi_parameters_map(const std::string& tag,
-                                    const VFI_Framework::VFI_TYPE& vfi_type,
-                                    const double& distance,
-                                    const double& square_distance,
-                                    const double& distance_error,
-                                    const double& square_distance_error
-                                    );
-    VFI_PARAMETERS _get_data_from_vfi_parameters_map(const std::string tag);
+    //std::vector<VFI_LOG_DATA> vfi_parameters_;
+    std::unordered_map<std::string, VFI_LOG_DATA> vfi_parameters_map_;
+    void _update_vfi_parameters_map(const std::string& tag, const VFI_LOG_DATA& vfi_parameters);
+    VFI_LOG_DATA _get_data_from_vfi_parameters_map(const std::string tag);
 
 protected:
     int dim_configuration_;
@@ -88,7 +82,7 @@ public:
                 const std::tuple<VectorXd, VectorXd>& configuration_velocity_limits,
                 const LEVEL& level = LEVEL::VELOCITIES);
 
-    std::tuple<double, double> add_vfi_constraint(
+    void add_vfi_constraint(
                             const std::string& tag,
                             const DIRECTION& direction,
                             const VFI_TYPE& vfi_type,
@@ -101,7 +95,7 @@ public:
                             const DQ& workspace_attached_direction,
                             const DQ& workspace_derivative = DQ(0));
 
-    std::tuple<double, double> add_vfi_rpoint_to_rpoint(
+    void add_vfi_rpoint_to_rpoint(
                                                 const std::string& tag,
                                                 const double& safe_distance,
                                                 const double& vfi_gain,
@@ -122,6 +116,7 @@ public:
     //std::tuple<MatrixXd, VectorXd> get_equality_constraints();
 
     double get_vfi_distance_error(const std::string& tag);
+    double get_line_to_line_angle(const std::string& tag);
 
 
 

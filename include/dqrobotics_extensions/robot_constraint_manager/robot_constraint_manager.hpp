@@ -50,7 +50,6 @@ protected:
     VectorXd initial_robot_configuration_;
     int number_of_constraints_;
 
-    std::vector<std::tuple<double, double>> distances_and_error_distances_;
     bool verbosity_{true};
 
     void _show_constraints();
@@ -70,11 +69,11 @@ public:
 
     void set_vfi_position_constraints_gain(const double& vfi_position_constraints_gain);
 
-    std::vector<std::tuple<double, double>> get_distances_and_error_distances() const;
-    //std::vector<std::tuple<double, double>> get_distance_and_error_distance(const std::string& tag);
+
 
     std::tuple<MatrixXd, VectorXd> get_inequality_constraints(const VectorXd& q);
 
     double get_vfi_distance_error(const std::string& tag);
+    double get_line_to_line_angle(const std::string& tag);
 };
 }

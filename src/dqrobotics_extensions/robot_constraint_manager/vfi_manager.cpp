@@ -32,7 +32,7 @@ VFI_manager::VFI_manager(const int &dim_configuration,
  * @param tag
  * @param vfi_parameters
  */
-void VFI_manager::_update_vfi_parameters_map(const std::string &tag, const VFI_PARAMETERS &vfi_parameters)
+void VFI_manager::_update_vfi_parameters_map(const std::string &tag, const VFI_LOG_DATA &vfi_parameters)
 {
     auto search = vfi_parameters_map_.find(tag);
     if (search != vfi_parameters_map_.end())
@@ -45,35 +45,20 @@ void VFI_manager::_update_vfi_parameters_map(const std::string &tag, const VFI_P
     }
 }
 
-void VFI_manager::_update_vfi_parameters_map(const std::string &tag,
-                                             const VFI_TYPE &vfi_type,
-                                             const double &distance,
-                                             const double &square_distance,
-                                             const double &distance_error,
-                                             const double &square_distance_error)
+/**
+ * @brief VFI_manager::_get_data_from_vfi_parameters_map
+ * @param tag
+ * @return
+ */
+VFI_manager::VFI_LOG_DATA VFI_manager::_get_data_from_vfi_parameters_map(const std::string tag)
 {
-    VFI_PARAMETERS data;
-    data.vfi_type = vfi_type;
-    data.distance = distance;
-    data.square_distance = square_distance;
-    data.distance_error = distance_error;
-    data.square_distance_error = square_distance_error;
-    _update_vfi_parameters_map(tag, data);
-}
-
-VFI_manager::VFI_PARAMETERS VFI_manager::_get_data_from_vfi_parameters_map(const std::string tag)
-{
-    auto search = vfi_parameters_map_.find(tag);
-    // returns a tuple <bool, VFI_manager::VFI_PARAMETERS>
-    //If the handle is found in the map, returns <true, VFI_manager::VFI_PARAMETERS>.
-    if (search != vfi_parameters_map_.end())
-    { // handle found in map
-        return search->second;
-    }
-    else
-    {   // handle not found in map.
+    try {
+        return vfi_parameters_map_.at(tag);
+    } catch (const std::runtime_error& e) {
+        std::cerr<<e.what()<<std::endl;
         throw std::runtime_error("VFI TAG not found!");
     }
+
 }
 
 /**
@@ -145,7 +130,7 @@ void VFI_manager::add_configuration_velocity_limits()
  * @param robot_pose_jacobian_and_pose_two The tuple containing the pose Jacobian and pose of the second point attached to the robot
  * @return A tuple containing the square distance and the square error. {square_d , square_error}
  */
-std::tuple<double, double> VFI_manager::add_vfi_rpoint_to_rpoint(const std::string &tag,
+void VFI_manager::add_vfi_rpoint_to_rpoint(const std::string &tag,
                                                                  const double &safe_distance,
                                                                  const double &vfi_gain,
                                                                  const std::tuple<MatrixXd, DQ> &robot_pose_jacobian_and_pose_one,
@@ -173,12 +158,21 @@ std::tuple<double, double> VFI_manager::add_vfi_rpoint_to_rpoint(const std::stri
     const double square_error = square_d- square_safe_distance;
     VectorXd b = DQ_robotics_extensions::CVectorXd({vfi_gain*(square_error) + residual});
     _add_vfi_constraint(Jd, b, VFI_Framework::DIRECTION::KEEP_ROBOT_OUTSIDE);
-    _update_vfi_parameters_map(tag, VFI_TYPE::RPOINT_TO_POINT, std::sqrt(square_d), square_d, -1, square_error);
-    return {square_d , square_error};
+    //#############-log data-###############
+    VFI_LOG_DATA data;
+    data.vfi_type = VFI_TYPE::RPOINT_TO_POINT;
+    data.distance = std::sqrt(square_d);
+    data.square_distance = square_d;
+    data.distance_error = -1;
+    data.square_distance_error = square_error;
+    data.line_to_line_angle_rad = -1;
+    _update_vfi_parameters_map(tag, data);
+    //######################################
 }
 
 /**
- * @brief VFI_manager::add_vfi_constraint adds the VFI constraint to the stack.
+ * @brief VFI_manager::add_vfi_constraint
+ * @param tag
  * @param direction
  * @param vfi_type
  * @param safe_distance
@@ -189,9 +183,8 @@ std::tuple<double, double> VFI_manager::add_vfi_rpoint_to_rpoint(const std::stri
  * @param workspace_pose
  * @param workspace_attached_direction
  * @param workspace_derivative
- * @return A tuple containing the variables related to the distance and the error. {f(d) , f(error)}
  */
-std::tuple<double, double> VFI_manager::add_vfi_constraint(const std::string &tag,
+void VFI_manager::add_vfi_constraint(const std::string &tag,
                                                            const DIRECTION &direction,
                                                            const VFI_TYPE &vfi_type,
                                                            const double &safe_distance,
@@ -203,7 +196,6 @@ std::tuple<double, double> VFI_manager::add_vfi_constraint(const std::string &ta
                                                            const DQ &workspace_attached_direction,
                                                            const DQ &workspace_derivative)
 {
-    std::tuple<double, double> rtn = {0,0};
     switch(vfi_type)
     {
 
@@ -221,10 +213,16 @@ std::tuple<double, double> VFI_manager::add_vfi_constraint(const std::string &ta
         const double square_error = square_d- square_safe_distance;
         VectorXd b = DQ_robotics_extensions::CVectorXd({vfi_gain*(square_error) + residual});
         _add_vfi_constraint(Jd, b, direction);
-        rtn = {square_d, square_error};
-
-        _update_vfi_parameters_map(tag, VFI_TYPE::RPOINT_TO_POINT, std::sqrt(square_d), square_d, -1, square_error);
-
+        //#############-log data-###############
+        VFI_LOG_DATA data;
+        data.vfi_type = VFI_TYPE::RPOINT_TO_POINT;
+        data.distance = std::sqrt(square_d);
+        data.square_distance = square_d;
+        data.distance_error = -1;
+        data.square_distance_error = square_error;
+        data.line_to_line_angle_rad = -1;
+        _update_vfi_parameters_map(tag, data);
+        //######################################
         break;
     }
     case VFI_TYPE::RPOINT_TO_PLANE:
@@ -241,8 +239,16 @@ std::tuple<double, double> VFI_manager::add_vfi_constraint(const std::string &ta
         const double error = d - safe_distance;
         VectorXd b = DQ_robotics_extensions::CVectorXd({vfi_gain*(error) + residual});
         _add_vfi_constraint(Jd, b, direction);
-        rtn = {d, error};
-        _update_vfi_parameters_map(tag, VFI_TYPE::RPOINT_TO_PLANE, d, d*d, error, -1);
+        //#############-log data-###############
+        VFI_LOG_DATA data;
+        data.vfi_type = VFI_TYPE::RPOINT_TO_PLANE;
+        data.distance = d;
+        data.square_distance = d*d;
+        data.distance_error = error;
+        data.square_distance_error = -1;
+        data.line_to_line_angle_rad = -1;
+        _update_vfi_parameters_map(tag, data);
+        //######################################
         break;
     }
 
@@ -261,8 +267,16 @@ std::tuple<double, double> VFI_manager::add_vfi_constraint(const std::string &ta
         const double square_error = square_d - square_safe_distance;
         VectorXd b = DQ_robotics_extensions::CVectorXd({vfi_gain*(square_error) + residual});
         _add_vfi_constraint(Jd, b, direction);
-        rtn = {square_d, square_error};
-        _update_vfi_parameters_map(tag, VFI_TYPE::RPOINT_TO_LINE, std::sqrt(square_d), square_d, -1, square_error);
+        //#############-log data-###############
+        VFI_LOG_DATA data;
+        data.vfi_type = VFI_TYPE::RPOINT_TO_POINT;
+        data.distance = std::sqrt(square_d);
+        data.square_distance = square_d;
+        data.distance_error = -1;
+        data.square_distance_error = square_error;
+        data.line_to_line_angle_rad = -1;
+        _update_vfi_parameters_map(tag, data);
+        //######################################
         break;
     }
     case VFI_TYPE::RLINE_TO_LINE_ANGLE:
@@ -281,8 +295,16 @@ std::tuple<double, double> VFI_manager::add_vfi_constraint(const std::string &ta
         const double residual = DQ_Kinematics::line_to_line_angle_residual(robot_line,workspace_line,-workspace_derivative);
         VectorXd b = DQ_robotics_extensions::CVectorXd({vfi_gain*(ferror) + residual});
         _add_vfi_constraint(Jfphi, b, direction);
-        rtn = {f, ferror};
-        _update_vfi_parameters_map(tag, VFI_TYPE::RLINE_TO_LINE_ANGLE, f, phi, ferror, -1);
+        //#############-log data-###############
+        VFI_LOG_DATA data;
+        data.vfi_type = VFI_TYPE::RLINE_TO_LINE_ANGLE;
+        data.distance = f;
+        data.square_distance = -1;
+        data.distance_error = ferror;
+        data.square_distance_error = -1;
+        data.line_to_line_angle_rad = phi;
+        _update_vfi_parameters_map(tag, data);
+        //######################################
         break;
     }
     case VFI_TYPE::RLINE_TO_LINE:
@@ -297,7 +319,7 @@ std::tuple<double, double> VFI_manager::add_vfi_constraint(const std::string &ta
         break;
     }
     }
-    return rtn;
+
 }
 
 
@@ -352,8 +374,23 @@ std::tuple<MatrixXd, VectorXd> VFI_manager::get_inequality_constraints()
 
 double VFI_manager::get_vfi_distance_error(const std::string &tag)
 {
+    return _get_data_from_vfi_parameters_map(tag).distance_error;
+}
+
+double VFI_manager::get_line_to_line_angle(const std::string &tag)
+{
     auto data = _get_data_from_vfi_parameters_map(tag);
-    return data.distance_error;
+    switch (data.vfi_type) {
+    case VFI_Framework::VFI_TYPE::RLINE_TO_LINE_ANGLE:
+        return _get_data_from_vfi_parameters_map(tag).line_to_line_angle_rad;
+    case VFI_Framework::VFI_TYPE::RLINE_TO_LINE:
+        throw std::runtime_error("VFI_manager::get_line_to_line_angle: not supported for RLINE_TO_LINE. "
+                                 "However, your constraint TAG=\""+tag+"\" is "+map_vfyType_to_string(data.vfi_type));
+    default:
+        throw std::runtime_error("VFI_manager::get_line_to_line_angle is available for RLINE_TO_LINE_ANGLE only. "
+                                 "However, your constraint TAG=\""+tag+"\" is "+map_vfyType_to_string(data.vfi_type));
+    }
+
 }
 
 /*

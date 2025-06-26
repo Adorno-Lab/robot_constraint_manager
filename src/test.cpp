@@ -67,7 +67,7 @@ int main()
             controller.set_inequality_constraint(A,b);
             auto u = controller.compute_setpoint_control_signal(q, xd.translation().vec4());
             panda->set_target_configuration_velocities(u);
-            std::cout<<"distance error: "<<rcm.get_vfi_distance_error("C1")<<std::endl;
+            std::cout<<"Angle: "<<DQ_robotics::rad2deg(rcm.get_line_to_line_angle("C2"))<<std::endl;
         }
         std::cout<<"Teleoperation finished."<<std::endl;
 
