@@ -131,12 +131,20 @@ void VFI_manager::add_configuration_velocity_limits()
 
 
 /**
- * @brief VFI_manager::add_vfi_rpoint_to_rpoint adds the rpoint-to-rpoint VFI constraint to the stack.
- * @param safe_distance The safe distance
- * @param vfi_gain  The vfi gain
+ * @brief VFI_manager::add_vfi_rpoint_to_rpoint builds a rpoint-to-rpoint VFI constraint and adds it to the constraint stack matrix.
+ *
+ *                                      The VFIs are based on:
+ *                                      M. M. Marinho, B. V. Adorno, K. Harada and M. Mitsuishi,
+ *                                      Dynamic Active Constraints for Surgical Robots Using Vector-Field Inequalities,
+ *                                      in IEEE Transactions on Robotics, vol. 35, no. 5, pp. 1166-1185, Oct. 2019, doi: 10.1109/TRO.2019.2920078.
+ *
+ * @param tag The tag of the constraint.
+ * @param stack_position The position in the constraint stack. You can use any integer. However, once the tag
+ *                       is associated with the tag, you need to keep using the same stack_position.
+ * @param safe_distance The safe distance.
+ * @param vfi_gain  The vfi gain.
  * @param robot_pose_jacobian_and_pose_one The tuple containing the pose Jacobian and pose of the first point attached to the robot
  * @param robot_pose_jacobian_and_pose_two The tuple containing the pose Jacobian and pose of the second point attached to the robot
- * @return A tuple containing the square distance and the square error. {square_d , square_error}
  */
 void VFI_manager::add_vfi_rpoint_to_rpoint(const std::string &tag,
                                            const int &stack_position,
@@ -181,31 +189,49 @@ void VFI_manager::add_vfi_rpoint_to_rpoint(const std::string &tag,
 }
 
 /**
- * @brief VFI_manager::add_vfi_constraint
- * @param tag
- * @param direction
- * @param vfi_type
- * @param safe_distance
- * @param vfi_gain
- * @param robot_pose_jacobian
- * @param robot_pose
- * @param robot_attached_direction
- * @param workspace_pose
- * @param workspace_attached_direction
- * @param workspace_derivative
+ * @brief VFI_manager::add_vfi_constraint builds a VFI constraint and adds it to the constraint stack matrix.
+ *
+ *                                      The VFIs are based on:
+ *                                      M. M. Marinho, B. V. Adorno, K. Harada and M. Mitsuishi,
+ *                                      Dynamic Active Constraints for Surgical Robots Using Vector-Field Inequalities,
+ *                                      in IEEE Transactions on Robotics, vol. 35, no. 5, pp. 1166-1185, Oct. 2019, doi: 10.1109/TRO.2019.2920078.
+ *
+ *                                      The Cone primitive (RLINE_TO_LINE_ANGLE) is an implementation of
+ *                                      J. J. Quiroz-Omaña and B. V. Adorno,
+ *                                      Whole-Body Control With (Self) Collision Avoidance Using Vector Field Inequalities,
+ *                                      in IEEE Robotics and Automation Letters, vol. 4, no. 4, pp. 4048-4053, Oct. 2019, doi: 10.1109/LRA.2019.2928783.
+ *
+ * @param tag The tag of the constraint.
+ * @param stack_position The position in the constraint stack. You can use any integer. However, once the tag
+ *                       is associated with the tag, you need to keep using the same stack_position.
+ * @param direction The direction of the VFI. Use KEEP_ROBOT_OUTSIDE or KEEP_ROBOT_INSIDE.
+ * @param vfi_type The VFI type.
+ * @param safe_distance The safe distance
+ * @param vfi_gain The VFI gain
+ * @param robot_pose_jacobian The robot pose Jacobian
+ * @param robot_pose The robot pose
+ * @param robot_attached_direction The unit pure quaternion that represents the attached direction. For instance,
+ *                Consider a reference frame "F", whose pose is given by the unid dual quaternion x=r+0.5*ε*t*r. Let's say you
+ *                want to attach a Plücker line "dq_l" aligned with the z-axis of the "F" frame. Then, the line can be described
+ *                as dq_l = l + ε*m, where l=r*robot_attached_direction*r.conj() denotes the line orientation and m represents the moment of the line.
+ *                The robot attached direction in this case is k_.
+ *
+ * @param workspace_pose The pose of the workspace geometric primitive.
+ * @param workspace_attached_direction The attached workspace direction.
+ * @param workspace_derivative The time derivativ of the pose that represents the workspace geometric primitive.
  */
 void VFI_manager::add_vfi_constraint(const std::string &tag,
-                                     const int& stack_position,
-                                                           const DIRECTION &direction,
-                                                           const VFI_TYPE &vfi_type,
-                                                           const double &safe_distance,
-                                                           const double &vfi_gain,
-                                                           const MatrixXd &robot_pose_jacobian,
-                                                           const DQ &robot_pose,
-                                                           const DQ &robot_attached_direction,
-                                                           const DQ &workspace_pose,
-                                                           const DQ &workspace_attached_direction,
-                                                           const DQ &workspace_derivative)
+                                       const int& stack_position,
+                                       const DIRECTION &direction,
+                                       const VFI_TYPE &vfi_type,
+                                       const double &safe_distance,
+                                       const double &vfi_gain,
+                                       const MatrixXd &robot_pose_jacobian,
+                                       const DQ &robot_pose,
+                                       const DQ &robot_attached_direction,
+                                       const DQ &workspace_pose,
+                                       const DQ &workspace_attached_direction,
+                                       const DQ &workspace_derivative)
 {
     switch(vfi_type)
     {
@@ -385,11 +411,33 @@ std::tuple<MatrixXd, VectorXd> VFI_manager::get_inequality_constraints()
     return constraint_manager_->get_inequality_constraints();
 }
 
+/**
+ * @brief VFI_manager::get_vfi_distance_error gets the distance error computed in the tag-specified VFI. Some VFIs are implemented
+ *                      using the square distance error, which is computed as
+ *                              square_distance_error = square_d - square_safe_distance.
+ *                      In such cases however, this method is going to return
+ *                      distance_error = sqrt(square_d) - sqrt(square_safe_distance).
+ *
+ * @param tag The tag of the constraint.
+ * @return The desired distance error.
+ */
 double VFI_manager::get_vfi_distance_error(const std::string &tag)
 {
     return _get_data_from_vfi_parameters_map(tag).distance_error;
 }
 
+
+/**
+ * @brief VFI_manager::get_line_to_line_angle gets the angle between the two Plücker line orientations when the VFI used is RLINE_TO_LINE_ANGLE.
+ *              For other VFI types, an exception is thrown.
+ *              Note that the safe angle is not taken into account. If you want to take into account the safe angle, consider using
+ *              ferror = get_vfi_distance_error(tag), which will return
+ *                          ferror = f-fsafe,
+ *              where f = 2-2*cos(phi) and fsafe = 2-2*cos(safe_angle).
+ *
+ * @param tag The tag of the constraint.
+ * @return the two Plücker line orientations.
+ */
 double VFI_manager::get_line_to_line_angle(const std::string &tag)
 {
     auto data = _get_data_from_vfi_parameters_map(tag);

@@ -85,8 +85,8 @@ public:
                 const std::tuple<VectorXd, VectorXd>& configuration_velocity_limits,
                 const LEVEL& level = LEVEL::VELOCITIES);
 
-    void add_vfi_constraint(
-                            const std::string& tag,
+
+    void add_vfi_constraint(const std::string& tag,
                             const int& stack_position,
                             const DIRECTION& direction,
                             const VFI_TYPE& vfi_type,
@@ -99,14 +99,13 @@ public:
                             const DQ& workspace_attached_direction,
                             const DQ& workspace_derivative = DQ(0));
 
-    void add_vfi_rpoint_to_rpoint(
-                                const std::string& tag,
-                                const int& stack_position,
-                                const double& safe_distance,
-                                const double& vfi_gain,
-                                const std::tuple<MatrixXd, DQ>& robot_pose_jacobian_and_pose_one,
-                                const std::tuple<MatrixXd, DQ>& robot_pose_jacobian_and_pose_two
-                                                );
+
+    void add_vfi_rpoint_to_rpoint(const std::string& tag,
+                                  const int& stack_position,
+                                  const double& safe_distance,
+                                  const double& vfi_gain,
+                                  const std::tuple<MatrixXd, DQ>& robot_pose_jacobian_and_pose_one,
+                                  const std::tuple<MatrixXd, DQ>& robot_pose_jacobian_and_pose_two);
 
     void set_configuration_limits(const std::tuple<VectorXd, VectorXd>& configuration_limits);
     void set_configuration_velocity_limits(const std::tuple<VectorXd, VectorXd> &configuration_velocity_limits);
