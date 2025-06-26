@@ -76,6 +76,13 @@ void RobotConstraintManager::_set_vfi_configuration_constraints_gain(const doubl
     configuration_limit_constraint_gain_ = vfi_position_constraints_gain;
 }
 
+void RobotConstraintManager::_check_unit(const std::string &unit)
+{
+    if (unit != std::string("DEG") && unit !=std::string("RAD"))
+        throw std::runtime_error("RobotConstraintManager: Bad argument. You used "+unit+" in the config file. "
+                                 "Use DEG for degrees or RAD for radians.");
+}
+
 
 /**
  * @brief RobotConstraintManager::get_inequality_constraints creates and returns the VFIs inequalities. This set of constraints
@@ -356,6 +363,7 @@ void RobotConstraintManager::_initial_settings()
                     auto q_min_raw = pos["q_min"].as<std::vector<double>>();
                     auto q_max_raw = pos["q_max"].as<std::vector<double>>();
                     auto unit_raw  = pos["unit"].as<std::string>();
+                    _check_unit(unit_raw);
                     auto vfi_gain  = pos["vfi_gain"].as<double>();
 
                     VectorXd q_min = DQ_robotics_extensions::Conversions::std_vector_double_to_vectorxd(q_min_raw);
@@ -380,8 +388,8 @@ void RobotConstraintManager::_initial_settings()
                 }else if(raw_vfi_mode =="CONFIGURATION_VELOCITY_LIMITS"){
                     auto q_dot_min_raw = pos["q_dot_min"].as<std::vector<double>>();
                     auto q_dot_max_raw = pos["q_dot_max"].as<std::vector<double>>();
-                    auto unit_raw  = pos["unit"].as<std::string>();
-
+                    auto unit_raw      = pos["unit"].as<std::string>();
+                    _check_unit(unit_raw);
 
                     VectorXd q_dot_min = DQ_robotics_extensions::Conversions::std_vector_double_to_vectorxd(q_dot_min_raw);
                     VectorXd q_dot_max = DQ_robotics_extensions::Conversions::std_vector_double_to_vectorxd(q_dot_max_raw);

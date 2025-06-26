@@ -79,6 +79,8 @@ protected:
     DQ _get_robot_primitive_offset_from_coppeliasim(const std::string& object_name, const int& joint_index);
     void _initial_settings();
     void _set_vfi_configuration_constraints_gain(const double& vfi_position_constraints_gain);
+
+    void _check_unit(const std::string& unit);
 public:
     RobotConstraintManager(const std::shared_ptr<DQ_CoppeliaSimInterfaceZMQ>& coppelia_interface,
                            const std::shared_ptr<DQ_CoppeliaSimRobot>& coppeliasim_robot,
