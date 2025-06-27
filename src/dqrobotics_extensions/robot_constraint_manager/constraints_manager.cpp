@@ -1,22 +1,22 @@
 /*
-#    Copyright (c) 2024 Juan Jose Quiroz Omana
+#    Copyright (c) 2024 Adorno-Lab
 #
-#    Capybara_toolkit is free software: you can redistribute it and/or modify
+#    robot_constraint_manager is free software: you can redistribute it and/or modify
 #    it under the terms of the GNU Lesser General Public License as published by
 #    the Free Software Foundation, either version 3 of the License, or
 #    (at your option) any later version.
 #
-#    Capybara_toolkit is distributed in the hope that it will be useful,
+#    robot_constraint_manager is distributed in the hope that it will be useful,
 #    but WITHOUT ANY WARRANTY; without even the implied warranty of
 #    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 #    GNU Lesser General Public License for more details.
 #
 #    You should have received a copy of the GNU Lesser General Public License
-#    along with Capybara_toolkit.  If not, see <https://www.gnu.org/licenses/>.
+#    along with robot_constraint_manager.  If not, see <https://www.gnu.org/licenses/>.
 #
 # ################################################################
 #
-#   Author: Juan Jose Quiroz Omana, (email: juanjqogm@gmail.com)
+#   Author: Juan Jose Quiroz Omana (email: juanjose.quirozomana@manchester.ac.uk)
 #
 # ################################################################
 */
@@ -25,19 +25,28 @@
 
 namespace DQ_robotics_extensions {
 
-
+/**
+ * @brief ConstraintsManager::ConstraintsManager constructor of the class
+ * @param dim_configuration The dimension of the robot configuration.
+ */
 ConstraintsManager::ConstraintsManager(const int &dim_configuration)
 :dim_configuration_(dim_configuration)
 {
 
 }
 
+/**
+ * @brief ConstraintsManager::_reset_equality_constraints resets the equality constraints.
+ */
 void ConstraintsManager::_reset_equality_constraints()
 {
     equality_constraint_matrix_ = MatrixXd::Zero(0,0);
     equality_constraint_vector_ = VectorXd::Zero(0);
 }
 
+/**
+ * @brief ConstraintsManager::_reset_inequality_constraints resets the ineequality constraints.
+ */
 void ConstraintsManager::_reset_inequality_constraints()
 {
     inequality_constraint_matrix_ = MatrixXd::Zero(0,0);
