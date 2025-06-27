@@ -40,7 +40,7 @@ int main()
         controller.set_gain(1.0);
         controller.set_damping(0.01);
 
-        std::string yaml_path = "/home/juanjqo/git/robot_constraint_manager/cfg/vfi_constraints.yaml";
+        std::string yaml_path = "/users/user/git/robot_constraint_manager/cfg/vfi_constraints.yaml";
 
 
         MatrixXd A;

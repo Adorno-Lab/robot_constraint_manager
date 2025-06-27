@@ -24,7 +24,7 @@
        entity_robot_primitive_type: LINE_ANGLE
        joint_index: 7
        safe_distance: 5
-       vfi_gain: 5.0
+       vfi_gain: 1.0
        direction: KEEP_ROBOT_INSIDE
        entity_robot_attached_direction: k_
        entity_environment_attached_direction: k_
@@ -41,7 +41,7 @@
        joint_index_one: 1
        joint_index_two: 7
        safe_distance: 0.3
-       vfi_gain: 5.0
+       vfi_gain: 1.0
        tag: C2
 
 - Description: End-effector plane constraint
@@ -53,7 +53,7 @@
        entity_robot_primitive_type: POINT
        joint_index: 7
        safe_distance: 0.05
-       vfi_gain: 5.0
+       vfi_gain: 1.0
        direction: KEEP_ROBOT_OUTSIDE
        entity_robot_attached_direction: k_
        entity_environment_attached_direction: k_
