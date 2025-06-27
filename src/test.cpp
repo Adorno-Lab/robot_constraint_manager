@@ -41,10 +41,7 @@ int main()
         controller.set_damping(0.01);
 
         std::string yaml_path = "/home/juanjqo/git/robot_constraint_manager/cfg/vfi_constraints.yaml";
-        const VectorXd q_max = ((VectorXd(7) <<  2.3093, 1.5133, 2.4937, -0.4461, 2.4800, 4.2094,  2.6895).finished());
-        const VectorXd q_min = ((VectorXd(7) << -2.3093,-1.5133,-2.4937, -2.7478,-2.4800, 0.8521, -2.6895).finished());
-        const VectorXd q_dot_min = ((VectorXd(7) << -2, -1, -1.5, -1.25, -3, -1.5, -3).finished());
-        const VectorXd q_dot_max = ((VectorXd(7) <<  2,  1,  1.5,  1.25,  3,  1.5,  3).finished());
+
 
         MatrixXd A;
         VectorXd b;
