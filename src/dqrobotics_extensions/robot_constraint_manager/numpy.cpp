@@ -183,10 +183,10 @@ MatrixXd Numpy::linspace(const VectorXd &start, const VectorXd &stop, const int 
 
 
 /**
- * @brief round
- * @param value
- * @param digits
- * @return
+ * @brief round rounds the given number.
+ * @param value The number to be rounded.
+ * @param digits The number of decimals
+ * @return The rounded number
  */
 double Numpy::round(const double &value, const int &digits)
 {
