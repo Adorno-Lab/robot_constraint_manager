@@ -20,7 +20,7 @@ jobs:
         run: | 
           git clone https://github.com/Adorno-Lab/docker_recipes
           cd docker_recipes
-          chmod +x ./dependencies/install_dqrobotics.sh
+          sudo chmod +x ./dependencies/install_dqrobotics.sh
           ./dependencies/install_dqrobotics.sh
 
       - name: Install Yaml-Cpp
