@@ -60,7 +60,7 @@ jobs:
         run: sh cpp/.github/scripts/macos/install.sh
 
       - name: Install qpOASES
-        #run: sh ./.github/scripts/ubuntu/install_qpoases.sh
+        #run: sh ./.github/scripts/ubuntu/install_qpoases.sh #Not working yet!
         run: |
           git clone https://github.com/coin-or/qpOASES.git
           cd qpOASES
@@ -71,9 +71,9 @@ jobs:
           make 
           sudo make install
 
-
       - name: Install dqrobotics-interface-qpoases
         run: | 
+          cd dqrobotics-interface-qpoases
           git clone https://github.com/dqrobotics/cpp-interface-qpoases
           sh cpp/.github/scripts/macos/build.sh
           sh cpp/.github/scripts/macos/install.sh
