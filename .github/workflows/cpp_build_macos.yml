@@ -61,8 +61,6 @@ jobs:
 
       - name: Install qpOASES
         run: |
-          git clone https://github.com/coin-or/qpOASES.git
-          cd qpOASES
           sh ./.github/scripts/ubuntu/install_qpoases.sh
 
       - name: Install dqrobotics-interface-qpoases
