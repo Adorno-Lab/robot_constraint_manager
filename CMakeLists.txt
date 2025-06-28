@@ -56,11 +56,11 @@ add_executable(test src/test.cpp)
 target_link_libraries(test PRIVATE
     dqrobotics
     dqrobotics-interface-coppeliasim-zmq
-    yaml-cpp
     qpOASES
+    yaml-cpp
     ${PROJECT_NAME})
 
-
+set(ENV{DYLD_LIBRARY_PATH} /usr/local/lib/)
 
 if (APPLE)
     set(qpOASES_LIBRARY32 /usr/local/lib/libqpOASES.3.2.dylib)
