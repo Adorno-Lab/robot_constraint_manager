@@ -58,4 +58,12 @@ jobs:
           
       - name: Install
         run: sh cpp/.github/scripts/macos/install.sh
+
+      - name: Build examples (panda_example)
+        run: |
+             cd examples/panda_examples
+             mkdir -p build && build
+             cmake ..
+             make
+        
           
