@@ -73,8 +73,8 @@ jobs:
 
       - name: Install dqrobotics-interface-qpoases
         run: | 
-          cd dqrobotics-interface-qpoases
           git clone https://github.com/dqrobotics/cpp-interface-qpoases
+          cd cpp-interface-qpoases
           sh cpp/.github/scripts/macos/build.sh
           sh cpp/.github/scripts/macos/install.sh
 
