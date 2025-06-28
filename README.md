@@ -1,5 +1,4 @@
-![Static Badge](https://img.shields.io/badge/Written_in-C%2B%2B17-blue)![GitHub License](https://img.shields.io/github/license/juanjqo/capybara_toolkit?color=orange)![Static Badge](https://img.shields.io/badge/status-experimental-red)[![CPP Build MacOS](https://github.com/Adorno-Lab/robot_constraint_manager/actions/workflows/cpp_build_macos.yml/badge.svg)](https://github.com/Adorno-Lab/robot_constraint_manager/actions/workflows/cpp_build_macos.yml)![Static Badge](https://img.shields.io/badge/Platform-Ubuntu_x64-orange)![Static Badge](https://img.shields.io/badge/tested-green)
-
+![Static Badge](https://img.shields.io/badge/Written_in-C%2B%2B17-blue)![GitHub License](https://img.shields.io/github/license/juanjqo/capybara_toolkit?color=orange)![Static Badge](https://img.shields.io/badge/status-experimental-red)[![CPP Build MacOS](https://github.com/Adorno-Lab/robot_constraint_manager/actions/workflows/cpp_build_macos.yml/badge.svg)](https://github.com/Adorno-Lab/robot_constraint_manager/actions/workflows/cpp_build_macos.yml)[![CPP Build Ubuntu](https://github.com/Adorno-Lab/robot_constraint_manager/actions/workflows/cpp_build.yml/badge.svg)](https://github.com/Adorno-Lab/robot_constraint_manager/actions/workflows/cpp_build.yml)
 # robot_constraint_manager
 
 
