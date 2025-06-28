@@ -19,8 +19,7 @@ jobs:
       - name: Install DQ Robotics package
         run: | 
           sudo add-apt-repository ppa:dqrobotics-dev/development 
-          sudo apt-get update && sudo apt-get install -y libdqrobotics libdqrobotics-interface-json11 \
-               libdqrobotics-interface-coppeliasim libdqrobotics-interface-coppeliasim-zmq libdqrobotics-interface-qpoases
+          sudo apt-get update && sudo apt-get install -y libdqrobotics libdqrobotics-interface-json11 libdqrobotics-interface-coppeliasim libdqrobotics-interface-coppeliasim-zmq libdqrobotics-interface-qpoases
 
       - name: Install qpOASES
         run: |
