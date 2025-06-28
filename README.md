@@ -52,6 +52,6 @@ make
 sudo make install
 ```
 
-Check this [example](https://github.com/Adorno-Lab/robot_constraint_manager/tree/main/examples/panda_example)
+Check this [example](https://github.com/Adorno-Lab/robot_constraint_manager/tree/main/examples/panda_example).
 
 
