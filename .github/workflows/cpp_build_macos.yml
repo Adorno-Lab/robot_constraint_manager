@@ -60,8 +60,7 @@ jobs:
         run: sh cpp/.github/scripts/macos/install.sh
 
       - name: Install qpOASES
-        run: |
-          sh ./.github/scripts/ubuntu/install_qpoases.sh
+        run: sh ./.github/scripts/ubuntu/install_qpoases.sh
 
       - name: Install dqrobotics-interface-qpoases
         run: | 
