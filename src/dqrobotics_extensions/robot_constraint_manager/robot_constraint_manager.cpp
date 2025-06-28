@@ -76,6 +76,9 @@ void RobotConstraintManager::_set_vfi_configuration_constraints_gain(const doubl
     configuration_limit_constraint_gain_ = vfi_position_constraints_gain;
 }
 
+/**
+ * @brief RobotConstraintManager::_check_unit throws an exception if the input string is not
+ */
 void RobotConstraintManager::_check_unit(const std::string &unit)
 {
     if (unit != std::string("DEG") && unit !=std::string("RAD"))

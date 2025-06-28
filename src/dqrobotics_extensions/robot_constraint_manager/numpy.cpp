@@ -1,26 +1,25 @@
 /*
-#    Copyright (c) 2024 Juan Jose Quiroz Omana
+#    Copyright (c) 2024 Adorno-Lab
 #
-#    Capybara_toolkit is free software: you can redistribute it and/or modify
+#    robot_constraint_manager is free software: you can redistribute it and/or modify
 #    it under the terms of the GNU Lesser General Public License as published by
 #    the Free Software Foundation, either version 3 of the License, or
 #    (at your option) any later version.
 #
-#    Capybara_toolkit is distributed in the hope that it will be useful,
+#    robot_constraint_manager is distributed in the hope that it will be useful,
 #    but WITHOUT ANY WARRANTY; without even the implied warranty of
 #    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 #    GNU Lesser General Public License for more details.
 #
 #    You should have received a copy of the GNU Lesser General Public License
-#    along with Capybara_toolkit.  If not, see <https://www.gnu.org/licenses/>.
+#    along with robot_constraint_manager.  If not, see <https://www.gnu.org/licenses/>.
 #
 # ################################################################
 #
-#   Author: Juan Jose Quiroz Omana, (email: juanjqogm@gmail.com)
+#   Author: Juan Jose Quiroz Omana (email: juanjose.quirozomana@manchester.ac.uk)
 #
 # ################################################################
 */
-
 #include <dqrobotics_extensions/robot_constraint_manager/numpy.hpp>
 
 namespace DQ_robotics_extensions{
@@ -143,11 +142,12 @@ MatrixXd Numpy::resize(const MatrixXd &A, const int &rows, const int &cols)
 }
 
 /**
- * @brief Numpy::linspace
- * @param start
- * @param stop
- * @param size
- * @return
+ * @brief Numpy::linspace returns a vector of evenly spaced points between start and stop.
+ *
+ * @param start The initial point
+ * @param stop  The final point
+ * @param size The number of points
+ * @return The desired vector.
  */
 VectorXd Numpy::linspace(const double &start, const double &stop, const int &size)
 {
@@ -156,11 +156,11 @@ VectorXd Numpy::linspace(const double &start, const double &stop, const int &siz
 
 
 /**
- * @brief Numpy::linspace
- * @param start
- * @param stop
- * @param size
- * @return
+ * @brief Numpy::linspace returns a matrix of evenly spaced points between the start and stop vectors.
+ * @param start The vector that contains the initial points.
+ * @param stop The vector that contains the final points.
+ * @param size The the number of points.
+ * @return The desired matrix
  */
 MatrixXd Numpy::linspace(const VectorXd &start, const VectorXd &stop, const int &size)
 {
@@ -183,10 +183,10 @@ MatrixXd Numpy::linspace(const VectorXd &start, const VectorXd &stop, const int 
 
 
 /**
- * @brief Capybara::round
- * @param value
- * @param digits
- * @return
+ * @brief round rounds the given number.
+ * @param value The number to be rounded.
+ * @param digits The number of decimals
+ * @return The rounded number
  */
 double Numpy::round(const double &value, const int &digits)
 {
