@@ -1,4 +1,4 @@
-name: CPP Build MacOS
+sname: CPP Build MacOS
 
 on: [push, pull_request]
 
@@ -58,6 +58,15 @@ jobs:
           
       - name: Install
         run: sh cpp/.github/scripts/macos/install.sh
+
+      - name: Install qpOASES
+        run: sh ./.github/scripts/ubuntu/install_qpoases.sh
+
+      - name: Install dqrobotics-interface-qpoases
+        run: | 
+             git clone https://github.com/dqrobotics/cpp-interface-qpoases
+             sh cpp/.github/scripts/macos/build.sh
+             sh cpp/.github/scripts/macos/install.sh
 
       - name: Build examples (panda_example)
         run: |
