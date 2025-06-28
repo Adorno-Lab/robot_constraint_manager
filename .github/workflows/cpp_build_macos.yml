@@ -42,12 +42,12 @@ jobs:
         run: | 
           git clone https://github.com/dqrobotics/cpp-interface-coppeliasim-zmq
           cd cpp-interface-coppeliasim-zmq
-          sh cpp/.github/scripts/macos/build.sh
+          sh ../cpp/.github/scripts/macos/build.sh
           
       - name: Install cpp-interface-coppeliasim-zmq
         run: | 
           cd cpp-interface-coppeliasim-zmq
-          sh /cpp/.github/scripts/macos/install.sh  
+          sh ../cpp/.github/scripts/macos/build.sh
           
       - name: Build
         run: sh cpp/.github/scripts/macos/build.sh
