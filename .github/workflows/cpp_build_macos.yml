@@ -1,4 +1,4 @@
-sname: CPP Build MacOS
+name: CPP Build MacOS
 
 on: [push, pull_request]
 
