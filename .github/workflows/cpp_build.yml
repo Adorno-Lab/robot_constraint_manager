@@ -45,10 +45,10 @@ jobs:
       - name: Build
         run: | 
           git clone https://github.com/dqrobotics/cpp
-          sh ./cpp/.github/scripts/ubuntu/build.sh
+          sh ./cpp/.github/scripts/macos/build.sh
           
       - name: Install
-        run: sh ./cpp/.github/scripts/ubuntu/install.sh
+        run: sh ./cpp/.github/scripts/macos/install.sh
 
       - name: Build examples (panda_example)
         run: |
