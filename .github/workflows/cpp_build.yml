@@ -18,10 +18,20 @@ jobs:
       
       - name: Install DQ Robotics package
         run: | 
-          git clone https://github.com/Adorno-Lab/docker_recipes
-          cd docker_recipes
-          sudo chmod +x ./dependencies/install_dqrobotics.sh
-          ./dependencies/install_dqrobotics.sh
+          sudo add-apt-repository ppa:dqrobotics-dev/development 
+          sudo apt-get update && apt-get install -y libdqrobotics libdqrobotics-interface-json11 \
+               libdqrobotics-interface-coppeliasim libdqrobotics-interface-coppeliasim-zmq libdqrobotics-interface-qpoases
+
+      - name: Install qpOASES
+        run: |
+          git clone https://github.com/coin-or/qpOASES.git
+          cd qpOASES
+          sed -i -e 's/option(BUILD_SHARED_LIBS "If ON, build shared library instead of static" OFF)/option(BUILD_SHARED_LIBS "If ON, build shared library instead of static" ON)/g' CMakeLists.txt
+          mkdir build
+          cd build
+          cmake ..
+          make 
+          sudo make install       
 
       - name: Install Yaml-Cpp
         run: | 
