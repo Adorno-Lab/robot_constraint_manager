@@ -1,0 +1,57 @@
+name: CPP Build MacOS
+
+on: [push, pull_request]
+
+jobs:
+  build:
+    runs-on: macos-latest
+    continue-on-error: true
+    strategy:
+      fail-fast: false
+      matrix:
+        testbranches: ['release','master']
+
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          submodules: 'true'
+      
+      - name: Install DQ Robotics
+        run: | 
+          git clone -b ${{ matrix.testbranches }} https://github.com/dqrobotics/cpp
+          cd cpp
+          sh ./.github/scripts/macos/install_prerequisites.sh
+          sh ./.github/scripts/macos/build.sh
+          sh ./.github/scripts/macos/install.sh
+
+      - name: Install prerequisites
+        run: sh ./.github/scripts/macos/install_prerequisites.sh
+
+      - name: Build cpp-interface-coppeliasim
+        run: | 
+          git clone https://github.com/dqrobotics/cpp-interface-coppeliasim
+          cd cpp-interface-coppeliasim
+          sh ../cpp/.github/scripts/macos/build.sh
+          
+      - name: Install cpp-interface-coppeliasim
+        run: | 
+          cd cpp-interface-coppeliasim
+          sh ../cpp/.github/scripts/macos/install.sh
+
+      - name: Build cpp-interface-coppeliasim-zmq
+        run: | 
+          git clone https://github.com/dqrobotics/cpp-interface-coppeliasim-zmq
+          cd cpp-interface-coppeliasim-zmq
+          sh ../cpp/.github/scripts/macos/build.sh
+          
+      - name: Install cpp-interface-coppeliasim-zmq
+        run: | 
+          cd cpp-interface-coppeliasim-zmq
+          sh ../cpp/.github/scripts/macos/install.sh     
+          
+      - name: Build
+        run: sh cpp/.github/scripts/macos/build.sh
+          
+      - name: Install
+        run: sh cpp/.github/scripts/macos/install.sh
+          
