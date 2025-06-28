@@ -41,3 +41,14 @@ The VFIs are described in this [publication](https://ieeexplore.ieee.org/documen
   custom_type  = {1. Journal Paper},
 }
 ```
+
+### Install (UNIX)
+
+```shell
+git clone https://github.com/Adorno-Lab/robot_constraint_manager
+cd robot_constraint_manager
+mkdir -p build && build
+cmake ..
+make
+sudo make install
+```
