@@ -40,6 +40,7 @@ target_link_libraries(${PROJECT_NAME}
     dqrobotics
     dqrobotics-interface-coppeliasim-zmq
     robot_constraint_manager
+    Eigen3::Eigen
     qpOASES)
 
 
