@@ -38,6 +38,12 @@ jobs:
           cd cpp-interface-coppeliasim
           sh ../cpp/.github/scripts/macos/install.sh
 
+      - name: Install prerequisites for cpp-interface-coppeliasim-zmq
+        run: | 
+          git clone https://github.com/dqrobotics/cpp-interface-coppeliasim-zmq
+          cd cpp-interface-coppeliasim-zmq
+          sh cpp-interface-coppeliasim-zmq/.github/scripts/macos/install_prerequisites.sh 
+
       - name: Build cpp-interface-coppeliasim-zmq
         run: | 
           git clone https://github.com/dqrobotics/cpp-interface-coppeliasim-zmq
