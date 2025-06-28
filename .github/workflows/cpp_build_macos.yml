@@ -51,7 +51,7 @@ jobs:
       - name: Install cpp-interface-coppeliasim-zmq
         run: | 
           cd cpp-interface-coppeliasim-zmq
-          sh ../cpp/.github/scripts/macos/build.sh
+          sh ../cpp/.github/scripts/macos/install.sh
           
       - name: Build
         run: sh cpp/.github/scripts/macos/build.sh
