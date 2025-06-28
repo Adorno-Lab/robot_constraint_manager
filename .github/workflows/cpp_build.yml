@@ -1,0 +1,48 @@
+name: CPP Build
+
+on: [push, pull_request, workflow_dispatch]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        testbranches: ['release','master']
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Apt update
+        run: sudo apt update
+      
+      - name: Install DQ Robotics package
+        run: | 
+          git clone https://github.com/Adorno-Lab/docker_recipes
+          cd docker_recipes
+          chmod +x .install_dqrobotics.sh
+          ./.install_dqrobotics.sh
+
+      - name: Install Yaml-Cpp
+        run: | 
+          git clone https://github.com/jbeder/yaml-cpp
+          cd yaml-cpp
+          mkdir build
+          cd build
+          cmake -DYAML_BUILD_SHARED_LIBS=on ..
+          make
+          sudo make install
+          
+      - name: Build
+        run: sh cpp/.github/scripts/macos/build.sh
+          
+      - name: Install
+        run: sh cpp/.github/scripts/macos/install.sh
+
+      - name: Build examples (panda_example)
+        run: |
+             cd examples/panda_example
+             mkdir -p build && cd build
+             cmake ..
+             make
+        
