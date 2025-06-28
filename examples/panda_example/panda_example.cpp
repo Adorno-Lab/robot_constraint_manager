@@ -42,13 +42,7 @@ int main()
 
         std::string yaml_path = "vfi_constraints.yaml";
 
-
-        MatrixXd A;
-        VectorXd b;
-        MatrixXd Aeq;
-        VectorXd beq;
         DQ_robotics_extensions::RobotConstraintManager rcm{cs, panda, panda_model, yaml_path, true};
-
 
         cs->start_simulation();
 
@@ -57,9 +51,7 @@ int main()
         {
             DQ xd = cs->get_object_pose("ReferenceFrame");
             auto q = panda->get_configuration();
-            auto ineq_constraints = rcm.get_inequality_constraints(q);
-            A = std::get<0>(ineq_constraints);
-            b = std::get<1>(ineq_constraints);
+            auto [A,b] = rcm.get_inequality_constraints(q);
             controller.set_inequality_constraint(A,b);
             auto u = controller.compute_setpoint_control_signal(q, xd.translation().vec4());
             panda->set_target_configuration_velocities(u);
