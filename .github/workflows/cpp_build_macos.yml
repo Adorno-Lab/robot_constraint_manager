@@ -61,7 +61,7 @@ jobs:
 
       - name: Build examples (panda_example)
         run: |
-             cd examples/panda_examples
+             cd examples/panda_example
              mkdir -p build && build
              cmake ..
              make
