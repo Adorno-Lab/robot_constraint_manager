@@ -79,7 +79,7 @@ brew install yaml-cpp
 ```shell
 git clone https://github.com/Adorno-Lab/robot_constraint_manager
 cd robot_constraint_manager
-mkdir -p build && build
+mkdir -p build && cd build
 cmake ..
 make
 sudo make install
