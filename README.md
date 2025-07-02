@@ -41,6 +41,39 @@ The VFIs are described in this [publication](https://ieeexplore.ieee.org/documen
 }
 ```
 
+
+### Prerequisites
+
+#### DQ Robotics
+
+Ubuntu:
+```shell
+sudo add-apt-repository ppa:dqrobotics-dev/development 
+sudo apt-get update && sudo apt-get install -y libdqrobotics libdqrobotics-interface-coppeliasim libdqrobotics-interface-coppeliasim-zmq libdqrobotics-interface-qpoases
+```
+macOS:
+
+Clone and build the CMake projects manually.
+
+#### [Yaml-cpp](https://github.com/jbeder/yaml-cpp)
+
+Ubuntu:
+```shell
+git clone https://github.com/jbeder/yaml-cpp
+cd yaml-cpp
+mkdir build
+cd build
+cmake -DYAML_BUILD_SHARED_LIBS=on ..
+make
+sudo make install
+```
+macOS:
+
+```
+brew update
+brew install yaml-cpp
+```
+
 ### Install (UNIX)
 
 ```shell
