@@ -74,7 +74,6 @@ INSTALL(FILES
     include/dqrobotics_extensions/robot_constraint_manager/constraints_manager.hpp
     include/dqrobotics_extensions/robot_constraint_manager/conversions.hpp
     include/dqrobotics_extensions/robot_constraint_manager/numpy.hpp
-    include/dqrobotics_extensions/robot_constraint_manager/robot_constraint_manager.hpp
     include/dqrobotics_extensions/robot_constraint_manager/utils.hpp
     include/dqrobotics_extensions/robot_constraint_manager/vfi_framework.hpp
     include/dqrobotics_extensions/robot_constraint_manager/vfi_manager.hpp
