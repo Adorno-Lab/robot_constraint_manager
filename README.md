@@ -1,6 +1,7 @@
 ![Static Badge](https://img.shields.io/badge/Written_in-C%2B%2B17-blue)![GitHub License](https://img.shields.io/github/license/juanjqo/capybara_toolkit?color=orange)![Static Badge](https://img.shields.io/badge/status-experimental-red)[![CPP Build MacOS](https://github.com/Adorno-Lab/robot_constraint_manager/actions/workflows/cpp_build_macos.yml/badge.svg)](https://github.com/Adorno-Lab/robot_constraint_manager/actions/workflows/cpp_build_macos.yml)[![CPP Build Ubuntu](https://github.com/Adorno-Lab/robot_constraint_manager/actions/workflows/cpp_build.yml/badge.svg)](https://github.com/Adorno-Lab/robot_constraint_manager/actions/workflows/cpp_build.yml)
 # robot_constraint_manager
 
+<img src="https://github.com/user-attachments/assets/810414b6-5dbc-4889-83c4-802c863807ea" alt="drawing" width="600"/>
 
 This project implements the VFIs constraints using a yaml configuration file.
 A version is described in this [publication](https://ieeexplore.ieee.org/document/10399868)
