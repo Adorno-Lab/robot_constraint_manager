@@ -68,6 +68,18 @@ RobotConstraintManager::RobotConstraintManager(const std::shared_ptr<DQ_Coppelia
 
 
 /**
+ * @brief RobotConstraintManager::get_number_vfi_constraints gets the number of VFI constraints set in the config file.
+ *                  This number only counts the constraints that require tags. Therefore, the configuration limits, and the
+ *                  configuration velocity limits are not taken into account.
+ * @return The VFI constraints set in the config file.
+ */
+int RobotConstraintManager::get_number_vfi_constraints() const
+{
+    return number_of_constraints_;
+}
+
+
+/**
  * @brief RobotConstraintManager::set_vfi_configuration_constraints_gain sets the gain for the configuration constraints.
  * @param vfi_position_constraints_gain
  */
@@ -170,7 +182,7 @@ std::tuple<MatrixXd, VectorXd> RobotConstraintManager::get_inequality_constraint
  * @param tag The tag of the constraint.
  * @return The desired distance error.
  */
-double RobotConstraintManager::get_vfi_distance_error(const std::string &tag)
+double RobotConstraintManager::get_vfi_distance_error(const std::string &tag) const
 {
     return VFI_M_->get_vfi_distance_error(tag);
 }
@@ -187,7 +199,7 @@ double RobotConstraintManager::get_vfi_distance_error(const std::string &tag)
  * @param tag The tag of the constraint.
  * @return the two Plücker line orientations.
  */
-double RobotConstraintManager::get_line_to_line_angle(const std::string &tag)
+double RobotConstraintManager::get_line_to_line_angle(const std::string &tag) const
 {
     return VFI_M_->get_line_to_line_angle(tag);
 }
@@ -197,7 +209,7 @@ double RobotConstraintManager::get_line_to_line_angle(const std::string &tag)
  * @brief RobotConstraintManager::show_vfi_build_data shows the data extracted from the config yaml file.
  * @param tag The tag of the constraint.
  */
-void RobotConstraintManager::show_vfi_build_data(const std::string &tag)
+void RobotConstraintManager::show_vfi_build_data(const std::string &tag) const
 {
     try {
         auto data = vfi_build_data_map_.at(tag);
