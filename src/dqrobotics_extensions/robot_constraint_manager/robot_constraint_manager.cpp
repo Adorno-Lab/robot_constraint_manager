@@ -56,8 +56,8 @@ RobotConstraintManager::RobotConstraintManager(const std::shared_ptr<DQ_Coppelia
                                                const std::shared_ptr<DQ_Kinematics> &robot,
                                                const std::string &yaml_file_path, const bool &verbosity,
                                                const VFI_Framework::LEVEL &level)
-    :coppelia_robot_{coppeliasim_robot}, cs_{coppelia_interface}, config_path_{yaml_file_path},
-    level_{level}, robot_{robot},
+    :cs_{coppelia_interface}, config_path_{yaml_file_path}, level_{level},
+    robot_{robot}, coppelia_robot_{coppeliasim_robot},
     verbosity_{verbosity}
 {
     impl_ = std::make_shared<RobotConstraintManager::Impl>();
