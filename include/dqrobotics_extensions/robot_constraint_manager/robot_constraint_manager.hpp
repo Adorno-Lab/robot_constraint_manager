@@ -90,7 +90,7 @@ public:
                            const VFI_manager::LEVEL& level = VFI_manager::LEVEL::VELOCITIES);
 
 
-    int get_number_vfi_constraints() const;
+    int get_number_of_vfi_constraints() const;
 
 
     std::tuple<MatrixXd, VectorXd> get_inequality_constraints(const VectorXd& q);

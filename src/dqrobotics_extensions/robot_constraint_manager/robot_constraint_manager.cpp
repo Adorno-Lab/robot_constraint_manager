@@ -68,12 +68,12 @@ RobotConstraintManager::RobotConstraintManager(const std::shared_ptr<DQ_Coppelia
 
 
 /**
- * @brief RobotConstraintManager::get_number_vfi_constraints gets the number of VFI constraints set in the config file.
+ * @brief RobotConstraintManager::get_number_of_vfi_constraints gets the number of VFI constraints set in the config file.
  *                  This number only counts the constraints that require tags. Therefore, the configuration limits, and the
  *                  configuration velocity limits are not taken into account.
  * @return The VFI constraints set in the config file.
  */
-int RobotConstraintManager::get_number_vfi_constraints() const
+int RobotConstraintManager::get_number_of_vfi_constraints() const
 {
     return number_of_constraints_;
 }
