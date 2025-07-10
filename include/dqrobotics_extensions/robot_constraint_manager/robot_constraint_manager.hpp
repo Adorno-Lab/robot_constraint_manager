@@ -100,6 +100,8 @@ public:
     void show_vfi_build_data(const std::string& tag) const;
     std::tuple<VectorXd, VectorXd> get_configuration_limits() const;
     std::tuple<VectorXd, VectorXd> get_configuration_velocity_limits() const;
+    void set_configuration_limits(const std::tuple<VectorXd, VectorXd>& configuration_limits);
+    void set_configuration_velocity_limits(const std::tuple<VectorXd, VectorXd> &configuration_velocity_limits);
 
 };
 }
