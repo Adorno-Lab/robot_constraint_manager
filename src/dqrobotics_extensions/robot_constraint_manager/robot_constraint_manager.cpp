@@ -258,6 +258,26 @@ std::tuple<VectorXd, VectorXd> RobotConstraintManager::get_configuration_velocit
 }
 
 
+/**
+ * @brief RobotConstraintManager::set_configuration_limits sets the configuration limits
+ * @param configuration_limits A tuple containing the configuration limits. Example: {q_lower_bound, q_upper_bound}
+ */
+void RobotConstraintManager::set_configuration_limits(const std::tuple<VectorXd, VectorXd> &configuration_limits)
+{
+    VFI_M_->set_configuration_limits(configuration_limits);
+}
+
+/**
+* @brief RobotConstraintManager::set_configuration_velocity_limits sets the configuration velocity limits
+* @param configuration_velocity_limits. A tuple containing the configuration velocity limits.
+*                      Example: {q_dot_lower_bound, q_dot_upper_bound}
+*/
+void RobotConstraintManager::set_configuration_velocity_limits(const std::tuple<VectorXd, VectorXd> &configuration_velocity_limits)
+{
+    VFI_M_->set_configuration_velocity_limits(configuration_velocity_limits);
+}
+
+
 
 /**
  * @brief RobotConstraintManager::_get_robot_primitive_offset_from_coppeliasim computes the primitive offsets
