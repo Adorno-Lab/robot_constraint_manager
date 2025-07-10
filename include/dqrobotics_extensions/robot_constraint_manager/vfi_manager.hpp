@@ -108,6 +108,9 @@ public:
     void set_configuration_limits(const std::tuple<VectorXd, VectorXd>& configuration_limits);
     void set_configuration_velocity_limits(const std::tuple<VectorXd, VectorXd> &configuration_velocity_limits);
 
+    std::tuple<VectorXd, VectorXd> get_configuration_limits() const;
+    std::tuple<VectorXd, VectorXd> get_configuration_velocity_limits() const;
+
 
 
     void add_configuration_limits(const double& gain, const VectorXd& configuration);

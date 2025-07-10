@@ -421,6 +421,26 @@ void VFI_manager::set_configuration_velocity_limits(const std::tuple<VectorXd, V
 
 }
 
+
+/**
+ * @brief VFI_manager::get_configuration_limits returns the configuration limits.
+ * @return The configuration limits: limits {q_lower_bound, q_upper_bound}
+ */
+std::tuple<VectorXd, VectorXd> VFI_manager::get_configuration_limits() const
+{
+    return {q_min_, q_max_};
+}
+
+
+/**
+ * @brief VFI_manager::get_configuration_velocity_limits returns the configuration velocity limits.
+ * @return The configuration velocity limits: {q_dot_lower_bound, q_dot_upper_bound}
+ */
+std::tuple<VectorXd, VectorXd> VFI_manager::get_configuration_velocity_limits() const
+{
+    return {q_dot_min_, q_dot_max_};
+}
+
 /**
  * @brief VFI_manager::get_inequality_constraints returns a tuple with the inequality constraints given by
  *                                                 Ax <= b

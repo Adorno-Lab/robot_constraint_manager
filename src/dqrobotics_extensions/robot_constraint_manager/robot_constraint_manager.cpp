@@ -238,6 +238,25 @@ void RobotConstraintManager::show_vfi_build_data(const std::string &tag) const
 
 }
 
+/**
+ * @brief RobotConstraintManager::get_configuration_limits returns the configuration limits.
+ * @return The configuration limits: limits {q_lower_bound, q_upper_bound}
+ */
+std::tuple<VectorXd, VectorXd> RobotConstraintManager::get_configuration_limits() const
+{
+    return VFI_M_->get_configuration_limits();
+}
+
+
+/**
+ * @brief RobotConstraintManager::get_configuration_velocity_limits returns the configuration velocity limits.
+ * @return The configuration velocity limits: {q_dot_lower_bound, q_dot_upper_bound}
+ */
+std::tuple<VectorXd, VectorXd> RobotConstraintManager::get_configuration_velocity_limits() const
+{
+    return VFI_M_->get_configuration_velocity_limits();
+}
+
 
 
 /**
