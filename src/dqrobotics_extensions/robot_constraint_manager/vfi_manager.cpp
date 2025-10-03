@@ -494,6 +494,24 @@ double VFI_manager::get_line_to_line_angle(const std::string &tag)
 
 }
 
+/**
+ * @brief VFI_manager::get_vfi_log_data returns a tuple containing the vfi log data. This is useful for debugging.
+ * @param tag The tag of the constraint.
+ * @return A tuple containing the vfi log data
+ *      {distance, square_distance, distance_error, square_distance_error, line_to_line_angle_rad, vfi_type}
+ *
+ */
+std::tuple<double, double, double, double, double, std::string> VFI_manager::get_vfi_log_data(const std::string &tag)
+{
+    const auto data = _get_data_from_vfi_parameters_map(tag);
+    return {data.distance,
+            data.square_distance,
+            data.distance_error,
+            data.square_distance_error,
+            data.line_to_line_angle_rad,
+            map_vfiType_to_string(data.vfi_type)};
+}
+
 
 
 }

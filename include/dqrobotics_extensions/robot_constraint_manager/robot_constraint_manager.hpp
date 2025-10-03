@@ -95,6 +95,9 @@ public:
 
     std::tuple<MatrixXd, VectorXd> get_inequality_constraints(const VectorXd& q);
 
+    std::tuple<double, double, double, double, double, std::string> get_vfi_log_data(const std::string &tag);
+
+
     double get_vfi_distance_error(const std::string& tag) const;
     double get_line_to_line_angle(const std::string& tag) const;
     void show_vfi_build_data(const std::string& tag) const;
