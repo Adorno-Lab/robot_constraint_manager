@@ -173,6 +173,18 @@ std::tuple<MatrixXd, VectorXd> RobotConstraintManager::get_inequality_constraint
 
 
 /**
+ * @brief RobotConstraintManager::get_vfi_log_data returns a tuple containing the vfi log data. This is useful for debugging.
+ * @param tag The tag of the constraint.
+ * @return A tuple containing the vfi log data
+ *      {distance, square_distance, distance_error, square_distance_error, line_to_line_angle_rad, vfi_type}
+ */
+std::tuple<double, double, double, double, double, std::string> RobotConstraintManager::get_vfi_log_data(const std::string &tag)
+{
+    return VFI_M_->get_vfi_log_data(tag);
+}
+
+
+/**
  * @brief RobotConstraintManager::get_vfi_distance_error gets the distance error computed in the tag-specified VFI. Some VFIs are implemented
  *                      using the square distance error, which is computed as
  *                              square_distance_error = square_d - square_safe_distance.
@@ -298,7 +310,12 @@ DQ RobotConstraintManager::_get_robot_primitive_offset_from_coppeliasim(const st
     {
         q = coppelia_robot_->get_configuration();
         xprimitive = cs_->get_object_pose(object_name);
-        x = robot_->fkm(q, joint_index);
+
+        if (joint_index == robot_->get_dim_configuration_space() -1)
+            x = robot_->fkm(q);
+        else
+            x = robot_->fkm(q, joint_index);
+
         x_offset =  x.conj()*xprimitive;
     }
     return x_offset;
