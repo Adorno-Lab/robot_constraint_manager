@@ -58,3 +58,19 @@
        entity_robot_attached_direction: k_
        entity_environment_attached_direction: k_
        tag: C3
+
+
+- Description: End-effector plane constraint
+  Parameters:
+     - vfi_mode: ENVIRONMENT_TO_ROBOT
+       cs_entity_environment: Cylinder
+       cs_entity_robot: rsphere
+       entity_environment_primitive_type: LINE
+       entity_robot_primitive_type: POINT
+       joint_index: 7
+       safe_distance: 0.1
+       vfi_gain: 2.0
+       direction: KEEP_ROBOT_OUTSIDE
+       entity_robot_attached_direction: k_
+       entity_environment_attached_direction: k_
+       tag: C4
