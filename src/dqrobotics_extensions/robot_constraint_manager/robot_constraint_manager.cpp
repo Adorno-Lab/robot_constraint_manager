@@ -1,5 +1,5 @@
 /*
-#    Copyright (c) 2024 Adorno-Lab
+#    Copyright (c) 2024-2025 Adorno-Lab
 #
 #    robot_constraint_manager is free software: you can redistribute it and/or modify
 #    it under the terms of the GNU Lesser General Public License as published by
@@ -23,6 +23,7 @@
 
 #include <dqrobotics_extensions/robot_constraint_manager/robot_constraint_manager.hpp>
 #include <yaml-cpp/yaml.h>
+#include <ranges>
 
 namespace DQ_robotics_extensions{
 
@@ -193,6 +194,19 @@ std::tuple<int, DQ, int, DQ> RobotConstraintManager::get_primitive_index_and_off
 {
     const auto data = vfi_build_data_map_.at(tag);
     return {data.joint_index_one, data.primitive_offset_one, data.joint_index_two, data.primitive_offset_two};
+}
+
+/**
+ * @brief RobotConstraintManager::get_vfi_tags returns all tags used in the configuration file
+ * @return A vector containing all tags
+ */
+std::vector<std::string> RobotConstraintManager::get_vfi_tags() const
+{
+    std::vector<std::string> tags;
+    tags.reserve(vfi_build_data_map_.size());
+    for (auto& pair : vfi_build_data_map_)
+        tags.push_back(pair.first);
+    return tags;
 }
 
 

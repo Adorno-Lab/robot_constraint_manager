@@ -1,5 +1,5 @@
 /*
-#    Copyright (c) 2024 Adorno-Lab
+#    Copyright (c) 2024-2025 Adorno-Lab
 #
 #    robot_constraint_manager is free software: you can redistribute it and/or modify
 #    it under the terms of the GNU Lesser General Public License as published by
@@ -112,7 +112,6 @@ public:
     std::tuple<VectorXd, VectorXd> get_configuration_velocity_limits() const;
 
 
-
     void add_configuration_limits(const double& gain, const VectorXd& configuration);
     void add_configuration_velocity_limits();
 
@@ -121,6 +120,7 @@ public:
 
     double get_vfi_distance_error(const std::string& tag);
     double get_line_to_line_angle(const std::string& tag);
+
 
     std::tuple<double, double, double, double, double, std::string> get_vfi_log_data(const std::string& tag);
 

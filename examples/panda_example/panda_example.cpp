@@ -44,7 +44,12 @@ int main()
 
         DQ_robotics_extensions::RobotConstraintManager rcm{cs, panda, panda_model, yaml_path, true};
 
+        auto tags = rcm.get_vfi_tags();
+        for (auto& tag : tags)
+            std::cout<<tag<<std::endl;
+
         cs->start_simulation();
+
 
         std::cout<<"Starting teleoperation "<<std::endl;
         while ( not kill_this_process)
