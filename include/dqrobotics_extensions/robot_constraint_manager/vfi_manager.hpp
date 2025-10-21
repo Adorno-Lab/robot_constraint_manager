@@ -1,5 +1,5 @@
 /*
-#    Copyright (c) 2024 Adorno-Lab
+#    Copyright (c) 2024-2025 Adorno-Lab
 #
 #    robot_constraint_manager is free software: you can redistribute it and/or modify
 #    it under the terms of the GNU Lesser General Public License as published by
