@@ -64,7 +64,7 @@ protected:
     std::unordered_map<std::string, VFI_BUILD_DATA> vfi_build_data_map_;
 
 protected:
-    std::shared_ptr<DQ_CoppeliaSimInterfaceZMQ> cs_;
+    std::shared_ptr<DQ_CoppeliaSimInterface> cs_;
     std::string config_path_;
     VFI_Framework::LEVEL level_;
     std::shared_ptr<DQ_Kinematics> robot_;
@@ -82,7 +82,7 @@ protected:
 
     void _check_unit(const std::string& unit);
 public:
-    RobotConstraintManager(const std::shared_ptr<DQ_CoppeliaSimInterfaceZMQ>& coppelia_interface,
+    RobotConstraintManager(const std::shared_ptr<DQ_CoppeliaSimInterface>& coppelia_interface,
                            const std::shared_ptr<DQ_CoppeliaSimRobot>& coppeliasim_robot,
                            const std::shared_ptr<DQ_Kinematics>& robot,
                            const std::string &yaml_file_path,

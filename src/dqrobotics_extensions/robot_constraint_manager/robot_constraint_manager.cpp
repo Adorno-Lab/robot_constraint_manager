@@ -52,7 +52,7 @@ public:
  * @param configuration_velocity_limits
  * @param level
  */
-RobotConstraintManager::RobotConstraintManager(const std::shared_ptr<DQ_CoppeliaSimInterfaceZMQ> &coppelia_interface,
+RobotConstraintManager::RobotConstraintManager(const std::shared_ptr<DQ_CoppeliaSimInterface> &coppelia_interface,
                                                const std::shared_ptr<DQ_CoppeliaSimRobot> &coppeliasim_robot,
                                                const std::shared_ptr<DQ_Kinematics> &robot,
                                                const std::string &yaml_file_path, const bool &verbosity,
