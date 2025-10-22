@@ -56,11 +56,6 @@ public:
         std::string tag;
     };
 
-private:
-    class Impl;
-    std::shared_ptr<Impl> impl_;
-
-protected:
     struct VFI_BUILD_DATA{
         VFI_Framework::VFI_MODE vfi_mode;
         VFI_Framework::VFI_TYPE vfi_type;
@@ -77,6 +72,12 @@ protected:
         DQ cs_entity_environment_pose;
         std::string tag;
     };
+
+private:
+    class Impl;
+    std::shared_ptr<Impl> impl_;
+
+protected:
 
     std::vector<VFI_BUILD_DATA> vfi_build_data_list_;
     std::unordered_map<std::string, VFI_BUILD_DATA> vfi_build_data_map_;
@@ -121,7 +122,12 @@ public:
     std::tuple<double, double, double, double, double, std::string> get_vfi_log_data(const std::string &tag) const;
     std::tuple<int, DQ, int, DQ> get_primitive_index_and_offset(const std::string& tag) const;
 
-    YAML_RAW_DATA get_raw_data(const std::string& tag) const;
+    [[deprecated("This method is experimental")]]
+    YAML_RAW_DATA get_raw_yaml_data(const std::string& tag) const;
+
+    [[deprecated("This method is experimental")]]
+    VFI_BUILD_DATA get_vfi_build_data(const std::string& tag) const;
+
     std::vector<std::string> get_vfi_tags() const;
     double get_vfi_distance_error(const std::string& tag) const;
     double get_line_to_line_angle(const std::string& tag) const;

@@ -197,11 +197,22 @@ std::tuple<int, DQ, int, DQ> RobotConstraintManager::get_primitive_index_and_off
 }
 
 /**
+ * @brief RobotConstraintManager::get_vfi_build_data returns a custom struct containing the data used to build
+ *              the VFIs
+ * @param tag The tag of the constraint.
+ * @return A VFI_BUILD_DATA struct.
+ */
+RobotConstraintManager::VFI_BUILD_DATA RobotConstraintManager::get_vfi_build_data(const std::string &tag) const
+{
+    return vfi_build_data_map_.at(tag);
+}
+
+/**
  * @brief RobotConstraintManager::get_raw_data returns a custom struct containing the raw data from the YAML file.
  * @param tag The tag of the constraint.
  * @return A YAML_RAW_DATA struct.
  */
-RobotConstraintManager::YAML_RAW_DATA RobotConstraintManager::get_raw_data(const std::string &tag) const
+RobotConstraintManager::YAML_RAW_DATA RobotConstraintManager::get_raw_yaml_data(const std::string &tag) const
 {
     return yaml_raw_data_map_.at(tag);
 }

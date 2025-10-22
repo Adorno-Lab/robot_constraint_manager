@@ -46,7 +46,29 @@ int main()
 
         auto tags = rcm.get_vfi_tags();
         for (auto& tag : tags)
+        {
+            std::cout<<"-------------"<<std::endl;
             std::cout<<tag<<std::endl;
+            auto yaml_raw_data  = rcm.get_raw_data(tag);
+            std::cout<<"Raw data"<<std::endl;
+            std::cout<<yaml_raw_data.vfi_mode<<std::endl;
+            std::cout<<yaml_raw_data.cs_entity_one_or_environment<<std::endl;
+            std::cout<<yaml_raw_data.cs_entity_two_or_robot<<std::endl;
+            std::cout<<yaml_raw_data.entity_one_primitive_type_or_environment<<std::endl;
+            std::cout<<yaml_raw_data.entity_two_primitive_type_or_robot<<std::endl;
+            std::cout<< yaml_raw_data.joint_index_one_or_joint_index<<std::endl;
+            std::cout<<yaml_raw_data.joint_index_two<<std::endl;
+            std::cout<<yaml_raw_data.safe_distance<<std::endl;
+            std::cout<<yaml_raw_data.vfi_gain<<std::endl;
+            std::cout<<yaml_raw_data.direction<<std::endl;
+            std::cout<<yaml_raw_data.entity_robot_attached_direction<<std::endl;
+            std::cout<<yaml_raw_data.entity_environment_attached_direction<<std::endl;
+            std::cout<<yaml_raw_data.tag<<std::endl;
+            std::cout<<"-------------"<<std::endl;
+        }
+
+
+
 
         cs->start_simulation();
 
