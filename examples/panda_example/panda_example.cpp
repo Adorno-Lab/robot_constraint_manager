@@ -49,7 +49,7 @@ int main()
         {
             std::cout<<"-------------"<<std::endl;
             std::cout<<tag<<std::endl;
-            auto yaml_raw_data  = rcm.get_raw_data(tag);
+            auto yaml_raw_data  = rcm.get_raw_yaml_data(tag);
             std::cout<<"Raw data"<<std::endl;
             std::cout<<yaml_raw_data.vfi_mode<<std::endl;
             std::cout<<yaml_raw_data.cs_entity_one_or_environment<<std::endl;
@@ -65,6 +65,10 @@ int main()
             std::cout<<yaml_raw_data.entity_environment_attached_direction<<std::endl;
             std::cout<<yaml_raw_data.tag<<std::endl;
             std::cout<<"-------------"<<std::endl;
+
+
+            auto build_data = rcm.get_vfi_build_data(tag);
+
         }
 
 
