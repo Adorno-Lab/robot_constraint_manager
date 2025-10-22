@@ -23,7 +23,7 @@
 
 #include <dqrobotics_extensions/robot_constraint_manager/robot_constraint_manager.hpp>
 #include <yaml-cpp/yaml.h>
-#include <ranges>
+
 
 namespace DQ_robotics_extensions{
 
@@ -52,7 +52,7 @@ public:
  * @param configuration_velocity_limits
  * @param level
  */
-RobotConstraintManager::RobotConstraintManager(const std::shared_ptr<DQ_CoppeliaSimInterfaceZMQ> &coppelia_interface,
+RobotConstraintManager::RobotConstraintManager(const std::shared_ptr<DQ_CoppeliaSimInterface> &coppelia_interface,
                                                const std::shared_ptr<DQ_CoppeliaSimRobot> &coppeliasim_robot,
                                                const std::shared_ptr<DQ_Kinematics> &robot,
                                                const std::string &yaml_file_path, const bool &verbosity,
@@ -194,6 +194,27 @@ std::tuple<int, DQ, int, DQ> RobotConstraintManager::get_primitive_index_and_off
 {
     const auto data = vfi_build_data_map_.at(tag);
     return {data.joint_index_one, data.primitive_offset_one, data.joint_index_two, data.primitive_offset_two};
+}
+
+/**
+ * @brief RobotConstraintManager::get_vfi_build_data returns a custom struct containing the data used to build
+ *              the VFIs
+ * @param tag The tag of the constraint.
+ * @return A VFI_BUILD_DATA struct.
+ */
+RobotConstraintManager::VFI_BUILD_DATA RobotConstraintManager::get_vfi_build_data(const std::string &tag) const
+{
+    return vfi_build_data_map_.at(tag);
+}
+
+/**
+ * @brief RobotConstraintManager::get_raw_data returns a custom struct containing the raw data from the YAML file.
+ * @param tag The tag of the constraint.
+ * @return A YAML_RAW_DATA struct.
+ */
+RobotConstraintManager::YAML_RAW_DATA RobotConstraintManager::get_raw_yaml_data(const std::string &tag) const
+{
+    return yaml_raw_data_map_.at(tag);
 }
 
 /**
@@ -358,7 +379,7 @@ void RobotConstraintManager::_initial_settings()
         }
         number_of_constraints_ =  impl_->config_.size() ;
 
-        int i = 0;
+        [[maybe_unused]] int i = 0;
         // The outer element is an array
         for(auto dict : impl_->config_) {
             auto name = dict["Description"];
@@ -383,6 +404,25 @@ void RobotConstraintManager::_initial_settings()
                     auto raw_entity_robot_attached_direction = pos["entity_robot_attached_direction"].as<std::string>();
                     auto raw_entity_environment_attached_direction = pos["entity_environment_attached_direction"].as<std::string>();
                     auto raw_tag = pos["tag"].as<std::string>();
+
+                    YAML_RAW_DATA yaml_raw_data;
+                    yaml_raw_data.vfi_mode = "ENVIRONMENT_TO_ROBOT";
+                    yaml_raw_data.cs_entity_one_or_environment             = raw_cs_entity_environment;
+                    yaml_raw_data.cs_entity_two_or_robot                   = raw_cs_entity_robot;
+                    yaml_raw_data.entity_one_primitive_type_or_environment = raw_entity_environment_primitive_type;
+                    yaml_raw_data.entity_two_primitive_type_or_robot       = raw_entity_robot_primitive_type;
+                    yaml_raw_data.joint_index_one_or_joint_index           = raw_joint_index;
+                    yaml_raw_data.joint_index_two                          = -1;
+                    yaml_raw_data.safe_distance                            = raw_safe_distance;
+                    yaml_raw_data.vfi_gain                                 = raw_vfi_gain;
+                    yaml_raw_data.direction                                = raw_direction;
+                    yaml_raw_data.entity_robot_attached_direction          = raw_entity_robot_attached_direction;
+                    yaml_raw_data.entity_environment_attached_direction    = raw_entity_environment_attached_direction;
+                    yaml_raw_data.tag                                      = raw_tag;
+
+                    yaml_raw_data_list_.push_back(yaml_raw_data);
+                    yaml_raw_data_map_.try_emplace(yaml_raw_data.tag, yaml_raw_data);
+
 
                     VFI_BUILD_DATA vfi_data;
                     vfi_data.vfi_mode = VFI_manager::VFI_MODE::ENVIRONMENT_TO_ROBOT;
@@ -414,7 +454,7 @@ void RobotConstraintManager::_initial_settings()
                     auto raw_cs_entity_two = pos["cs_entity_two"].as<std::string>();
 
                     auto raw_entity_one_primitive_type =  pos["entity_one_primitive_type"].as<std::string>();
-                    auto raw_entity_two_primitive_type=   pos["entity_two_primitive_type"].as<std::string>();
+                    auto raw_entity_two_primitive_type =   pos["entity_two_primitive_type"].as<std::string>();
 
                     // C++ uses zero-index for the first element. However, the user specifies the first joint with index 1.
                     auto raw_joint_index_one =  pos["joint_index_one"].as<double>()-1;
@@ -423,6 +463,25 @@ void RobotConstraintManager::_initial_settings()
                     auto raw_safe_distance = pos["safe_distance"].as<double>();
                     auto raw_vfi_gain = pos["vfi_gain"].as<double>();
                     auto raw_tag = pos["tag"].as<std::string>();
+
+
+                    YAML_RAW_DATA yaml_raw_data;
+                    yaml_raw_data.vfi_mode = "ENVIRONMENT_TO_ROBOT";
+                    yaml_raw_data.cs_entity_one_or_environment             = raw_cs_entity_one;
+                    yaml_raw_data.cs_entity_two_or_robot                   = raw_cs_entity_two;
+                    yaml_raw_data.entity_one_primitive_type_or_environment = raw_entity_one_primitive_type;
+                    yaml_raw_data.entity_two_primitive_type_or_robot       = raw_entity_two_primitive_type;
+                    yaml_raw_data.joint_index_one_or_joint_index           = raw_joint_index_one;
+                    yaml_raw_data.joint_index_two                          = raw_joint_index_two;
+                    yaml_raw_data.safe_distance                            = raw_safe_distance;
+                    yaml_raw_data.vfi_gain                                 = raw_vfi_gain;
+                    yaml_raw_data.direction                                = "NONE";
+                    yaml_raw_data.entity_robot_attached_direction          = "NONE";
+                    yaml_raw_data.entity_environment_attached_direction    = "NONE";
+                    yaml_raw_data.tag                                      = raw_tag;
+
+                    yaml_raw_data_list_.push_back(yaml_raw_data);
+                    yaml_raw_data_map_.try_emplace(yaml_raw_data.tag, yaml_raw_data);
 
 
                     VFI_BUILD_DATA vfi_data;

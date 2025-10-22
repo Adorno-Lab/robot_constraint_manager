@@ -39,11 +39,23 @@ namespace DQ_robotics_extensions
 
 class RobotConstraintManager
 {
-private:
-    class Impl;
-    std::shared_ptr<Impl> impl_;
+public:
+    struct YAML_RAW_DATA{
+        std::string vfi_mode;
+        std::string cs_entity_one_or_environment;
+        std::string cs_entity_two_or_robot;
+        std::string entity_one_primitive_type_or_environment;
+        std::string entity_two_primitive_type_or_robot;
+        int joint_index_one_or_joint_index;
+        int joint_index_two;
+        double safe_distance;
+        double vfi_gain;
+        std::string direction;
+        std::string entity_robot_attached_direction;
+        std::string entity_environment_attached_direction;
+        std::string tag;
+    };
 
-protected:
     struct VFI_BUILD_DATA{
         VFI_Framework::VFI_MODE vfi_mode;
         VFI_Framework::VFI_TYPE vfi_type;
@@ -60,11 +72,23 @@ protected:
         DQ cs_entity_environment_pose;
         std::string tag;
     };
+
+private:
+    class Impl;
+    std::shared_ptr<Impl> impl_;
+
+protected:
+
     std::vector<VFI_BUILD_DATA> vfi_build_data_list_;
     std::unordered_map<std::string, VFI_BUILD_DATA> vfi_build_data_map_;
 
+    std::vector<YAML_RAW_DATA> yaml_raw_data_list_;
+    std::unordered_map<std::string, YAML_RAW_DATA> yaml_raw_data_map_;
+
+
+
 protected:
-    std::shared_ptr<DQ_CoppeliaSimInterfaceZMQ> cs_;
+    std::shared_ptr<DQ_CoppeliaSimInterface> cs_;
     std::string config_path_;
     VFI_Framework::LEVEL level_;
     std::shared_ptr<DQ_Kinematics> robot_;
@@ -82,7 +106,7 @@ protected:
 
     void _check_unit(const std::string& unit);
 public:
-    RobotConstraintManager(const std::shared_ptr<DQ_CoppeliaSimInterfaceZMQ>& coppelia_interface,
+    RobotConstraintManager(const std::shared_ptr<DQ_CoppeliaSimInterface>& coppelia_interface,
                            const std::shared_ptr<DQ_CoppeliaSimRobot>& coppeliasim_robot,
                            const std::shared_ptr<DQ_Kinematics>& robot,
                            const std::string &yaml_file_path,
@@ -97,6 +121,12 @@ public:
 
     std::tuple<double, double, double, double, double, std::string> get_vfi_log_data(const std::string &tag) const;
     std::tuple<int, DQ, int, DQ> get_primitive_index_and_offset(const std::string& tag) const;
+
+    [[deprecated("This method is experimental")]]
+    YAML_RAW_DATA get_raw_yaml_data(const std::string& tag) const;
+
+    [[deprecated("This method is experimental")]]
+    VFI_BUILD_DATA get_vfi_build_data(const std::string& tag) const;
 
     std::vector<std::string> get_vfi_tags() const;
     double get_vfi_distance_error(const std::string& tag) const;
