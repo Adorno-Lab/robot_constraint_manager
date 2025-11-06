@@ -75,4 +75,50 @@ void millidelay(const int &milliseconds)
 {
     std::this_thread::sleep_for(std::chrono::milliseconds(milliseconds));
 }
+
+/**
+ * @brief get_planar_joint_configuration_from_pose given a unit dual quaternion that represents
+ *              the pose of a planar joint, this method returns the planar joint configuration
+ *              q = [x, y, phi]. This method assumes that the z-axis of the frame represented by
+ *              the pose is collinear with the z-axis of the planar joint. Furthermore, the planar joint
+ *              can rotate around its z-axis and translate in the XY plane.
+ * @param pose A unit dual quaternion
+ * @return the desired configuration
+ */
+VectorXd get_planar_joint_configuration_from_pose(const DQ &pose)
+{
+    DQ x = pose;
+    VectorXd axis = x.rotation_axis().vec4();
+    // To ensure that the z-axis is always positive.
+    if (axis(3)<0)
+        x = -x;
+    VectorXd p = x.translation().vec3();
+    double rangle = x.P().rotation_angle();
+    return (VectorXd(3)<< p(0), p(1), rangle).finished();
+}
+
+
+/**
+ * @brief get_planar_joint_configuration_velocities_at_body_frame returns the planar joint configuration velocities expressed in
+ *                          the body frame.
+ * @param body_frame_pose The unit dual quaternion that represents the pose of the body frame.
+ * @param planar_joint_velocities_at_inertial_frame The planar joint configuration velocities wrt to the inertial frame.
+ * @return The desired planar joint configuration velocities.
+ */
+VectorXd get_planar_joint_configuration_velocities_at_body_frame(const DQ &body_frame_pose,
+                                                   const VectorXd &planar_joint_velocities_at_inertial_frame)
+{
+    const VectorXd& ua = planar_joint_velocities_at_inertial_frame; // x_dot, y_dot, phi_dot
+    const DQ p_dot_a_ab = ua(0)*i_ + ua(1)*j_;
+    const DQ w_a_ab = ua(2)*k_;
+    // Build the Twist_a, which represents the velocities in the inertial frame
+    const DQ twist_a = w_a_ab + E_*(p_dot_a_ab + DQ_robotics::cross(body_frame_pose.translation(), w_a_ab));
+
+    // Twist_a expressed in the body frame is given as
+    const DQ twist_b = Ad(body_frame_pose.conj(), twist_a);
+    const VectorXd twist_b_vec = twist_b.vec6(); // [0 0 wb xb_dot yb_dot 0]
+                                                 //[xb_dot         yb_dot        wb]
+    return DQ_robotics_extensions::CVectorXd({twist_b_vec(3), twist_b_vec(4), twist_b_vec(2)});
+}
+
 }

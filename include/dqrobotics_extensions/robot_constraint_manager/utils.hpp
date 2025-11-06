@@ -22,6 +22,7 @@
 */
 
 #pragma once
+#include <dqrobotics/DQ.h>
 #include <dqrobotics_extensions/robot_constraint_manager/conversions.hpp>
 #include <dqrobotics_extensions/robot_constraint_manager/checkers.hpp>
 #ifdef _WIN32
@@ -33,6 +34,7 @@
 #include <iostream>
 
 using namespace Eigen;
+using namespace DQ_robotics;
 
 namespace DQ_robotics_extensions {
 
@@ -42,6 +44,11 @@ MatrixXd CMatrixXd(const std::vector<std::vector<double>>& mat);
 void millidelay(const int& milliseconds);
 void microdelay(const int& microseconds);
 void delay(const int& seconds);
+
+VectorXd get_planar_joint_configuration_from_pose(const DQ& pose);
+VectorXd get_planar_joint_configuration_velocities_at_body_frame(const DQ& body_frame_pose,
+                                                                 const VectorXd& planar_joint_velocities_at_inertial_frame);
+
 
 }
 
