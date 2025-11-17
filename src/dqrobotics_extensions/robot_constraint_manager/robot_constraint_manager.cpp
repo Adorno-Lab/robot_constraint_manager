@@ -114,56 +114,64 @@ void RobotConstraintManager::_check_unit(const std::string &unit)
  */
 std::tuple<MatrixXd, VectorXd> RobotConstraintManager::get_inequality_constraints(const VectorXd &q)
 {
-    const int n = vfi_build_data_list_.size();
+    //const int n = vfi_build_data_list_.size();
+    const int n = vfi_build_data_map_.size();
     const int robot_dim = robot_->get_dim_configuration_space();
+
+    std::vector<VFI_BUILD_DATA> vfi_build_data_list;
+    vfi_build_data_list.reserve(n);
+
+    for (auto& pair : vfi_build_data_map_)
+        vfi_build_data_list.push_back(pair.second);
+
 
     VFI_M_->add_configuration_limits(configuration_limit_constraint_gain_, q);
     VFI_M_->add_configuration_velocity_limits();
 
     for (int i = 0; i<n; i++)
     {
-        if (vfi_build_data_list_.at(i).vfi_mode == VFI_manager::VFI_MODE::ENVIRONMENT_TO_ROBOT)
+        if (vfi_build_data_list.at(i).vfi_mode == VFI_manager::VFI_MODE::ENVIRONMENT_TO_ROBOT)
         {
-            const int index = vfi_build_data_list_.at(i).joint_index_one;
-            const DQ offset = vfi_build_data_list_.at(i).primitive_offset_one;
+            const int index = vfi_build_data_list.at(i).joint_index_one;
+            const DQ offset = vfi_build_data_list.at(i).primitive_offset_one;
             DQ x = (robot_->fkm(q, index))*offset;
             MatrixXd J = haminus8(offset)*robot_->pose_jacobian(q, index);
             if (J.cols() != robot_dim)
                 J = DQ_robotics_extensions::Numpy::resize(J, J.rows(), robot_dim);
 
-            VFI_M_->add_vfi_constraint(vfi_build_data_list_.at(i).tag,
+            VFI_M_->add_vfi_constraint(vfi_build_data_list.at(i).tag,
                                        i,
-                                       vfi_build_data_list_.at(i).direction,
-                                       vfi_build_data_list_.at(i).vfi_type,
-                                       vfi_build_data_list_.at(i).safe_distance,
-                                       vfi_build_data_list_.at(i).vfi_gain,
+                                       vfi_build_data_list.at(i).direction,
+                                       vfi_build_data_list.at(i).vfi_type,
+                                       vfi_build_data_list.at(i).safe_distance,
+                                       vfi_build_data_list.at(i).vfi_gain,
                                        J,
                                        x,
-                                       vfi_build_data_list_.at(i).robot_attached_direction,
-                                       vfi_build_data_list_.at(i).cs_entity_environment_pose, // x_workspace
-                                       vfi_build_data_list_.at(i).environment_attached_direction,
-                                       vfi_build_data_list_.at(i).workspace_derivative);
+                                       vfi_build_data_list.at(i).robot_attached_direction,
+                                       vfi_build_data_list.at(i).cs_entity_environment_pose, // x_workspace
+                                       vfi_build_data_list.at(i).environment_attached_direction,
+                                       vfi_build_data_list.at(i).workspace_derivative);
 
 
         }
         else{ //vfi_mode_list_.at(i) == VFI_manager::VFI_MODE::ROBOT_TO_ROBOT
-            const int index_1 = vfi_build_data_list_.at(i).joint_index_one;
-            const DQ offset_1 = vfi_build_data_list_.at(i).primitive_offset_one;
+            const int index_1 = vfi_build_data_list.at(i).joint_index_one;
+            const DQ offset_1 = vfi_build_data_list.at(i).primitive_offset_one;
 
             DQ x1 =  (robot_->fkm(q, index_1))*offset_1;
             MatrixXd J1 = haminus8(offset_1)*robot_->pose_jacobian(q, index_1);
 
-            const int index_2 = vfi_build_data_list_.at(i).joint_index_two;
-            const DQ offset_2 = vfi_build_data_list_.at(i).primitive_offset_two;
+            const int index_2 = vfi_build_data_list.at(i).joint_index_two;
+            const DQ offset_2 = vfi_build_data_list.at(i).primitive_offset_two;
 
             DQ x2 =  (robot_->fkm(q, index_2))*offset_2;
             MatrixXd J2 = haminus8(offset_2)*robot_->pose_jacobian(q, index_2);
 
 
-            VFI_M_->add_vfi_rpoint_to_rpoint(vfi_build_data_list_.at(i).tag,
+            VFI_M_->add_vfi_rpoint_to_rpoint(vfi_build_data_list.at(i).tag,
                                              i,
-                                             vfi_build_data_list_.at(i).safe_distance,
-                                             vfi_build_data_list_.at(i).vfi_gain,
+                                             vfi_build_data_list.at(i).safe_distance,
+                                             vfi_build_data_list.at(i).vfi_gain,
                                              {J1, x1},
                                              {J2, x2});
         }
@@ -295,6 +303,24 @@ void RobotConstraintManager::show_vfi_build_data(const std::string &tag) const
         throw std::runtime_error("RobotConstraintManager::show_vfi_build_data: VFI TAG not found!");
     }
 
+}
+
+/**
+ * @brief RobotConstraintManager::update_vfi_workspace
+ * @param tag
+ * @param workspace_pose
+ */
+void RobotConstraintManager::update_vfi_workspace(const std::string &tag, const DQ &workspace_pose)
+{
+
+    try{
+        VFI_BUILD_DATA data = vfi_build_data_map_.at(tag);
+        data.cs_entity_environment_pose = workspace_pose;
+        vfi_build_data_map_.insert_or_assign(tag,data);
+    } catch (const std::runtime_error& e) {
+        std::cerr<<e.what()<<std::endl;
+        throw std::runtime_error("RobotConstraintManager::update_vfi_workspace: Fail to update the VFI data!");
+    }
 }
 
 /**
@@ -443,7 +469,7 @@ void RobotConstraintManager::_initial_settings()
                     vfi_data.cs_entity_environment_pose = cs_->get_object_pose(raw_cs_entity_environment);
                     vfi_data.tag = raw_tag;
 
-                    vfi_build_data_list_.push_back(vfi_data);
+                    //vfi_build_data_list_.push_back(vfi_data);
                     vfi_build_data_map_.try_emplace(vfi_data.tag, vfi_data);
                     if (verbosity_)
                         show_vfi_build_data(vfi_data.tag);
@@ -504,7 +530,7 @@ void RobotConstraintManager::_initial_settings()
                     vfi_data.cs_entity_environment_pose = DQ(-1);
                     vfi_data.tag = raw_tag;
 
-                    vfi_build_data_list_.push_back(vfi_data);
+                    //vfi_build_data_list_.push_back(vfi_data);
                     vfi_build_data_map_.try_emplace(vfi_data.tag, vfi_data);
                     if (verbosity_)
                         show_vfi_build_data(vfi_data.tag);
