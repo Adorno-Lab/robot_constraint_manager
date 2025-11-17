@@ -87,7 +87,10 @@ int main()
             auto u = controller.compute_setpoint_control_signal(q, xd.translation().vec4());
             panda->set_target_configuration_velocities(u);
             std::string tag = "C3";
-            //std::cout<<"Constraint tag="+tag+". distance_error: "<<rcm.get_vfi_distance_error(tag)<<std::endl;
+            std::cout<<"Constraint tag="+tag+". distance_error: "<<rcm.get_vfi_distance_error(tag)<<std::endl;
+
+            DQ xplane = cs->get_object_pose("/Plane");
+            rcm.update_vfi_workspace(tag, xplane);
         }
         std::cout<<"Teleoperation finished."<<std::endl;
 
