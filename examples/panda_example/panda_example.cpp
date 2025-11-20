@@ -90,7 +90,7 @@ int main()
             std::cout<<"Constraint tag="+tag+". distance_error: "<<rcm.get_vfi_distance_error(tag)<<std::endl;
 
             DQ xplane = cs->get_object_pose("/Plane");
-            rcm.update_vfi_workspace(tag, xplane);
+            rcm.update_vfi_workspace_pose(tag, xplane);
         }
         std::cout<<"Teleoperation finished."<<std::endl;
 
