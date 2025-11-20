@@ -132,7 +132,8 @@ public:
     double get_vfi_distance_error(const std::string& tag) const;
     double get_line_to_line_angle(const std::string& tag) const;
     void show_vfi_build_data(const std::string& tag) const;
-    void update_vfi_workspace(const std::string& tag, const DQ& workspace_pose);
+    void update_vfi_workspace_pose(const std::string& tag, const DQ& workspace_pose);
+    void update_vfi_workspace_derivative(const std::string& tag, const DQ& workspace_derivative);
 
     std::tuple<VectorXd, VectorXd> get_configuration_limits() const;
     std::tuple<VectorXd, VectorXd> get_configuration_velocity_limits() const;

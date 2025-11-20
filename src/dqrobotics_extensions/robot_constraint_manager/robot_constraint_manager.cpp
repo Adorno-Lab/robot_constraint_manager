@@ -305,12 +305,30 @@ void RobotConstraintManager::show_vfi_build_data(const std::string &tag) const
 
 }
 
+
 /**
- * @brief RobotConstraintManager::update_vfi_workspace
+ * @brief RobotConstraintManager::update_vfi_workspace_derivative
+ * @param tag
+ * @param workspace_derivative
+ */
+void RobotConstraintManager::update_vfi_workspace_derivative(const std::string &tag, const DQ &workspace_derivative)
+{
+    try{
+        VFI_BUILD_DATA data = vfi_build_data_map_.at(tag);
+        data.workspace_derivative = workspace_derivative;
+        vfi_build_data_map_.insert_or_assign(tag,data);
+    } catch (const std::runtime_error& e) {
+        std::cerr<<e.what()<<std::endl;
+        throw std::runtime_error("RobotConstraintManager::update_vfi_workspace_derivative: Fail to update the VFI data!");
+    }
+}
+
+/**
+ * @brief RobotConstraintManager::update_vfi_workspace_pose
  * @param tag
  * @param workspace_pose
  */
-void RobotConstraintManager::update_vfi_workspace(const std::string &tag, const DQ &workspace_pose)
+void RobotConstraintManager::update_vfi_workspace_pose(const std::string &tag, const DQ &workspace_pose)
 {
 
     try{
