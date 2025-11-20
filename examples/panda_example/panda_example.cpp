@@ -29,7 +29,8 @@ int main()
 
     auto cs = std::make_shared<DQ_CoppeliaSimInterfaceZMQ>();
     try {
-        cs->connect("localhost", 23000, 1500);
+        cs->connect("localhost", 23000, 2000);
+        cs->set_stepping_mode(true);
         auto panda = std::make_shared<FrankaEmikaPandaCoppeliaSimZMQRobot>("Franka", cs);
         auto panda_model =  std::make_shared<DQ_SerialManipulatorMDH>(panda->kinematics());
         auto solver = std::make_shared<DQ_QPOASESSolver>();
@@ -56,7 +57,7 @@ int main()
             std::cout<<yaml_raw_data.cs_entity_two_or_robot<<std::endl;
             std::cout<<yaml_raw_data.entity_one_primitive_type_or_environment<<std::endl;
             std::cout<<yaml_raw_data.entity_two_primitive_type_or_robot<<std::endl;
-            std::cout<< yaml_raw_data.joint_index_one_or_joint_index<<std::endl;
+            std::cout<<yaml_raw_data.joint_index_one_or_joint_index<<std::endl;
             std::cout<<yaml_raw_data.joint_index_two<<std::endl;
             std::cout<<yaml_raw_data.safe_distance<<std::endl;
             std::cout<<yaml_raw_data.vfi_gain<<std::endl;
@@ -78,6 +79,11 @@ int main()
 
 
         std::cout<<"Starting teleoperation "<<std::endl;
+
+        int i=0;
+        double T=0.05;
+        double w=0.1;
+
         while ( not kill_this_process)
         {
             DQ xd = cs->get_object_pose("ReferenceFrame");
@@ -86,11 +92,23 @@ int main()
             controller.set_inequality_constraint(A,b);
             auto u = controller.compute_setpoint_control_signal(q, xd.translation().vec4());
             panda->set_target_configuration_velocities(u);
+
+
             std::string tag = "C3";
             std::cout<<"Constraint tag="+tag+". distance_error: "<<rcm.get_vfi_distance_error(tag)<<std::endl;
 
-            DQ xplane = cs->get_object_pose("/Plane");
-            rcm.update_vfi_workspace_pose(tag, xplane);
+            // Varying-time VFI
+
+            std::string ctag = "C5";
+            DQ z = 0.6*i_ + 0.4*k_+ 0.1*sin(w*i*T)*k_;
+            DQ z_dot = 0.1*w*cos(w*i*T)*k_;
+            DQ xsphere = 1 + 0.5*E_*z;
+            cs->set_object_pose("/obs_sphere", xsphere);
+
+            rcm.update_vfi_workspace_pose(ctag, xsphere);
+            rcm.update_vfi_workspace_derivative(ctag, z_dot);
+            cs->trigger_next_simulation_step();
+            i++;
         }
         std::cout<<"Teleoperation finished."<<std::endl;
 
