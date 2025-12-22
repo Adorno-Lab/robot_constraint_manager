@@ -149,6 +149,16 @@ void VFI_manager::add_configuration_velocity_limits()
     constraint_manager_->add_inequality_constraint( I_,  q_dot_max_);
 }
 
+/**
+ * @brief VFI_manager::add_inequality_constraint
+ * @param A
+ * @param b
+ */
+void VFI_manager::add_inequality_constraint(const MatrixXd &A, const VectorXd &b)
+{
+    constraint_manager_->add_inequality_constraint(A,b);
+}
+
 
 /**
  * @brief VFI_manager::add_vfi_rpoint_to_rpoint builds a rpoint-to-rpoint VFI constraint and adds it to the constraint stack matrix.
