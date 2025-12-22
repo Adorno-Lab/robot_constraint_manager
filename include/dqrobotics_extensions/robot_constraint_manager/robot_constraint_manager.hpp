@@ -116,8 +116,15 @@ public:
 
     int get_number_of_vfi_constraints() const;
 
+    void add_inequality_constraint(const MatrixXd& A, const VectorXd& b);
+    std::tuple<MatrixXd, VectorXd> get_inequality_constraints(const VectorXd& q,
+                                                              const bool& include_configuration_constraints=true,
+                                                              const bool& include_configuration_velocity_constraints=true
+                                                              );
 
-    std::tuple<MatrixXd, VectorXd> get_inequality_constraints(const VectorXd& q);
+
+
+
 
     std::tuple<double, double, double, double, double, std::string> get_vfi_log_data(const std::string &tag) const;
     std::tuple<int, DQ, int, DQ> get_primitive_index_and_offset(const std::string& tag) const;
