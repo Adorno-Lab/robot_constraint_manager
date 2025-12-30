@@ -79,6 +79,16 @@ int RobotConstraintManager::get_number_of_vfi_constraints() const
     return number_of_constraints_;
 }
 
+/**
+ * @brief RobotConstraintManager::add_inequality_constraint
+ * @param A
+ * @param b
+ */
+void RobotConstraintManager::add_inequality_constraint(const MatrixXd &A, const VectorXd &b)
+{
+    VFI_M_->add_inequality_constraint(A, b);
+}
+
 
 /**
  * @brief RobotConstraintManager::set_vfi_configuration_constraints_gain sets the gain for the configuration constraints.
@@ -110,9 +120,13 @@ void RobotConstraintManager::_check_unit(const std::string &unit)
  *                     38(6):3498–3513, December, 2022. Presented at ICRA'23.
  *
  * @param q The robot configuration.
+ * @param include_configuration_constraints
+ * @param include_configuration_velocity_constraints
  * @return A tuple containing the  desired VFIs constraints. For instance, given the constraints A*x <= b, this method returns {A,b}.
  */
-std::tuple<MatrixXd, VectorXd> RobotConstraintManager::get_inequality_constraints(const VectorXd &q)
+std::tuple<MatrixXd, VectorXd> RobotConstraintManager::get_inequality_constraints(const VectorXd &q,
+                                                                                  const bool &include_configuration_constraints,
+                                                                                  const bool &include_configuration_velocity_constraints)
 {
     //const int n = vfi_build_data_list_.size();
     const int n = vfi_build_data_map_.size();
@@ -124,9 +138,10 @@ std::tuple<MatrixXd, VectorXd> RobotConstraintManager::get_inequality_constraint
     for (auto& pair : vfi_build_data_map_)
         vfi_build_data_list.push_back(pair.second);
 
-
-    VFI_M_->add_configuration_limits(configuration_limit_constraint_gain_, q);
-    VFI_M_->add_configuration_velocity_limits();
+    if (include_configuration_constraints)
+        VFI_M_->add_configuration_limits(configuration_limit_constraint_gain_, q);
+    if (include_configuration_velocity_constraints)
+        VFI_M_->add_configuration_velocity_limits();
 
     for (int i = 0; i<n; i++)
     {

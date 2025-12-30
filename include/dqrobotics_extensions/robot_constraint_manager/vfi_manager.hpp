@@ -115,7 +115,7 @@ public:
     void add_configuration_limits(const double& gain, const VectorXd& configuration);
     void add_configuration_velocity_limits();
 
-
+    void add_inequality_constraint(const MatrixXd& A, const VectorXd& b);
     std::tuple<MatrixXd, VectorXd> get_inequality_constraints();
 
     double get_vfi_distance_error(const std::string& tag);
