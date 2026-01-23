@@ -297,8 +297,8 @@ void RobotConstraintManager::show_vfi_build_data(const std::string &tag) const
         auto data = vfi_build_data_map_.at(tag);
         std::cout<<"---------------------------------------------"<<std::endl;
         std::cout<<"TAG:                             "<<tag<<std::endl;
-        std::cout<<"VFI type:                        "<<VFI_Framework::map_vfiMode_to_string(data.vfi_type)<<std::endl;
-        std::cout<<"VFI class:                       "<<VFI_Framework::map_vfiType_to_string(data.vfi_class)<<std::endl;
+        std::cout<<"VFI type:                        "<<VFI_Framework::map_vfiType_to_string(data.vfi_type)<<std::endl;
+        std::cout<<"VFI class:                       "<<VFI_Framework::map_vfiClass_to_string(data.vfi_class)<<std::endl;
         std::cout<<"Direction:                       "<<VFI_Framework::map_vfiDirection_to_string(data.direction)<<std::endl;
         std::cout<<"Safe distance:                   "<<data.safe_distance<<std::endl;
         std::cout<<"VFI gain:                        "<<data.vfi_gain<<std::endl;
@@ -485,7 +485,7 @@ void RobotConstraintManager::_initial_settings()
 
                     VFI_BUILD_DATA vfi_data;
                     vfi_data.vfi_type = VFI_manager::VFI_TYPE::ENVIRONMENT_TO_ROBOT;
-                    vfi_data.vfi_class = VFI_Framework::map_strings_to_vfiType(raw_entity_robot_primitive_type,
+                    vfi_data.vfi_class = VFI_Framework::map_strings_to_vfiClass(raw_entity_robot_primitive_type,
                                                                               raw_entity_environment_primitive_type);
                     vfi_data.direction = VFI_Framework::map_string_to_vfiDirection(raw_direction);
                     vfi_data.safe_distance = raw_safe_distance;
@@ -545,7 +545,7 @@ void RobotConstraintManager::_initial_settings()
 
                     VFI_BUILD_DATA vfi_data;
                     vfi_data.vfi_type = VFI_manager::VFI_TYPE::ROBOT_TO_ROBOT;
-                    vfi_data.vfi_class = VFI_Framework::map_strings_to_vfiType(raw_entity_one_primitive_type,
+                    vfi_data.vfi_class = VFI_Framework::map_strings_to_vfiClass(raw_entity_one_primitive_type,
                                                                               raw_entity_two_primitive_type);
                     vfi_data.direction = VFI_Framework::DIRECTION::KEEP_ROBOT_OUTSIDE;
                     vfi_data.safe_distance = raw_safe_distance;

@@ -496,10 +496,10 @@ double VFI_manager::get_line_to_line_angle(const std::string &tag)
         return _get_data_from_vfi_parameters_map(tag).line_to_line_angle_rad;
     case VFI_Framework::VFI_CLASS::RLINE_TO_LINE:
         throw std::runtime_error("VFI_manager::get_line_to_line_angle: not supported for RLINE_TO_LINE. "
-                                 "However, your constraint TAG=\""+tag+"\" is "+map_vfiType_to_string(data.vfi_class));
+                                 "However, your constraint TAG=\""+tag+"\" is "+map_vfiClass_to_string(data.vfi_class));
     default:
         throw std::runtime_error("VFI_manager::get_line_to_line_angle is available for RLINE_TO_LINE_ANGLE only. "
-                                 "However, your constraint TAG=\""+tag+"\" is "+map_vfiType_to_string(data.vfi_class));
+                                 "However, your constraint TAG=\""+tag+"\" is "+map_vfiClass_to_string(data.vfi_class));
     }
 
 }
@@ -519,7 +519,7 @@ std::tuple<double, double, double, double, double, std::string> VFI_manager::get
             data.distance_error,
             data.square_distance_error,
             data.line_to_line_angle_rad,
-            map_vfiType_to_string(data.vfi_class)};
+            map_vfiClass_to_string(data.vfi_class)};
 }
 
 

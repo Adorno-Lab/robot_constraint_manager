@@ -20,7 +20,7 @@ VFI_Framework::DIRECTION VFI_Framework::map_string_to_vfiDirection(const std::st
     return direction;
 }
 
-VFI_Framework::VFI_CLASS VFI_Framework::map_strings_to_vfiType(const std::string &entity_robot_primitive_type,
+VFI_Framework::VFI_CLASS VFI_Framework::map_strings_to_vfiClass(const std::string &entity_robot_primitive_type,
                                                           const std::string &entity_enviroment_primitive_type)
 {
     auto robot_primitive = map_string_to_primitive(entity_robot_primitive_type);
@@ -97,7 +97,7 @@ std::string VFI_Framework::map_vfiDirection_to_string(const DIRECTION &direction
     }
 }
 
-std::string VFI_Framework::map_vfiType_to_string(const VFI_CLASS &vfi_class)
+std::string VFI_Framework::map_vfiClass_to_string(const VFI_CLASS &vfi_class)
 {
     std::string str;
     switch (vfi_class) {
@@ -122,7 +122,7 @@ std::string VFI_Framework::map_vfiType_to_string(const VFI_CLASS &vfi_class)
     return str;
 }
 
-std::string VFI_Framework::map_vfiMode_to_string(const VFI_TYPE &vfi_type)
+std::string VFI_Framework::map_vfiType_to_string(const VFI_TYPE &vfi_type)
 {
     switch (vfi_type) {
     case VFI_TYPE::ENVIRONMENT_TO_ROBOT:

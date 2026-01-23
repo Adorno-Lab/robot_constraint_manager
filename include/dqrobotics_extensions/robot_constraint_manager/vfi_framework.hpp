@@ -68,10 +68,10 @@ public:
     static DIRECTION   map_string_to_vfiDirection  (const std::string& str);
     static std::string map_vfiDirection_to_string (const DIRECTION& direction);
 
-    static VFI_CLASS  map_strings_to_vfiType   (const std::string& entity_robot_primitive_type,
+    static VFI_CLASS  map_strings_to_vfiClass   (const std::string& entity_robot_primitive_type,
                                                const std::string& entity_enviroment_primitive_type);
-    static std::string map_vfiType_to_string   (const VFI_CLASS& vfi_class);
-    static std::string map_vfiMode_to_string   (const VFI_TYPE& vfi_type);
+    static std::string map_vfiClass_to_string   (const VFI_CLASS& vfi_class);
+    static std::string map_vfiType_to_string   (const VFI_TYPE& vfi_type);
     static std::string map_primitive_to_string(const PRIMITIVE& primitive);
 
     static DQ map_attached_direction_string_to_dq(const std::string& str);
