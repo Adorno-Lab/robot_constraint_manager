@@ -208,7 +208,7 @@ void VFI_manager::add_vfi_rpoint_to_rpoint(const std::string &tag,
     //#############-log data-###############
     const double d = std::sqrt(square_d);
     VFI_LOG_DATA data;
-    data.vfi_type = VFI_TYPE::RPOINT_TO_POINT;
+    data.vfi_class = VFI_CLASS::RPOINT_TO_POINT;
     data.distance = d;
     data.square_distance = square_d;
     data.distance_error = d-safe_distance;
@@ -253,7 +253,7 @@ void VFI_manager::add_vfi_rpoint_to_rpoint(const std::string &tag,
 void VFI_manager::add_vfi_constraint(const std::string &tag,
                                        const int& stack_position,
                                        const DIRECTION &direction,
-                                       const VFI_TYPE &vfi_type,
+                                       const VFI_CLASS &vfi_type,
                                        const double &safe_distance,
                                        const double &vfi_gain,
                                        const MatrixXd &robot_pose_jacobian,
@@ -266,7 +266,7 @@ void VFI_manager::add_vfi_constraint(const std::string &tag,
     switch(vfi_type)
     {
 
-    case VFI_TYPE::RPOINT_TO_POINT:
+    case VFI_CLASS::RPOINT_TO_POINT:
     {
         const double square_safe_distance = pow(safe_distance, 2);
         const DQ& x = robot_pose;
@@ -283,7 +283,7 @@ void VFI_manager::add_vfi_constraint(const std::string &tag,
         //#############-log data-###############
         const double d = std::sqrt(square_d);
         VFI_LOG_DATA data;
-        data.vfi_type = VFI_TYPE::RPOINT_TO_POINT;
+        data.vfi_class = VFI_CLASS::RPOINT_TO_POINT;
         data.distance = d;
         data.square_distance = square_d;
         data.distance_error = d-safe_distance;
@@ -293,7 +293,7 @@ void VFI_manager::add_vfi_constraint(const std::string &tag,
         //######################################
         break;
     }
-    case VFI_TYPE::RPOINT_TO_PLANE:
+    case VFI_CLASS::RPOINT_TO_PLANE:
     {
         const DQ p = robot_pose.translation();
         const DQ& x_ = workspace_pose;
@@ -309,7 +309,7 @@ void VFI_manager::add_vfi_constraint(const std::string &tag,
         _add_vfi_constraint(Jd, b, direction);
         //#############-log data-###############
         VFI_LOG_DATA data;
-        data.vfi_type = VFI_TYPE::RPOINT_TO_PLANE;
+        data.vfi_class = VFI_CLASS::RPOINT_TO_PLANE;
         data.distance = d;
         data.square_distance = d*d;
         data.distance_error = error;
@@ -320,7 +320,7 @@ void VFI_manager::add_vfi_constraint(const std::string &tag,
         break;
     }
 
-    case VFI_TYPE::RPOINT_TO_LINE:
+    case VFI_CLASS::RPOINT_TO_LINE:
     {
         const DQ& x= workspace_pose;
         const DQ l_= (x.P())*workspace_attached_direction*(x.P().conj());
@@ -338,7 +338,7 @@ void VFI_manager::add_vfi_constraint(const std::string &tag,
         //#############-log data-###############
         const double d = std::sqrt(square_d);
         VFI_LOG_DATA data;
-        data.vfi_type = VFI_TYPE::RPOINT_TO_POINT;
+        data.vfi_class = VFI_CLASS::RPOINT_TO_POINT;
         data.distance = d;
         data.square_distance = square_d;
         data.distance_error = d-safe_distance;
@@ -348,7 +348,7 @@ void VFI_manager::add_vfi_constraint(const std::string &tag,
         //######################################
         break;
     }
-    case VFI_TYPE::RLINE_TO_LINE_ANGLE:
+    case VFI_CLASS::RLINE_TO_LINE_ANGLE:
     {
         const DQ workspace_line = (workspace_pose.P())*workspace_attached_direction*(workspace_pose.P().conj());
         const double safe_angle = safe_distance*(pi/180);  //Convert to radians
@@ -366,7 +366,7 @@ void VFI_manager::add_vfi_constraint(const std::string &tag,
         _add_vfi_constraint(Jfphi, b, direction);
         //#############-log data-###############
         VFI_LOG_DATA data;
-        data.vfi_type = VFI_TYPE::RLINE_TO_LINE_ANGLE;
+        data.vfi_class = VFI_CLASS::RLINE_TO_LINE_ANGLE;
         data.distance = f;
         data.square_distance = -1;
         data.distance_error = ferror;
@@ -376,15 +376,15 @@ void VFI_manager::add_vfi_constraint(const std::string &tag,
         //######################################
         break;
     }
-    case VFI_TYPE::RLINE_TO_LINE:
+    case VFI_CLASS::RLINE_TO_LINE:
     {
-        throw std::runtime_error("VFI_TYPE::RLINE_TO_LINE is unsupported");
+        throw std::runtime_error("VFI_CLASS::RLINE_TO_LINE is unsupported");
         break;
     }
 
-    case VFI_TYPE::RLINE_TO_POINT:
+    case VFI_CLASS::RLINE_TO_POINT:
     {
-        throw std::runtime_error("VFI_TYPE::RLINE_TO_POINT is unsupported");
+        throw std::runtime_error("VFI_CLASS::RLINE_TO_POINT is unsupported");
         break;
     }
     }
@@ -479,7 +479,7 @@ double VFI_manager::get_vfi_distance_error(const std::string &tag)
 
 /**
  * @brief VFI_manager::get_line_to_line_angle gets the angle between the two Plücker line orientations when the VFI used is RLINE_TO_LINE_ANGLE.
- *              For other VFI types, an exception is thrown.
+ *              For other VFI classes, an exception is thrown.
  *              Note that the safe angle is not taken into account. If you want to include the safe angle, consider using
  *              ferror = get_vfi_distance_error(tag), which will return
  *                          ferror = f-fsafe,
@@ -491,15 +491,15 @@ double VFI_manager::get_vfi_distance_error(const std::string &tag)
 double VFI_manager::get_line_to_line_angle(const std::string &tag)
 {
     auto data = _get_data_from_vfi_parameters_map(tag);
-    switch (data.vfi_type) {
-    case VFI_Framework::VFI_TYPE::RLINE_TO_LINE_ANGLE:
+    switch (data.vfi_class) {
+    case VFI_Framework::VFI_CLASS::RLINE_TO_LINE_ANGLE:
         return _get_data_from_vfi_parameters_map(tag).line_to_line_angle_rad;
-    case VFI_Framework::VFI_TYPE::RLINE_TO_LINE:
+    case VFI_Framework::VFI_CLASS::RLINE_TO_LINE:
         throw std::runtime_error("VFI_manager::get_line_to_line_angle: not supported for RLINE_TO_LINE. "
-                                 "However, your constraint TAG=\""+tag+"\" is "+map_vfiType_to_string(data.vfi_type));
+                                 "However, your constraint TAG=\""+tag+"\" is "+map_vfiType_to_string(data.vfi_class));
     default:
         throw std::runtime_error("VFI_manager::get_line_to_line_angle is available for RLINE_TO_LINE_ANGLE only. "
-                                 "However, your constraint TAG=\""+tag+"\" is "+map_vfiType_to_string(data.vfi_type));
+                                 "However, your constraint TAG=\""+tag+"\" is "+map_vfiType_to_string(data.vfi_class));
     }
 
 }
@@ -508,7 +508,7 @@ double VFI_manager::get_line_to_line_angle(const std::string &tag)
  * @brief VFI_manager::get_vfi_log_data returns a tuple containing the vfi log data. This is useful for debugging.
  * @param tag The tag of the constraint.
  * @return A tuple containing the vfi log data
- *      {distance, square_distance, distance_error, square_distance_error, line_to_line_angle_rad, vfi_type}
+ *      {distance, square_distance, distance_error, square_distance_error, line_to_line_angle_rad, vfi_class}
  *
  */
 std::tuple<double, double, double, double, double, std::string> VFI_manager::get_vfi_log_data(const std::string &tag)
@@ -519,7 +519,7 @@ std::tuple<double, double, double, double, double, std::string> VFI_manager::get
             data.distance_error,
             data.square_distance_error,
             data.line_to_line_angle_rad,
-            map_vfiType_to_string(data.vfi_type)};
+            map_vfiType_to_string(data.vfi_class)};
 }
 
 

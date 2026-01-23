@@ -57,8 +57,8 @@ public:
     };
 
     struct VFI_BUILD_DATA{
-        VFI_Framework::VFI_MODE vfi_mode;
         VFI_Framework::VFI_TYPE vfi_type;
+        VFI_Framework::VFI_CLASS vfi_class;
         VFI_Framework::DIRECTION direction;
         double safe_distance;
         double vfi_gain;

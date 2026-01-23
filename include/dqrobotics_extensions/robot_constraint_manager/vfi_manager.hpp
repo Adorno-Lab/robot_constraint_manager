@@ -51,7 +51,7 @@ protected:
         double distance_error;
         double square_distance_error;
         double line_to_line_angle_rad;
-        VFI_Framework::VFI_TYPE vfi_type;
+        VFI_Framework::VFI_CLASS vfi_class;
     };
 
     std::unordered_map<std::string, int> tag_stack_position_list_;
@@ -87,7 +87,7 @@ public:
     void add_vfi_constraint(const std::string& tag,
                             const int& stack_position,
                             const DIRECTION& direction,
-                            const VFI_TYPE& vfi_type,
+                            const VFI_CLASS& vfi_class,
                             const double& safe_distance,
                             const double& vfi_gain,
                             const MatrixXd &robot_pose_jacobian,
