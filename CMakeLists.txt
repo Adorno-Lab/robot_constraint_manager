@@ -55,6 +55,7 @@ target_link_libraries(${PROJECT_NAME}
         dqrobotics-interface-coppeliasim-zmq
         Eigen3::Eigen
         yaml-cpp
+        robot_constraint_editor
 )
 
 SET_TARGET_PROPERTIES(${PROJECT_NAME}

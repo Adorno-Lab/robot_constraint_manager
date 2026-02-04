@@ -26,6 +26,7 @@
 #include <dqrobotics/interfaces/coppeliasim/DQ_CoppeliaSimInterfaceZMQ.h>
 #include <dqrobotics/interfaces/coppeliasim/DQ_CoppeliaSimRobot.h>
 #include <dqrobotics_extensions/robot_constraint_manager/vfi_manager.hpp>
+#include <dqrobotics_extensions/robot_constraint_editor/vfi_configuration_file.hpp>
 #include <dqrobotics/utils/DQ_Math.h>
 #include <memory>
 #include <unordered_map>
@@ -81,9 +82,12 @@ protected:
 
     //std::vector<VFI_BUILD_DATA> vfi_build_data_list_;
     std::unordered_map<std::string, VFI_BUILD_DATA> vfi_build_data_map_;
-
     std::vector<YAML_RAW_DATA> yaml_raw_data_list_;
     std::unordered_map<std::string, YAML_RAW_DATA> yaml_raw_data_map_;
+
+
+    std::vector<VFIConfigurationFile::Data> data_list_;
+    std::unordered_map<std::string, VFIConfigurationFile::Data> data_map_;
 
 
 
@@ -94,6 +98,7 @@ protected:
     std::shared_ptr<DQ_Kinematics> robot_;
     std::shared_ptr<DQ_CoppeliaSimRobot> coppelia_robot_;
     std::shared_ptr<DQ_robotics_extensions::VFI_manager> VFI_M_;
+    std::shared_ptr<DQ_robotics_extensions::VFIConfigurationFile> config_file_reader_;
     double configuration_limit_constraint_gain_;
 
     VectorXd initial_robot_configuration_;
@@ -106,12 +111,22 @@ protected:
 
     void _check_unit(const std::string& unit);
 public:
+    [[deprecated]]
     RobotConstraintManager(const std::shared_ptr<DQ_CoppeliaSimInterface>& coppelia_interface,
                            const std::shared_ptr<DQ_CoppeliaSimRobot>& coppeliasim_robot,
                            const std::shared_ptr<DQ_Kinematics>& robot,
                            const std::string &yaml_file_path,
                            const bool& verbosity = false,
                            const VFI_manager::LEVEL& level = VFI_manager::LEVEL::VELOCITIES);
+
+    RobotConstraintManager(const std::shared_ptr<DQ_CoppeliaSimInterface>& coppelia_interface,
+                           const std::shared_ptr<DQ_CoppeliaSimRobot>& coppeliasim_robot,
+                           const std::shared_ptr<DQ_Kinematics>& robot,
+                           const std::shared_ptr<VFIConfigurationFile>& config_file_reader,
+                           const std::string &yaml_file_path,
+                           const bool& verbosity = false,
+                           const VFI_manager::LEVEL& level = VFI_manager::LEVEL::VELOCITIES);
+
 
 
     int get_number_of_vfi_constraints() const;

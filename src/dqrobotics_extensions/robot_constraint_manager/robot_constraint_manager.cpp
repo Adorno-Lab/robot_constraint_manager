@@ -67,6 +67,30 @@ RobotConstraintManager::RobotConstraintManager(const std::shared_ptr<DQ_Coppelia
     _initial_settings();
 }
 
+RobotConstraintManager::RobotConstraintManager(const std::shared_ptr<DQ_CoppeliaSimInterface> &coppelia_interface,
+                                               const std::shared_ptr<DQ_CoppeliaSimRobot> &coppeliasim_robot,
+                                               const std::shared_ptr<DQ_Kinematics> &robot,
+                                               const std::shared_ptr<VFIConfigurationFile> &config_file_reader,
+                                               const std::string &yaml_file_path,
+                                               const bool &verbosity, const VFI_Framework::LEVEL &level)
+    :cs_{coppelia_interface},
+    config_path_{yaml_file_path},
+    level_{level},
+    robot_{robot},
+    coppelia_robot_{coppeliasim_robot},
+    config_file_reader_{config_file_reader},
+    verbosity_{verbosity}
+{
+    VFI_M_ = std::make_shared<DQ_robotics_extensions::VFI_manager>(robot->get_dim_configuration_space());
+    try {
+        config_file_reader_->load_data(config_path_);
+    } catch (const std::exception& e) {
+        throw std::runtime_error(e.what());
+    }
+    data_list_ = config_file_reader_->get_data();
+
+}
+
 
 /**
  * @brief RobotConstraintManager::get_number_of_vfi_constraints gets the number of VFI constraints set in the config file.
