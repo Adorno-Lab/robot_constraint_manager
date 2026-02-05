@@ -1,0 +1,15 @@
+vfi_file_version: 2
+zero_indexed: false
+vfi_array:
+    -
+        vfi_type: "ENVIRONMENT_TO_ROBOT"
+        cs_entity_environment: ["x_inertial"]
+        cs_entity_robot: ["rline"]
+        entity_environment_primitive_type: "LINE_ANGLE"
+        entity_robot_primitive_type: "LINE_ANGLE"
+        robot_index: 1
+        joint_index: 7
+        safe_distance: 5
+        vfi_gain: 1.0
+        direction: "SAFE_ZONE"
+        tag: "C1"
