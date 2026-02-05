@@ -88,7 +88,10 @@ RobotConstraintManager::RobotConstraintManager(const std::shared_ptr<DQ_Coppelia
         throw std::runtime_error(e.what());
     }
     data_list_ = config_file_reader_->get_data();
+    for (auto& element : data_list_)
+    {
 
+    }
 }
 
 

@@ -6,7 +6,7 @@ project(panda_example LANGUAGES CXX)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-
+set(LOCAL_TESTS OFF)
 
 find_package(Eigen3 REQUIRED)
 if (APPLE)
@@ -32,6 +32,28 @@ file(GLOB_RECURSE EXTRA_FILES */*)
 add_custom_target(cfg ALL WORKING_DIRECTORY ${PROJECT_SOURCE_DIR} SOURCES ${EXTRA_FILES})
 #
 
+if (${LOCAL_TESTS})
+    include_directories(../../include/)
+    set(RCM_SOURCES
+        ../../src/dqrobotics_extensions/robot_constraint_manager/robot_constraint_manager.cpp
+        ../../src/dqrobotics_extensions/robot_constraint_manager/checkers.cpp
+        ../../src/dqrobotics_extensions/robot_constraint_manager/conversions.cpp
+        ../../src/dqrobotics_extensions/robot_constraint_manager/numpy.cpp
+        ../../src/dqrobotics_extensions/robot_constraint_manager/vfi_framework.cpp
+        ../../src/dqrobotics_extensions/robot_constraint_manager/vfi_manager.cpp
+        ../../src/dqrobotics_extensions/robot_constraint_manager/constraints_manager.cpp
+        ../../src/dqrobotics_extensions/robot_constraint_manager/utils.cpp
+    )
+    add_library(robot_constraint_manager
+        ${RCM_SOURCES}
+    )
+    target_link_libraries(robot_constraint_manager
+        dqrobotics
+        dqrobotics-interface-coppeliasim-zmq
+        Eigen3::Eigen
+        yaml-cpp)
+
+endif()
 
 add_executable(${PROJECT_NAME}
                ${PROJECT_NAME}.cpp)
