@@ -41,6 +41,13 @@ jobs:
           cmake -DYAML_BUILD_SHARED_LIBS=on ..
           make
           sudo make install
+
+      - name: Install robot-constrait-editor
+        run: |
+          git clone https://github.com/Adorno-Lab/robot_constraint_editor 
+          cd robot_constraint_editor
+          mkdir -p build && cd build
+          cmake .. && make && sudo make install
           
       - name: Build
         run: | 
