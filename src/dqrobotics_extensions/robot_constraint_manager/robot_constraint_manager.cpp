@@ -121,24 +121,21 @@ void RobotConstraintManager::_create_build_data()
             if constexpr (std::is_same_v<T, VFIConfigurationFile::ENVIRONMENT_TO_ROBOT_DATA>) {
                 BUILD_ENVIRONMENT_TO_ROBOT_DATA  bdata;
                 bdata.vfi_type = VFI_manager::VFI_TYPE::ENVIRONMENT_TO_ROBOT;
-
                 bdata.vfi_class = VFI_Framework::map_strings_to_vfiClass(arg.entity_environment_primitive_type,
                                                                          arg.entity_robot_primitive_type);
                 bdata.direction = VFI_Framework::map_string_to_vfiDirection(arg.direction);
                 bdata.safe_distance = arg.safe_distance;
                 bdata.vfi_gain = arg.vfi_gain;
                 bdata.robot_index = arg.robot_index;
-
                 bdata.joint_index = arg.joint_index;
-
                 bdata.primitive_offsets = _get_coppeliasim_offsets(arg.cs_entity_robot, arg.joint_index-robot_index_convention_);
                 bdata.robot_attached_direction = k_;
                 bdata.environment_attached_direction = k_;
-
                 bdata.workspace_derivative = {DQ(0)};
                 bdata.entity_environment_poses = _get_workspace_poses(arg.cs_entity_environment);
                 bdata.tag = arg.tag;
-                build_data.emplace_back(bdata);
+                //build_data.emplace_back(bdata);
+                build_data_map_.try_emplace(bdata.tag, bdata);
 
 
             }else if constexpr (std::is_same_v<T, VFIConfigurationFile::ROBOT_TO_ROBOT_DATA>){
@@ -148,6 +145,7 @@ void RobotConstraintManager::_create_build_data()
             }
         }, data_item);
     }
+
 
 
    // for (auto& pair : data_map_)

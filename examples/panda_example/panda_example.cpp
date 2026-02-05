@@ -42,11 +42,11 @@ int main()
         controller.set_damping(0.01);
 
 
-        std::string yaml_path = "vfi_constraints_2.yaml";
-        auto vcr = std::make_shared<DQ_robotics_extensions::VFIConfigurationFileYaml>();
-        DQ_robotics_extensions::RobotConstraintManager rcm{cs, panda, panda_model, vcr, yaml_path, true};
+        std::string yaml_path = "vfi_constraints.yaml";
+        //auto vcr = std::make_shared<DQ_robotics_extensions::VFIConfigurationFileYaml>();
+        //DQ_robotics_extensions::RobotConstraintManager rcm2{cs, panda, panda_model, vcr, yaml_path, true};
 
-        /*
+
         DQ_robotics_extensions::RobotConstraintManager rcm{cs, panda, panda_model, yaml_path, true};
 
         auto tags = rcm.get_vfi_tags();
@@ -117,7 +117,7 @@ int main()
         std::cout<<"Teleoperation finished."<<std::endl;
 
         cs->stop_simulation();
-        */
+
     }
     catch (const std::runtime_error& e)
     {

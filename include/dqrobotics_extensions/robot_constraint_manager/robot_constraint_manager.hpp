@@ -132,6 +132,7 @@ protected:
 
     std::vector<VFIConfigurationFile::Data> data_list_;
     std::unordered_map<std::string, VFIConfigurationFile::Data> data_map_;
+    std::unordered_map<std::string, BUILD_DATA> build_data_map_;
 
 
 
