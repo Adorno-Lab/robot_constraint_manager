@@ -59,6 +59,7 @@ RobotConstraintManager::RobotConstraintManager(const std::shared_ptr<DQ_Coppelia
                                                const VFI_Framework::LEVEL &level)
     :cs_{coppelia_interface}, config_path_{yaml_file_path}, level_{level},
     robot_{robot}, coppelia_robot_{coppeliasim_robot},
+    rce_compatible_{false},
     verbosity_{verbosity}
 {
     impl_ = std::make_shared<RobotConstraintManager::Impl>();
@@ -79,6 +80,7 @@ RobotConstraintManager::RobotConstraintManager(const std::shared_ptr<DQ_Coppelia
     robot_{robot},
     coppelia_robot_{coppeliasim_robot},
     config_file_reader_{config_file_reader},
+    rce_compatible_{true},
     verbosity_{verbosity}
 {
     VFI_M_ = std::make_shared<DQ_robotics_extensions::VFI_manager>(robot->get_dim_configuration_space());
@@ -87,6 +89,12 @@ RobotConstraintManager::RobotConstraintManager(const std::shared_ptr<DQ_Coppelia
     } catch (const std::exception& e) {
         throw std::runtime_error(e.what());
     }
+
+    if (!config_file_reader_->is_zero_indexed())
+        robot_index_convention_ = 1;
+    else
+        robot_index_convention_ = 0;
+
     data_list_ = config_file_reader_->get_data();
     for (auto& data_item : data_list_)
     {
@@ -94,8 +102,58 @@ RobotConstraintManager::RobotConstraintManager(const std::shared_ptr<DQ_Coppelia
         std::visit([&tag](const auto& d){tag = d.tag;}, data_item);
         data_map_.try_emplace(tag, data_item);
     }
+    _create_build_data();
+
 }
 
+void RobotConstraintManager::_create_build_data()
+{
+    if (!rce_compatible_)
+        throw std::runtime_error("Invalid call. This private method requires the version 2 of the configuration File Specification");
+
+    const int n = data_map_.size();
+    std::vector<BUILD_DATA> build_data;
+    build_data.reserve(n);
+    for (auto& data_item : data_list_)
+    {
+        std::visit([this](auto&& arg){
+            using T = std::decay_t<decltype(arg)>;
+            if constexpr (std::is_same_v<T, VFIConfigurationFile::ENVIRONMENT_TO_ROBOT_DATA>) {
+                BUILD_ENVIRONMENT_TO_ROBOT_DATA  bdata;
+                bdata.vfi_type = VFI_manager::VFI_TYPE::ENVIRONMENT_TO_ROBOT;
+
+                bdata.vfi_class = VFI_Framework::map_strings_to_vfiClass(arg.entity_environment_primitive_type,
+                                                                         arg.entity_robot_primitive_type);
+                bdata.direction = VFI_Framework::map_string_to_vfiDirection(arg.direction);
+                bdata.safe_distance = arg.safe_distance;
+                bdata.vfi_gain = arg.vfi_gain;
+                bdata.robot_index = arg.robot_index;
+
+                bdata.joint_index = arg.joint_index;
+
+                bdata.primitive_offsets = _get_coppeliasim_offsets(arg.cs_entity_robot, arg.joint_index-robot_index_convention_);
+                bdata.robot_attached_direction = k_;
+                bdata.environment_attached_direction = k_;
+
+                bdata.workspace_derivative = {DQ(0)};
+                bdata.entity_environment_poses = _get_workspace_poses(arg.cs_entity_environment);
+                bdata.tag = arg.tag;
+
+
+            }else if constexpr (std::is_same_v<T, VFIConfigurationFile::ROBOT_TO_ROBOT_DATA>){
+                throw std::runtime_error("Unsupported temp");
+            }else {
+                throw std::runtime_error("Unsupported VFI TYPE!");
+            }
+        }, data_item);
+    }
+
+
+   // for (auto& pair : data_map_)
+
+
+
+}
 
 /**
  * @brief RobotConstraintManager::get_number_of_vfi_constraints gets the number of VFI constraints set in the config file.
@@ -460,6 +518,28 @@ DQ RobotConstraintManager::_get_robot_primitive_offset_from_coppeliasim(const st
     }
     return x_offset;
 }
+
+std::vector<DQ> RobotConstraintManager::_get_coppeliasim_offsets(const std::vector<std::string>& primitives,
+                                                                 const int &joint_index)
+{
+    const int n = primitives.size();
+    std::vector<DQ> offsets;
+    offsets.resize(n);
+    for (int i=0;i<n;i++)
+        offsets.at(i) = _get_robot_primitive_offset_from_coppeliasim(primitives.at(i), joint_index);
+    return offsets;
+}
+
+std::vector<DQ> RobotConstraintManager::_get_workspace_poses(const std::vector<std::string>& entity_environment_primitives)
+{
+    const int n = entity_environment_primitives.size();
+    std::vector<DQ> poses;
+    poses.resize(n);
+    for (int i=0;i<n;i++)
+        poses.at(i) = cs_->get_object_pose(entity_environment_primitives.at(i));
+    return poses;
+}
+
 
 /**
  * @brief RobotConstraintManager::_initial_settings reads the yaml file used to build the VFIs.

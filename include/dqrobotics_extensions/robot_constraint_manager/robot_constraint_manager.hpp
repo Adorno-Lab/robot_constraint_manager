@@ -41,6 +41,7 @@ namespace DQ_robotics_extensions
 class RobotConstraintManager
 {
 public:
+    // Deprecated
     struct YAML_RAW_DATA{
         std::string vfi_mode;
         std::string cs_entity_one_or_environment;
@@ -57,6 +58,7 @@ public:
         std::string tag;
     };
 
+    // Deprecated
     struct VFI_BUILD_DATA{
         VFI_Framework::VFI_TYPE vfi_type;
         VFI_Framework::VFI_CLASS vfi_class;
@@ -74,9 +76,51 @@ public:
         std::string tag;
     };
 
+
+    struct BUILD_BASE_DATA{
+        VFI_Framework::VFI_TYPE vfi_type;
+        VFI_Framework::VFI_CLASS vfi_class;
+        VFI_Framework::DIRECTION direction;
+        double safe_distance;
+        double vfi_gain;
+        std::string tag;
+        std::vector<DQ> workspace_derivative;
+
+    };
+    struct BUILD_ENVIRONMENT_TO_ROBOT_DATA : BUILD_BASE_DATA{
+        std::vector<DQ> entity_environment_poses;
+        //std::vector<DQ> entity_robot;
+        std::vector<DQ> primitive_offsets;
+        int robot_index;
+        int joint_index;
+        DQ robot_attached_direction;
+        DQ environment_attached_direction;
+
+    };
+    struct BUILD_ROBOT_TO_ROBOT_DATA : BUILD_BASE_DATA{
+        std::vector<DQ> entity_one;
+        std::vector<DQ> entity_two;
+        int robot_index_one;
+        int robot_index_two;
+        int joint_index_one;
+        int joint_index_two;
+        DQ primitive_offset_one;
+        DQ primitive_offset_two;
+        DQ robot_one_attached_direction;
+        DQ robot_two_attached_direction;
+    };
+
+    using BUILD_DATA = std::variant<BUILD_ENVIRONMENT_TO_ROBOT_DATA, BUILD_ROBOT_TO_ROBOT_DATA>;
+
+
+
+
 private:
     class Impl;
     std::shared_ptr<Impl> impl_;
+
+    std::vector<DQ> _get_coppeliasim_offsets(const std::vector<std::string>& primitives, const int& joint_index);
+    std::vector<DQ> _get_workspace_poses(const std::vector<std::string>& entity_environment_primitives);
 
 protected:
 
@@ -99,6 +143,9 @@ protected:
     std::shared_ptr<DQ_CoppeliaSimRobot> coppelia_robot_;
     std::shared_ptr<DQ_robotics_extensions::VFI_manager> VFI_M_;
     std::shared_ptr<DQ_robotics_extensions::VFIConfigurationFile> config_file_reader_;
+    bool rce_compatible_;
+    int robot_index_convention_;
+
     double configuration_limit_constraint_gain_;
 
     VectorXd initial_robot_configuration_;
@@ -110,6 +157,8 @@ protected:
     void _set_vfi_configuration_constraints_gain(const double& vfi_position_constraints_gain);
 
     void _check_unit(const std::string& unit);
+
+    void _create_build_data();
 public:
     [[deprecated]]
     RobotConstraintManager(const std::shared_ptr<DQ_CoppeliaSimInterface>& coppelia_interface,

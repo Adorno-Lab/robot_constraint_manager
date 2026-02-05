@@ -4,11 +4,11 @@ namespace DQ_robotics_extensions  {
 VFI_Framework::DIRECTION VFI_Framework::map_string_to_vfiDirection(const std::string &str)
 {
     DIRECTION direction;
-    if (str == std::string("KEEP_ROBOT_OUTSIDE"))
+    if (str == std::string("KEEP_ROBOT_OUTSIDE") || str == std::string("RESTRICTED_ZONE"))
     {
         direction = DIRECTION::KEEP_ROBOT_OUTSIDE;
     }
-    else if  (str == std::string("KEEP_ROBOT_INSIDE"))
+    else if  (str == std::string("KEEP_ROBOT_INSIDE") || str == std::string("SAFE_ZONE"))
     {
         direction = DIRECTION::KEEP_ROBOT_INSIDE;
     }
