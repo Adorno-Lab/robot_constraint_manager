@@ -116,7 +116,7 @@ void RobotConstraintManager::_create_build_data()
     build_data.reserve(n);
     for (auto& data_item : data_list_)
     {
-        std::visit([this](auto&& arg){
+        std::visit([this, &build_data](auto&& arg){
             using T = std::decay_t<decltype(arg)>;
             if constexpr (std::is_same_v<T, VFIConfigurationFile::ENVIRONMENT_TO_ROBOT_DATA>) {
                 BUILD_ENVIRONMENT_TO_ROBOT_DATA  bdata;
@@ -138,6 +138,7 @@ void RobotConstraintManager::_create_build_data()
                 bdata.workspace_derivative = {DQ(0)};
                 bdata.entity_environment_poses = _get_workspace_poses(arg.cs_entity_environment);
                 bdata.tag = arg.tag;
+                build_data.emplace_back(bdata);
 
 
             }else if constexpr (std::is_same_v<T, VFIConfigurationFile::ROBOT_TO_ROBOT_DATA>){
@@ -509,7 +510,7 @@ DQ RobotConstraintManager::_get_robot_primitive_offset_from_coppeliasim(const st
 
     // In some versions of CoppeliaSim, the first simulation step could
     // return invalid data. I read the data five times just in case.
-    for (int i=0;i<5;i++)    // Read the data from CoppeliaSim five times.
+    for (int i=0;i<2;i++)    // Read the data from CoppeliaSim two times.
     {
         q = coppelia_robot_->get_configuration();
         xprimitive = cs_->get_object_pose(object_name);
@@ -524,9 +525,9 @@ std::vector<DQ> RobotConstraintManager::_get_coppeliasim_offsets(const std::vect
 {
     const int n = primitives.size();
     std::vector<DQ> offsets;
-    offsets.resize(n);
+    offsets.reserve(n);
     for (int i=0;i<n;i++)
-        offsets.at(i) = _get_robot_primitive_offset_from_coppeliasim(primitives.at(i), joint_index);
+        offsets.emplace_back(_get_robot_primitive_offset_from_coppeliasim(primitives.at(i), joint_index));
     return offsets;
 }
 
@@ -534,9 +535,9 @@ std::vector<DQ> RobotConstraintManager::_get_workspace_poses(const std::vector<s
 {
     const int n = entity_environment_primitives.size();
     std::vector<DQ> poses;
-    poses.resize(n);
+    poses.reserve(n);
     for (int i=0;i<n;i++)
-        poses.at(i) = cs_->get_object_pose(entity_environment_primitives.at(i));
+        poses.emplace_back(cs_->get_object_pose(entity_environment_primitives.at(i)));
     return poses;
 }
 
