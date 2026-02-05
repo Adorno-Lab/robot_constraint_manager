@@ -42,11 +42,15 @@ int main()
         controller.set_damping(0.01);
 
 
+//
+        auto vcr = std::make_shared<DQ_robotics_extensions::VFIConfigurationFileYaml>();
+        DQ_robotics_extensions::RobotConstraintManager rcm2{cs, panda, panda_model, vcr,
+                                                            "vfi_constraints_2.yaml", true};
+
+        rcm2.show_vfi_build_data("C1");
+
+        /*
         std::string yaml_path = "vfi_constraints.yaml";
-        //auto vcr = std::make_shared<DQ_robotics_extensions::VFIConfigurationFileYaml>();
-        //DQ_robotics_extensions::RobotConstraintManager rcm2{cs, panda, panda_model, vcr, yaml_path, true};
-
-
         DQ_robotics_extensions::RobotConstraintManager rcm{cs, panda, panda_model, yaml_path, true};
 
         auto tags = rcm.get_vfi_tags();
@@ -118,6 +122,7 @@ int main()
 
         cs->stop_simulation();
 
+        */
     }
     catch (const std::runtime_error& e)
     {

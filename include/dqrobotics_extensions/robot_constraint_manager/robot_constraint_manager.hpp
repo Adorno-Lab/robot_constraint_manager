@@ -84,7 +84,7 @@ public:
         double safe_distance;
         double vfi_gain;
         std::string tag;
-        std::vector<DQ> workspace_derivative;
+
 
     };
     struct BUILD_ENVIRONMENT_TO_ROBOT_DATA : BUILD_BASE_DATA{
@@ -95,17 +95,18 @@ public:
         int joint_index;
         DQ robot_attached_direction;
         DQ environment_attached_direction;
+        std::vector<DQ> workspace_derivative;
 
     };
     struct BUILD_ROBOT_TO_ROBOT_DATA : BUILD_BASE_DATA{
-        std::vector<DQ> entity_one;
-        std::vector<DQ> entity_two;
+        //std::vector<DQ> entity_one;
+        //std::vector<DQ> entity_two;
         int robot_index_one;
         int robot_index_two;
         int joint_index_one;
         int joint_index_two;
-        DQ primitive_offset_one;
-        DQ primitive_offset_two;
+        std::vector<DQ> primitive_offsets_one;
+        std::vector<DQ> primitive_offsets_two;
         DQ robot_one_attached_direction;
         DQ robot_two_attached_direction;
     };
@@ -119,15 +120,19 @@ private:
     class Impl;
     std::shared_ptr<Impl> impl_;
 
-    std::vector<DQ> _get_coppeliasim_offsets(const std::vector<std::string>& primitives, const int& joint_index);
+    std::vector<DQ> _get_coppeliasim_offsets(const std::vector<std::string>& primitives,
+                                             const int& robot_index,
+                                             const int& joint_index);
     std::vector<DQ> _get_workspace_poses(const std::vector<std::string>& entity_environment_primitives);
 
 protected:
 
     //std::vector<VFI_BUILD_DATA> vfi_build_data_list_;
+    //----Deprecated--------------------------------------------------
     std::unordered_map<std::string, VFI_BUILD_DATA> vfi_build_data_map_;
     std::vector<YAML_RAW_DATA> yaml_raw_data_list_;
     std::unordered_map<std::string, YAML_RAW_DATA> yaml_raw_data_map_;
+    //-----------------------------------------------------------------
 
 
     std::vector<VFIConfigurationFile::Data> data_list_;
@@ -146,6 +151,8 @@ protected:
     std::shared_ptr<DQ_robotics_extensions::VFIConfigurationFile> config_file_reader_;
     bool rce_compatible_;
     int robot_index_convention_;
+    int vfi_file_version_;
+    bool vfi_zero_indexed_;
 
     double configuration_limit_constraint_gain_;
 
@@ -153,12 +160,10 @@ protected:
     int number_of_constraints_;
 
     bool verbosity_{true};
-    DQ _get_robot_primitive_offset_from_coppeliasim(const std::string& object_name, const int& joint_index);
+    DQ   _get_robot_primitive_offset_from_coppeliasim(const std::string& object_name, const int& joint_index);
     void _initial_settings();
     void _set_vfi_configuration_constraints_gain(const double& vfi_position_constraints_gain);
-
     void _check_unit(const std::string& unit);
-
     void _create_build_data();
 public:
     [[deprecated]]

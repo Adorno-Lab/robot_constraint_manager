@@ -22,6 +22,7 @@
 */
 
 #include <dqrobotics_extensions/robot_constraint_manager/robot_constraint_manager.hpp>
+#include <dqrobotics_extensions/robot_constraint_editor/utils.hpp>
 #include <yaml-cpp/yaml.h>
 
 
@@ -68,6 +69,17 @@ RobotConstraintManager::RobotConstraintManager(const std::shared_ptr<DQ_Coppelia
     _initial_settings();
 }
 
+
+/**
+ * @brief RobotConstraintManager::RobotConstraintManager
+ * @param coppelia_interface
+ * @param coppeliasim_robot
+ * @param robot
+ * @param config_file_reader
+ * @param yaml_file_path
+ * @param verbosity
+ * @param level
+ */
 RobotConstraintManager::RobotConstraintManager(const std::shared_ptr<DQ_CoppeliaSimInterface> &coppelia_interface,
                                                const std::shared_ptr<DQ_CoppeliaSimRobot> &coppeliasim_robot,
                                                const std::shared_ptr<DQ_Kinematics> &robot,
@@ -96,6 +108,9 @@ RobotConstraintManager::RobotConstraintManager(const std::shared_ptr<DQ_Coppelia
         robot_index_convention_ = 0;
 
     data_list_ = config_file_reader_->get_data();
+    number_of_constraints_ = data_list_.size();
+    vfi_file_version_ =  config_file_reader_->get_vfi_file_version();
+    vfi_zero_indexed_ =  config_file_reader_->is_zero_indexed();
     for (auto& data_item : data_list_)
     {
         std::string tag;
@@ -128,27 +143,39 @@ void RobotConstraintManager::_create_build_data()
                 bdata.vfi_gain = arg.vfi_gain;
                 bdata.robot_index = arg.robot_index;
                 bdata.joint_index = arg.joint_index;
-                bdata.primitive_offsets = _get_coppeliasim_offsets(arg.cs_entity_robot, arg.joint_index-robot_index_convention_);
+                bdata.primitive_offsets = _get_coppeliasim_offsets(arg.cs_entity_robot,  arg.robot_index, arg.joint_index-robot_index_convention_);
                 bdata.robot_attached_direction = k_;
                 bdata.environment_attached_direction = k_;
                 bdata.workspace_derivative = {DQ(0)};
                 bdata.entity_environment_poses = _get_workspace_poses(arg.cs_entity_environment);
                 bdata.tag = arg.tag;
-                //build_data.emplace_back(bdata);
                 build_data_map_.try_emplace(bdata.tag, bdata);
 
 
             }else if constexpr (std::is_same_v<T, VFIConfigurationFile::ROBOT_TO_ROBOT_DATA>){
-                throw std::runtime_error("Unsupported temp");
+                BUILD_ROBOT_TO_ROBOT_DATA bdata;
+                bdata.vfi_type = VFI_manager::VFI_TYPE::ROBOT_TO_ROBOT;
+                bdata.vfi_class = VFI_Framework::map_strings_to_vfiClass(arg.entity_one_primitive_type,
+                                                                         arg.entity_two_primitive_type);
+                bdata.direction = VFI_Framework::map_string_to_vfiDirection(arg.direction);
+                bdata.safe_distance = arg.safe_distance;
+                bdata.vfi_gain = arg.vfi_gain;
+                bdata.robot_index_one = arg.robot_index_one;
+                bdata.robot_index_two = arg.robot_index_two;
+                bdata.joint_index_one = arg.joint_index_one;
+                bdata.joint_index_two = arg.joint_index_two;
+                bdata.primitive_offsets_one = _get_coppeliasim_offsets(arg.cs_entity_one, arg.robot_index_one, arg.joint_index_one-robot_index_convention_);
+                bdata.robot_one_attached_direction = k_;
+                bdata.robot_two_attached_direction = k_;
+                //bdata.entity_environment_poses = _get_workspace_poses(arg.cs_entity_environment);
+                bdata.tag = arg.tag;
+                build_data_map_.try_emplace(bdata.tag, bdata);
             }else {
                 throw std::runtime_error("Unsupported VFI TYPE!");
             }
         }, data_item);
     }
 
-
-
-   // for (auto& pair : data_map_)
 
 
 
@@ -343,9 +370,17 @@ VFIConfigurationFile::Data RobotConstraintManager::get_data(const std::string& t
 std::vector<std::string> RobotConstraintManager::get_vfi_tags() const
 {
     std::vector<std::string> tags;
-    tags.reserve(vfi_build_data_map_.size());
-    for (auto& pair : vfi_build_data_map_)
-        tags.push_back(pair.first);
+    if (!rce_compatible_)
+    {
+        //To keep backward compatibility
+        tags.reserve(vfi_build_data_map_.size());
+        for (auto& pair : vfi_build_data_map_)
+            tags.push_back(pair.first);
+    }else{
+        tags.reserve(build_data_map_.size());
+        for (auto& pair : build_data_map_)
+            tags.push_back(pair.first);
+    }
     return tags;
 }
 
@@ -389,29 +424,36 @@ double RobotConstraintManager::get_line_to_line_angle(const std::string &tag) co
  */
 void RobotConstraintManager::show_vfi_build_data(const std::string &tag) const
 {
-    try {
-        auto data = vfi_build_data_map_.at(tag);
-        std::cout<<"---------------------------------------------"<<std::endl;
-        std::cout<<"TAG:                             "<<tag<<std::endl;
-        std::cout<<"VFI type:                        "<<VFI_Framework::map_vfiType_to_string(data.vfi_type)<<std::endl;
-        std::cout<<"VFI class:                       "<<VFI_Framework::map_vfiClass_to_string(data.vfi_class)<<std::endl;
-        std::cout<<"Direction:                       "<<VFI_Framework::map_vfiDirection_to_string(data.direction)<<std::endl;
-        std::cout<<"Safe distance:                   "<<data.safe_distance<<std::endl;
-        std::cout<<"VFI gain:                        "<<data.vfi_gain<<std::endl;
-        std::cout<<"Joint index one:                 "<<data.joint_index_one<<std::endl;
-        std::cout<<"Joint index two:                 "<<data.joint_index_two<<std::endl;
-        std::cout<<"primitive_offset_one:            "<<data.primitive_offset_one<<std::endl;
-        std::cout<<"primitive_offset_two:            "<<data.primitive_offset_two<<std::endl;
-        std::cout<<"robot_attached_direction:        "<<data.robot_attached_direction<<std::endl;
-        std::cout<<"environment_attached_direction:  "<<data.environment_attached_direction<<std::endl;
-        std::cout<<"workspace derivative:            "<<data.workspace_derivative<<std::endl;
-        std::cout<<"cs_entity_environment_pose:      "<<data.cs_entity_environment_pose<<std::endl;
+    if (!rce_compatible_)
+    {
+        try {
+            auto data = vfi_build_data_map_.at(tag);
+            std::cout<<"---------------------------------------------"<<std::endl;
+            std::cout<<"TAG:                             "<<tag<<std::endl;
+            std::cout<<"VFI type:                        "<<VFI_Framework::map_vfiType_to_string(data.vfi_type)<<std::endl;
+            std::cout<<"VFI class:                       "<<VFI_Framework::map_vfiClass_to_string(data.vfi_class)<<std::endl;
+            std::cout<<"Direction:                       "<<VFI_Framework::map_vfiDirection_to_string(data.direction)<<std::endl;
+            std::cout<<"Safe distance:                   "<<data.safe_distance<<std::endl;
+            std::cout<<"VFI gain:                        "<<data.vfi_gain<<std::endl;
+            std::cout<<"Joint index one:                 "<<data.joint_index_one<<std::endl;
+            std::cout<<"Joint index two:                 "<<data.joint_index_two<<std::endl;
+            std::cout<<"primitive_offset_one:            "<<data.primitive_offset_one<<std::endl;
+            std::cout<<"primitive_offset_two:            "<<data.primitive_offset_two<<std::endl;
+            std::cout<<"robot_attached_direction:        "<<data.robot_attached_direction<<std::endl;
+            std::cout<<"environment_attached_direction:  "<<data.environment_attached_direction<<std::endl;
+            std::cout<<"workspace derivative:            "<<data.workspace_derivative<<std::endl;
+            std::cout<<"cs_entity_environment_pose:      "<<data.cs_entity_environment_pose<<std::endl;
 
 
-        std::cout<<"---------------------------------------------"<<std::endl;
-    } catch (const std::runtime_error& e) {
-        std::cerr<<e.what()<<std::endl;
-        throw std::runtime_error("RobotConstraintManager::show_vfi_build_data: VFI TAG not found!");
+            std::cout<<"---------------------------------------------"<<std::endl;
+        } catch (const std::runtime_error& e) {
+            std::cerr<<e.what()<<std::endl;
+            throw std::runtime_error("RobotConstraintManager::show_vfi_build_data: VFI TAG not found!");
+        }
+    }else
+    {
+        //VFIConfigurationFileData::show_data(data_list_, vfi_file_version_ , vfi_zero_indexed_);
+        throw std::runtime_error("RobotConstraintManager::show_vfi_build_data unsupported!");
     }
 
 }
@@ -424,13 +466,18 @@ void RobotConstraintManager::show_vfi_build_data(const std::string &tag) const
  */
 void RobotConstraintManager::update_vfi_workspace_derivative(const std::string &tag, const DQ &workspace_derivative)
 {
-    try{
-        VFI_BUILD_DATA data = vfi_build_data_map_.at(tag);
-        data.workspace_derivative = workspace_derivative;
-        vfi_build_data_map_.insert_or_assign(tag,data);
-    } catch (const std::runtime_error& e) {
-        std::cerr<<e.what()<<std::endl;
-        throw std::runtime_error("RobotConstraintManager::update_vfi_workspace_derivative: Fail to update the VFI data!");
+    if (!rce_compatible_)
+    {
+        try{
+            VFI_BUILD_DATA data = vfi_build_data_map_.at(tag);
+            data.workspace_derivative = workspace_derivative;
+            vfi_build_data_map_.insert_or_assign(tag,data);
+        } catch (const std::runtime_error& e) {
+            std::cerr<<e.what()<<std::endl;
+            throw std::runtime_error("RobotConstraintManager::update_vfi_workspace_derivative: Fail to update the VFI data!");
+        }
+    }else{
+        throw std::runtime_error("RobotConstraintManager::update_vfi_workspace_derivative unsupported!");
     }
 }
 
@@ -441,16 +488,21 @@ void RobotConstraintManager::update_vfi_workspace_derivative(const std::string &
  */
 void RobotConstraintManager::update_vfi_workspace_pose(const std::string &tag, const DQ &workspace_pose)
 {
-
-    try{
-        VFI_BUILD_DATA data = vfi_build_data_map_.at(tag);
-        data.cs_entity_environment_pose = workspace_pose;
-        vfi_build_data_map_.insert_or_assign(tag,data);
-    } catch (const std::runtime_error& e) {
-        std::cerr<<e.what()<<std::endl;
-        throw std::runtime_error("RobotConstraintManager::update_vfi_workspace: Fail to update the VFI data!");
+    if (!rce_compatible_)
+    {
+        try{
+            VFI_BUILD_DATA data = vfi_build_data_map_.at(tag);
+            data.cs_entity_environment_pose = workspace_pose;
+            vfi_build_data_map_.insert_or_assign(tag,data);
+        } catch (const std::runtime_error& e) {
+            std::cerr<<e.what()<<std::endl;
+            throw std::runtime_error("RobotConstraintManager::update_vfi_workspace: Fail to update the VFI data!");
+        }
+    }else{
+        throw std::runtime_error("RobotConstraintManager::update_vfi_workspace_pose unsupported!");
     }
 }
+
 
 /**
  * @brief RobotConstraintManager::get_configuration_limits returns the configuration limits.
@@ -519,13 +571,16 @@ DQ RobotConstraintManager::_get_robot_primitive_offset_from_coppeliasim(const st
 }
 
 std::vector<DQ> RobotConstraintManager::_get_coppeliasim_offsets(const std::vector<std::string>& primitives,
-                                                                 const int &joint_index)
+                                                                 const int& robot_index,
+                                                                 const int& joint_index)
 {
     const int n = primitives.size();
     std::vector<DQ> offsets;
     offsets.reserve(n);
     for (int i=0;i<n;i++)
+    {
         offsets.emplace_back(_get_robot_primitive_offset_from_coppeliasim(primitives.at(i), joint_index));
+    }
     return offsets;
 }
 
