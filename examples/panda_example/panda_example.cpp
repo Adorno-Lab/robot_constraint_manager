@@ -8,6 +8,7 @@
 #include <dqrobotics/robot_control/DQ_ClassicQPController.h>
 #include <dqrobotics/solvers/DQ_QPOASESSolver.h>
 #include <dqrobotics_extensions/robot_constraint_manager/robot_constraint_manager.hpp>
+#include <dqrobotics_extensions/robot_constraint_editor/vfi_configuration_file_yaml.hpp>
 
 
 /*********************************************
@@ -29,20 +30,30 @@ int main()
 
     auto cs = std::make_shared<DQ_CoppeliaSimInterfaceZMQ>();
     try {
-        cs->connect("localhost", 23000, 2000);
-        cs->set_stepping_mode(true);
-        auto panda = std::make_shared<FrankaEmikaPandaCoppeliaSimZMQRobot>("Franka", cs);
-        auto panda_model =  std::make_shared<DQ_SerialManipulatorMDH>(panda->kinematics());
+        //cs->connect("localhost", 23000, 2000);
+        //cs->set_stepping_mode(true);
+        //auto panda = std::make_shared<FrankaEmikaPandaCoppeliaSimZMQRobot>("Franka", cs);
+        //auto panda_model =  std::make_shared<DQ_SerialManipulatorMDH>(panda->kinematics());
         auto solver = std::make_shared<DQ_QPOASESSolver>();
 
-        DQ_ClassicQPController controller(panda_model, solver);
-        controller.set_control_objective(ControlObjective::Translation);
-        controller.set_gain(1.0);
-        controller.set_damping(0.01);
+        //DQ_ClassicQPController controller(panda_model, solver);
+        //controller.set_control_objective(ControlObjective::Translation);
+        //controller.set_gain(1.0);
+        //controller.set_damping(0.01);
 
 
-        std::string yaml_path = "vfi_constraints.yaml";
+        std::string yaml_path = "vfi_constraints_2.yaml";
+        auto vcr = std::make_shared<DQ_robotics_extensions::VFIConfigurationFileYaml>();
+        vcr->load_data(yaml_path);
+        auto data = vcr->get_data();
+        for (const auto& data_item : data) {
+            std::visit([](const auto& d) {
+                std::cout << "Tag: " << d.tag << std::endl;
+            }, data_item);
+        }
 
+
+        /*
         DQ_robotics_extensions::RobotConstraintManager rcm{cs, panda, panda_model, yaml_path, true};
 
         auto tags = rcm.get_vfi_tags();
@@ -113,6 +124,7 @@ int main()
         std::cout<<"Teleoperation finished."<<std::endl;
 
         cs->stop_simulation();
+        */
     }
     catch (const std::runtime_error& e)
     {

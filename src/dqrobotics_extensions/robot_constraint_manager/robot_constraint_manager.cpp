@@ -88,9 +88,11 @@ RobotConstraintManager::RobotConstraintManager(const std::shared_ptr<DQ_Coppelia
         throw std::runtime_error(e.what());
     }
     data_list_ = config_file_reader_->get_data();
-    for (auto& element : data_list_)
+    for (auto& data_item : data_list_)
     {
-
+        std::string tag;
+        std::visit([&tag](const auto& d){tag = d.tag;}, data_item);
+        data_map_.try_emplace(tag, data_item);
     }
 }
 
@@ -265,6 +267,16 @@ RobotConstraintManager::VFI_BUILD_DATA RobotConstraintManager::get_vfi_build_dat
 RobotConstraintManager::YAML_RAW_DATA RobotConstraintManager::get_raw_yaml_data(const std::string &tag) const
 {
     return yaml_raw_data_map_.at(tag);
+}
+
+/**
+ * @brief RobotConstraintManager::get_data returns the data from the YAML file.
+ * @param tag The tag of the constraint.
+ * @return the data of the constraint.
+ */
+VFIConfigurationFile::Data RobotConstraintManager::get_data(const std::string& tag) const
+{
+    return data_map_.at(tag);
 }
 
 /**

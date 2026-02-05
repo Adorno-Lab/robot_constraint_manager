@@ -144,11 +144,15 @@ public:
     std::tuple<double, double, double, double, double, std::string> get_vfi_log_data(const std::string &tag) const;
     std::tuple<int, DQ, int, DQ> get_primitive_index_and_offset(const std::string& tag) const;
 
-    [[deprecated("This method is experimental")]]
+    [[deprecated("This method is deprecated")]]
     YAML_RAW_DATA get_raw_yaml_data(const std::string& tag) const;
 
-    [[deprecated("This method is experimental")]]
+    [[deprecated("This method is deprecated")]]
     VFI_BUILD_DATA get_vfi_build_data(const std::string& tag) const;
+
+    VFIConfigurationFile::Data get_data(const std::string& tag) const;
+
+
 
     std::vector<std::string> get_vfi_tags() const;
     double get_vfi_distance_error(const std::string& tag) const;
