@@ -43,7 +43,7 @@ VFI_Framework::VFI_CLASS VFI_Framework::map_strings_to_vfiClass(const std::strin
             throw std::runtime_error("Error in map_string_to_vfiType. Combination of primitives "
                                      + map_primitive_to_string(robot_primitive) + "-"
                                      + map_primitive_to_string(environment_primitive)
-                                     + "not supported.");
+                                     + " not supported.");
             break;
         }
         break;

@@ -44,23 +44,18 @@ int main()
 
 //
         auto vcr = std::make_shared<DQ_robotics_extensions::VFIConfigurationFileYaml>();
-        /*
-        DQ_robotics_extensions::RobotConstraintManager rcm2{cs, panda, panda_model, vcr,
+
+        DQ_robotics_extensions::RobotConstraintManager rcm{cs, panda, panda_model, vcr,
                                                             "vfi_constraints_2.yaml", true};
 
-        rcm2.show_vfi_build_data("C1");
-        auto tags = rcm2.get_vfi_tags();
-        for (auto& tag : tags)
-        {
-            std::cout<<"-------------"<<std::endl;
-            std::cout<<tag<<std::endl;
-        }
-*/
 
 
+        /*
         std::string yaml_path = "vfi_constraints.yaml";
         DQ_robotics_extensions::RobotConstraintManager rcm{cs, panda, panda_model, yaml_path, true};
+        */
 
+        /*
         auto tags = rcm.get_vfi_tags();
         for (auto& tag : tags)
         {
@@ -87,8 +82,7 @@ int main()
             auto build_data = rcm.get_vfi_build_data(tag);
 
         }
-
-
+*/
 
 
         cs->start_simulation();
@@ -104,7 +98,7 @@ int main()
         {
             DQ xd = cs->get_object_pose("ReferenceFrame");
             auto q = panda->get_configuration();
-            auto [A,b] = rcm.get_inequality_constraints(q);
+            auto [A,b] = rcm.get_inequality_constraints(q, false, false);
             controller.set_inequality_constraint(A,b);
             auto u = controller.compute_setpoint_control_signal(q, xd.translation().vec4());
             panda->set_target_configuration_velocities(u);

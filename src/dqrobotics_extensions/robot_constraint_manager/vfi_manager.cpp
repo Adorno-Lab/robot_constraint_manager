@@ -253,7 +253,7 @@ void VFI_manager::add_vfi_rpoint_to_rpoint(const std::string &tag,
 void VFI_manager::add_vfi_constraint(const std::string &tag,
                                        const int& stack_position,
                                        const DIRECTION &direction,
-                                       const VFI_CLASS &vfi_type,
+                                       const VFI_CLASS &vfi_class,
                                        const double &safe_distance,
                                        const double &vfi_gain,
                                        const MatrixXd &robot_pose_jacobian,
@@ -263,7 +263,7 @@ void VFI_manager::add_vfi_constraint(const std::string &tag,
                                        const DQ &workspace_attached_direction,
                                        const DQ &workspace_derivative)
 {
-    switch(vfi_type)
+    switch(vfi_class)
     {
 
     case VFI_CLASS::RPOINT_TO_POINT:

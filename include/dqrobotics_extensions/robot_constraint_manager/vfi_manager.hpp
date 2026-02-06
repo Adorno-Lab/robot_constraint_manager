@@ -44,6 +44,27 @@ namespace DQ_robotics_extensions  {
 
 class VFI_manager: public VFI_Framework
 {
+public:
+
+    struct VFI_BUILD_DATA{
+        VFI_Framework::VFI_TYPE vfi_type;
+        VFI_Framework::VFI_CLASS vfi_class;
+        VFI_Framework::DIRECTION direction;
+        double safe_distance;
+        double vfi_gain;
+        int joint_index_one;
+        int joint_index_two;
+        int robot_index_one;
+        int robot_index_two;
+        std::vector<DQ> primitive_offsets_one;
+        std::vector<DQ> primitive_offsets_two;
+        DQ robot_attached_direction;
+        DQ environment_attached_direction;
+        DQ workspace_derivative;
+        std::vector<DQ> environment_poses;
+        std::string tag;
+    };
+
 protected:
     struct VFI_LOG_DATA{
         double distance;

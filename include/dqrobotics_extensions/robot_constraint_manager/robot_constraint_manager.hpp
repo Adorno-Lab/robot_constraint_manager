@@ -58,65 +58,13 @@ public:
         std::string tag;
     };
 
-    // Deprecated
-    struct VFI_BUILD_DATA{
-        VFI_Framework::VFI_TYPE vfi_type;
-        VFI_Framework::VFI_CLASS vfi_class;
-        VFI_Framework::DIRECTION direction;
-        double safe_distance;
-        double vfi_gain;
-        int joint_index_one;
-        int joint_index_two;
-        int robot_index_one;
-        int robot_index_two;
-        DQ primitive_offset_one;
-        DQ primitive_offset_two;
-        DQ robot_attached_direction;
-        DQ environment_attached_direction;
-        DQ workspace_derivative;
-        DQ cs_entity_environment_pose;
-        std::string tag;
-    };
+
 
 
 
 private:
     class Impl;
     std::shared_ptr<Impl> impl_;
-
-    /*
-    struct BUILD_BASE_DATA{
-        VFI_Framework::VFI_TYPE vfi_type;
-        VFI_Framework::VFI_CLASS vfi_class;
-        VFI_Framework::DIRECTION direction;
-        double safe_distance;
-        double vfi_gain;
-        std::string tag;
-    };
-
-    struct BUILD_ENVIRONMENT_TO_ROBOT_DATA : BUILD_BASE_DATA{
-        std::vector<DQ> environment_poses;
-        std::vector<DQ> primitive_offsets;
-        int robot_index;
-        int joint_index;
-        DQ robot_attached_direction;
-        DQ environment_attached_direction;
-        std::vector<DQ> workspace_derivative;
-
-    };
-    struct BUILD_ROBOT_TO_ROBOT_DATA : BUILD_BASE_DATA{
-        int robot_index_one;
-        int robot_index_two;
-        int joint_index_one;
-        int joint_index_two;
-        std::vector<DQ> primitive_offsets_one;
-        std::vector<DQ> primitive_offsets_two;
-        DQ robot_one_attached_direction;
-        DQ robot_two_attached_direction;
-    };
-
-    using BUILD_DATA = std::variant<BUILD_ENVIRONMENT_TO_ROBOT_DATA, BUILD_ROBOT_TO_ROBOT_DATA>;
-*/
 
     std::vector<DQ> _get_coppeliasim_offsets(const std::vector<std::string>& primitives,
                                              const int& robot_index,
@@ -126,14 +74,12 @@ private:
 
     std::vector<VFIConfigurationFile::Data> data_list_;
     std::unordered_map<std::string, VFIConfigurationFile::Data> data_map_;
-    //std::unordered_map<std::string, BUILD_DATA> build_data_map_;
-
 
 protected:
 
     //std::vector<VFI_BUILD_DATA> vfi_build_data_list_;
     //----Deprecated--------------------------------------------------
-    std::unordered_map<std::string, VFI_BUILD_DATA> vfi_build_data_map_;
+    std::unordered_map<std::string, VFI_manager::VFI_BUILD_DATA> vfi_build_data_map_;
     std::vector<YAML_RAW_DATA> yaml_raw_data_list_;
     std::unordered_map<std::string, YAML_RAW_DATA> yaml_raw_data_map_;
     //-----------------------------------------------------------------
@@ -161,7 +107,7 @@ protected:
     void _initial_settings();
     void _set_vfi_configuration_constraints_gain(const double& vfi_position_constraints_gain);
     void _check_unit(const std::string& unit);
-    //void _create_build_data();
+    void _create_build_data();
 public:
     [[deprecated]]
     RobotConstraintManager(const std::shared_ptr<DQ_CoppeliaSimInterface>& coppelia_interface,
@@ -196,7 +142,7 @@ public:
     YAML_RAW_DATA get_raw_yaml_data(const std::string& tag) const;
 
     [[deprecated("This method is deprecated")]]
-    VFI_BUILD_DATA get_vfi_build_data(const std::string& tag) const;
+    VFI_manager::VFI_BUILD_DATA get_vfi_build_data(const std::string& tag) const;
 
     VFIConfigurationFile::Data get_data(const std::string& tag) const;
 

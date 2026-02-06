@@ -27,3 +27,39 @@ vfi_array:
         vfi_gain: 1.0
         direction: "RESTRICTED_ZONE"
         tag: "C2"
+    -
+        vfi_type: "ENVIRONMENT_TO_ROBOT"
+        cs_entity_environment: ["Plane"]
+        cs_entity_robot: ["rsphere"]
+        entity_environment_primitive_type: "PLANE"
+        entity_robot_primitive_type: "POINT"
+        robot_index: 1
+        joint_index: 7
+        safe_distance: 0.05
+        vfi_gain: 1.0
+        direction: "RESTRICTED_ZONE"
+        tag: "C3"
+    -
+        vfi_type: "ENVIRONMENT_TO_ROBOT"
+        cs_entity_environment: ["Cylinder"]
+        cs_entity_robot: ["rsphere"]
+        entity_environment_primitive_type: "LINE"
+        entity_robot_primitive_type: "POINT"
+        robot_index: 1
+        joint_index: 7
+        safe_distance: 0.1
+        vfi_gain: 2.0
+        direction: "RESTRICTED_ZONE"
+        tag: "C4"
+    -
+        vfi_type: "ENVIRONMENT_TO_ROBOT"
+        cs_entity_environment: ["obs_sphere"]
+        cs_entity_robot: ["rsphere"]
+        entity_environment_primitive_type: "POINT"
+        entity_robot_primitive_type: "POINT"
+        robot_index: 1
+        joint_index: 7
+        safe_distance: 0.1
+        vfi_gain: 2.0
+        direction: "RESTRICTED_ZONE"
+        tag: "C5"
