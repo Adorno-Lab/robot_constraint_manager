@@ -48,6 +48,12 @@ int main()
                                                             "vfi_constraints_2.yaml", true};
 
         rcm2.show_vfi_build_data("C1");
+        auto tags = rcm2.get_vfi_tags();
+        for (auto& tag : tags)
+        {
+            std::cout<<"-------------"<<std::endl;
+            std::cout<<tag<<std::endl;
+        }
 
         /*
         std::string yaml_path = "vfi_constraints.yaml";

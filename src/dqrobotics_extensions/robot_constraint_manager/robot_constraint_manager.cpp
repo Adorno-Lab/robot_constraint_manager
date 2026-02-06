@@ -443,8 +443,6 @@ void RobotConstraintManager::show_vfi_build_data(const std::string &tag) const
             std::cout<<"environment_attached_direction:  "<<data.environment_attached_direction<<std::endl;
             std::cout<<"workspace derivative:            "<<data.workspace_derivative<<std::endl;
             std::cout<<"cs_entity_environment_pose:      "<<data.cs_entity_environment_pose<<std::endl;
-
-
             std::cout<<"---------------------------------------------"<<std::endl;
         } catch (const std::runtime_error& e) {
             std::cerr<<e.what()<<std::endl;
@@ -452,9 +450,48 @@ void RobotConstraintManager::show_vfi_build_data(const std::string &tag) const
         }
     }else
     {
-        //VFIConfigurationFileData::show_data(data_list_, vfi_file_version_ , vfi_zero_indexed_);
-        throw std::runtime_error("RobotConstraintManager::show_vfi_build_data unsupported!");
+        auto build_data = build_data_map_.at(tag);
+        std::visit([this, &build_data, &tag](auto&& arg){
+            using T = std::decay_t<decltype(arg)>;
+
+            if constexpr (std::is_same_v<T, BUILD_ENVIRONMENT_TO_ROBOT_DATA>) {
+                std::cout<<"---------------------------------------------"<<std::endl;
+                std::cout<<"TAG:                             "<<tag<<std::endl;
+                std::cout<<"VFI type:                        "<<VFI_Framework::map_vfiType_to_string(arg.vfi_type)<<std::endl;
+                std::cout<<"VFI class:                       "<<VFI_Framework::map_vfiClass_to_string(arg.vfi_class)<<std::endl;
+                std::cout<<"Direction:                       "<<VFI_Framework::map_vfiDirection_to_string(arg.direction)<<std::endl;
+                std::cout<<"Safe distance:                   "<<arg.safe_distance<<std::endl;
+                std::cout<<"VFI gain:                        "<<arg.vfi_gain<<std::endl;
+                std::cout<<"Robot index:                     "<<arg.robot_index<<std::endl;  // Changed field name
+                std::cout<<"Joint index:                     "<<arg.joint_index<<std::endl;   // Changed field name
+                //std::cout<<"Entity environment poses:        "<<arg.entity_environment_poses<<std::endl;  // Changed field name
+                //std::cout<<"Primitive offsets:               "<<arg.primitive_offsets<<std::endl;
+                std::cout<<"Robot attached direction:        "<<arg.robot_attached_direction<<std::endl;
+                std::cout<<"Environment attached direction:  "<<arg.environment_attached_direction<<std::endl;
+                //std::cout<<"Workspace derivative:            "<<arg.workspace_derivative<<std::endl;
+
+            } else if constexpr (std::is_same_v<T, BUILD_ROBOT_TO_ROBOT_DATA>) {
+                std::cout<<"---------------------------------------------"<<std::endl;
+                std::cout<<"TAG:                             "<<tag<<std::endl;
+                std::cout<<"VFI type:                        "<<VFI_Framework::map_vfiType_to_string(arg.vfi_type)<<std::endl;
+                std::cout<<"VFI class:                       "<<VFI_Framework::map_vfiClass_to_string(arg.vfi_class)<<std::endl;
+                std::cout<<"Direction:                       "<<VFI_Framework::map_vfiDirection_to_string(arg.direction)<<std::endl;
+                std::cout<<"Safe distance:                   "<<arg.safe_distance<<std::endl;
+                std::cout<<"VFI gain:                        "<<arg.vfi_gain<<std::endl;
+                std::cout<<"Robot index one:                 "<<arg.robot_index_one<<std::endl;
+                std::cout<<"Robot index two:                 "<<arg.robot_index_two<<std::endl;
+                std::cout<<"Joint index one:                 "<<arg.joint_index_one<<std::endl;
+                std::cout<<"Joint index two:                 "<<arg.joint_index_two<<std::endl;
+                //std::cout<<"Primitive offsets one:           "<<arg.primitive_offsets_one<<std::endl;  // Changed field name
+                //std::cout<<"Primitive offsets two:           "<<arg.primitive_offsets_two<<std::endl;  // Changed field name
+                std::cout<<"Robot one attached direction:    "<<arg.robot_one_attached_direction<<std::endl;  // Changed field name
+                std::cout<<"Robot two attached direction:    "<<arg.robot_two_attached_direction<<std::endl;  // Changed field name
+            } else {
+                throw std::runtime_error("Unsupported VFI TYPE!");
+            }
+        }, build_data);
     }
+
 
 }
 
@@ -814,5 +851,6 @@ void RobotConstraintManager::_initial_settings()
     }
 
 }
+
 
 }

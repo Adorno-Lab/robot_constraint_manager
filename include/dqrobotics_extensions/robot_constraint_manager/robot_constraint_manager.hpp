@@ -125,6 +125,7 @@ private:
                                              const int& joint_index);
     std::vector<DQ> _get_workspace_poses(const std::vector<std::string>& entity_environment_primitives);
 
+
 protected:
 
     //std::vector<VFI_BUILD_DATA> vfi_build_data_list_;
