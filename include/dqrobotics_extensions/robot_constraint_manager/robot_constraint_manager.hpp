@@ -67,6 +67,8 @@ public:
         double vfi_gain;
         int joint_index_one;
         int joint_index_two;
+        int robot_index_one;
+        int robot_index_two;
         DQ primitive_offset_one;
         DQ primitive_offset_two;
         DQ robot_attached_direction;
@@ -82,6 +84,7 @@ private:
     class Impl;
     std::shared_ptr<Impl> impl_;
 
+    /*
     struct BUILD_BASE_DATA{
         VFI_Framework::VFI_TYPE vfi_type;
         VFI_Framework::VFI_CLASS vfi_class;
@@ -113,6 +116,7 @@ private:
     };
 
     using BUILD_DATA = std::variant<BUILD_ENVIRONMENT_TO_ROBOT_DATA, BUILD_ROBOT_TO_ROBOT_DATA>;
+*/
 
     std::vector<DQ> _get_coppeliasim_offsets(const std::vector<std::string>& primitives,
                                              const int& robot_index,
@@ -122,7 +126,7 @@ private:
 
     std::vector<VFIConfigurationFile::Data> data_list_;
     std::unordered_map<std::string, VFIConfigurationFile::Data> data_map_;
-    std::unordered_map<std::string, BUILD_DATA> build_data_map_;
+    //std::unordered_map<std::string, BUILD_DATA> build_data_map_;
 
 
 protected:
@@ -157,7 +161,7 @@ protected:
     void _initial_settings();
     void _set_vfi_configuration_constraints_gain(const double& vfi_position_constraints_gain);
     void _check_unit(const std::string& unit);
-    void _create_build_data();
+    //void _create_build_data();
 public:
     [[deprecated]]
     RobotConstraintManager(const std::shared_ptr<DQ_CoppeliaSimInterface>& coppelia_interface,

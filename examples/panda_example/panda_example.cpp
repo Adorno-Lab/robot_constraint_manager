@@ -44,6 +44,7 @@ int main()
 
 //
         auto vcr = std::make_shared<DQ_robotics_extensions::VFIConfigurationFileYaml>();
+        /*
         DQ_robotics_extensions::RobotConstraintManager rcm2{cs, panda, panda_model, vcr,
                                                             "vfi_constraints_2.yaml", true};
 
@@ -54,8 +55,9 @@ int main()
             std::cout<<"-------------"<<std::endl;
             std::cout<<tag<<std::endl;
         }
+*/
 
-        /*
+
         std::string yaml_path = "vfi_constraints.yaml";
         DQ_robotics_extensions::RobotConstraintManager rcm{cs, panda, panda_model, yaml_path, true};
 
@@ -128,7 +130,7 @@ int main()
 
         cs->stop_simulation();
 
-        */
+
     }
     catch (const std::runtime_error& e)
     {
