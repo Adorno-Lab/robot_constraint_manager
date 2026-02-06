@@ -77,6 +77,11 @@ public:
     };
 
 
+
+private:
+    class Impl;
+    std::shared_ptr<Impl> impl_;
+
     struct BUILD_BASE_DATA{
         VFI_Framework::VFI_TYPE vfi_type;
         VFI_Framework::VFI_CLASS vfi_class;
@@ -84,12 +89,10 @@ public:
         double safe_distance;
         double vfi_gain;
         std::string tag;
-
-
     };
+
     struct BUILD_ENVIRONMENT_TO_ROBOT_DATA : BUILD_BASE_DATA{
-        std::vector<DQ> entity_environment_poses;
-        //std::vector<DQ> entity_robot;
+        std::vector<DQ> environment_poses;
         std::vector<DQ> primitive_offsets;
         int robot_index;
         int joint_index;
@@ -99,8 +102,6 @@ public:
 
     };
     struct BUILD_ROBOT_TO_ROBOT_DATA : BUILD_BASE_DATA{
-        //std::vector<DQ> entity_one;
-        //std::vector<DQ> entity_two;
         int robot_index_one;
         int robot_index_two;
         int joint_index_one;
@@ -113,17 +114,15 @@ public:
 
     using BUILD_DATA = std::variant<BUILD_ENVIRONMENT_TO_ROBOT_DATA, BUILD_ROBOT_TO_ROBOT_DATA>;
 
-
-
-
-private:
-    class Impl;
-    std::shared_ptr<Impl> impl_;
-
     std::vector<DQ> _get_coppeliasim_offsets(const std::vector<std::string>& primitives,
                                              const int& robot_index,
                                              const int& joint_index);
     std::vector<DQ> _get_workspace_poses(const std::vector<std::string>& entity_environment_primitives);
+
+
+    std::vector<VFIConfigurationFile::Data> data_list_;
+    std::unordered_map<std::string, VFIConfigurationFile::Data> data_map_;
+    std::unordered_map<std::string, BUILD_DATA> build_data_map_;
 
 
 protected:
@@ -134,13 +133,6 @@ protected:
     std::vector<YAML_RAW_DATA> yaml_raw_data_list_;
     std::unordered_map<std::string, YAML_RAW_DATA> yaml_raw_data_map_;
     //-----------------------------------------------------------------
-
-
-    std::vector<VFIConfigurationFile::Data> data_list_;
-    std::unordered_map<std::string, VFIConfigurationFile::Data> data_map_;
-    std::unordered_map<std::string, BUILD_DATA> build_data_map_;
-
-
 
 protected:
     std::shared_ptr<DQ_CoppeliaSimInterface> cs_;
@@ -192,10 +184,6 @@ public:
                                                               const bool& include_configuration_constraints=true,
                                                               const bool& include_configuration_velocity_constraints=true
                                                               );
-
-
-
-
 
     std::tuple<double, double, double, double, double, std::string> get_vfi_log_data(const std::string &tag) const;
     std::tuple<int, DQ, int, DQ> get_primitive_index_and_offset(const std::string& tag) const;

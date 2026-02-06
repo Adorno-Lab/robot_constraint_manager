@@ -98,6 +98,8 @@ public:
                             const DQ& workspace_derivative = DQ(0));
 
 
+
+
     void add_vfi_rpoint_to_rpoint(const std::string& tag,
                                   const int& stack_position,
                                   const double& safe_distance,
