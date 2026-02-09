@@ -442,6 +442,18 @@ void VFI_manager::add_vfi_constraint(const VFI_BUILD_DATA& build_data,
             }
             case VFI_CLASS::RPOINT_TO_PLANE:
             {
+                const auto [robot_pose, robot_pose_jacobian]  =
+                    _get_robot_pose_and_pose_jacobian(robot_1, q1,
+                                                      build_data.robot_index_one,
+                                                      build_data.primitive_offsets_one.at(0));
+                const double& safe_distance = build_data.safe_distance;
+                const DQ& workspace_pose = build_data.environment_poses.at(0);
+                const DQ& workspace_derivative = build_data.workspace_derivative;
+                const VFI_Framework::DIRECTION& direction = build_data.direction;
+                const double& vfi_gain = build_data.vfi_gain;
+                const std::string& tag = build_data.tag;
+                const DQ workspace_attached_direction = k_;
+
                 const DQ p = robot_pose.translation();
                 const DQ& x_ = workspace_pose;
                 const DQ plane_normal = x_.P()*workspace_attached_direction*x_.P().conj();
@@ -469,6 +481,18 @@ void VFI_manager::add_vfi_constraint(const VFI_BUILD_DATA& build_data,
 
             case VFI_CLASS::RPOINT_TO_LINE:
             {
+                const auto [robot_pose, robot_pose_jacobian]  =
+                    _get_robot_pose_and_pose_jacobian(robot_1, q1,
+                                                      build_data.robot_index_one,
+                                                      build_data.primitive_offsets_one.at(0));
+                const double& safe_distance = build_data.safe_distance;
+                const DQ& workspace_pose = build_data.environment_poses.at(0);
+                const DQ& workspace_derivative = build_data.workspace_derivative;
+                const VFI_Framework::DIRECTION& direction = build_data.direction;
+                const double& vfi_gain = build_data.vfi_gain;
+                const std::string& tag = build_data.tag;
+                const DQ workspace_attached_direction = k_;
+
                 const DQ& x= workspace_pose;
                 const DQ l_= (x.P())*workspace_attached_direction*(x.P().conj());
                 const DQ p_= x.translation();
@@ -497,6 +521,19 @@ void VFI_manager::add_vfi_constraint(const VFI_BUILD_DATA& build_data,
             }
             case VFI_CLASS::RLINE_TO_LINE_ANGLE:
             {
+                const auto [robot_pose, robot_pose_jacobian]  =
+                    _get_robot_pose_and_pose_jacobian(robot_1, q1,
+                                                      build_data.robot_index_one,
+                                                      build_data.primitive_offsets_one.at(0));
+                const double& safe_distance = build_data.safe_distance;
+                const DQ& workspace_pose = build_data.environment_poses.at(0);
+                const DQ& workspace_derivative = build_data.workspace_derivative;
+                const VFI_Framework::DIRECTION& direction = build_data.direction;
+                const double& vfi_gain = build_data.vfi_gain;
+                const std::string& tag = build_data.tag;
+                const DQ workspace_attached_direction = k_;
+                const DQ robot_attached_direction = k_;
+
                 const DQ workspace_line = (workspace_pose.P())*workspace_attached_direction*(workspace_pose.P().conj());
                 const double safe_angle = safe_distance*(pi/180);  //Convert to radians
                 const DQ& robot_line_direction = robot_attached_direction;
@@ -540,7 +577,35 @@ void VFI_manager::add_vfi_constraint(const VFI_BUILD_DATA& build_data,
         if (!robot_2)
             throw std::runtime_error("VFI_manager::add_vfi_constraint: Invalid robot_2 pointer!");
 
+        switch(build_data.vfi_class)
+        {
 
+        case VFI_Framework::VFI_CLASS::RPOINT_TO_POINT:
+        {
+            const int index_1 = build_data.joint_index_one;
+            const DQ offset_1 = build_data.primitive_offsets_one.at(0);
+
+            DQ x1 =  (robot_1->fkm(q1, index_1))*offset_1;
+            MatrixXd J1 = haminus8(offset_1)*robot_1->pose_jacobian(q1, index_1);
+
+            const int index_2 = build_data.joint_index_two;
+            const DQ offset_2 = build_data.primitive_offsets_two.at(0);
+
+            DQ x2 =  (robot_2->fkm(q2, index_2))*offset_2;
+            MatrixXd J2 = haminus8(offset_2)*robot_2->pose_jacobian(q2, index_2);
+            add_vfi_rpoint_to_rpoint(build_data.tag,
+                                     stack_position,
+                                     build_data.safe_distance,
+                                     build_data.vfi_gain,
+                                     {J1, x1},
+                                     {J2, x2});
+
+            break;
+        }
+        default:
+           throw std::runtime_error("VFI_manager::add_vfi_constraint: For VFI of type ROBOT_TO_ROBOT "
+                                     "the VFI CLASS POINT_TO_RPOINT is the only one supported!");
+        }
     }
 }
 
