@@ -391,6 +391,159 @@ void VFI_manager::add_vfi_constraint(const std::string &tag,
 
 }
 
+void VFI_manager::add_vfi_constraint(const VFI_BUILD_DATA& build_data,
+                                     const int& stack_position,
+                                     const std::shared_ptr<DQ_Kinematics>& robot_1,
+                                     const VectorXd &q1,
+                                     const std::shared_ptr<DQ_Kinematics>& robot_2,
+                                     const VectorXd &q2)
+{
+    if (!robot_1)
+        throw std::runtime_error("VFI_manager::add_vfi_constraint: Invalid robot_1 pointer!");
+    if (build_data.vfi_type == VFI_manager::VFI_TYPE::ENVIRONMENT_TO_ROBOT)
+    {
+        switch(build_data.vfi_class)
+        {
+            case VFI_CLASS::RPOINT_TO_POINT:
+            {
+                const auto [robot_pose, robot_pose_jacobian]  =
+                _get_robot_pose_and_pose_jacobian(robot_1, q1,
+                                                  build_data.robot_index_one,
+                                                  build_data.primitive_offsets_one.at(0));
+                const double& safe_distance = build_data.safe_distance;
+                const DQ& workspace_pose = build_data.environment_poses.at(0);
+                const DQ& workspace_derivative = build_data.workspace_derivative;
+                const VFI_Framework::DIRECTION& direction = build_data.direction;
+                const double& vfi_gain = build_data.vfi_gain;
+                const std::string& tag = build_data.tag;
+
+                const double square_safe_distance = pow(safe_distance, 2);
+                const DQ p = robot_pose.translation();
+                const DQ p_ = workspace_pose.translation();
+                const MatrixXd Jt     = DQ_Kinematics::translation_jacobian(robot_pose_jacobian, robot_pose);
+                const MatrixXd Jd     = DQ_Kinematics::point_to_point_distance_jacobian(Jt, p, p_);
+                const double square_d = DQ_Geometry::point_to_point_squared_distance(p, p_);
+                const double residual = DQ_Kinematics::point_to_point_residual(p, p_, workspace_derivative);
+                const double square_error = square_d- square_safe_distance;
+                VectorXd b = DQ_robotics_extensions::CVectorXd({vfi_gain*(square_error) + residual});
+                _add_vfi_constraint(Jd, b, direction);
+                //#############-log data-###############
+                const double d = std::sqrt(square_d);
+                VFI_LOG_DATA data;
+                data.vfi_class = VFI_CLASS::RPOINT_TO_POINT;
+                data.distance = d;
+                data.square_distance = square_d;
+                data.distance_error = d-safe_distance;
+                data.square_distance_error = square_error;
+                data.line_to_line_angle_rad = -1;
+                _update_vfi_parameters_map(tag, stack_position, data);
+                //######################################
+                break;
+            }
+            case VFI_CLASS::RPOINT_TO_PLANE:
+            {
+                const DQ p = robot_pose.translation();
+                const DQ& x_ = workspace_pose;
+                const DQ plane_normal = x_.P()*workspace_attached_direction*x_.P().conj();
+                const DQ plane_point =  x_.translation();
+                const DQ workspace_plane  = plane_normal + E_*dot(plane_point, plane_normal);
+                const MatrixXd Jt     =  DQ_Kinematics::translation_jacobian(robot_pose_jacobian, robot_pose);
+                const MatrixXd Jd     =  DQ_Kinematics::point_to_plane_distance_jacobian(Jt, p, workspace_plane);
+                const double residual =  DQ_Kinematics::point_to_plane_residual(p, workspace_derivative);
+                const double d = DQ_Geometry::point_to_plane_distance(p, workspace_plane);
+                const double error = d - safe_distance;
+                VectorXd b = DQ_robotics_extensions::CVectorXd({vfi_gain*(error) + residual});
+                _add_vfi_constraint(Jd, b, direction);
+                //#############-log data-###############
+                VFI_LOG_DATA data;
+                data.vfi_class = VFI_CLASS::RPOINT_TO_PLANE;
+                data.distance = d;
+                data.square_distance = d*d;
+                data.distance_error = error;
+                data.square_distance_error = -1;
+                data.line_to_line_angle_rad = -1;
+                _update_vfi_parameters_map(tag, stack_position, data);
+                //######################################
+                break;
+            }
+
+            case VFI_CLASS::RPOINT_TO_LINE:
+            {
+                const DQ& x= workspace_pose;
+                const DQ l_= (x.P())*workspace_attached_direction*(x.P().conj());
+                const DQ p_= x.translation();
+                const DQ workspace_line = l_ + E_*cross(p_, l_);
+                const double square_safe_distance = pow(safe_distance, 2);
+                const DQ p = robot_pose.translation();
+                const MatrixXd Jt =  DQ_Kinematics::translation_jacobian(robot_pose_jacobian, robot_pose);
+                const MatrixXd Jd = DQ_Kinematics::point_to_line_distance_jacobian(Jt, p, workspace_line);
+                const double residual = DQ_Kinematics::point_to_line_residual(p, workspace_line, workspace_derivative);
+                const double square_d = DQ_Geometry::point_to_line_squared_distance(p, workspace_line);
+                const double square_error = square_d - square_safe_distance;
+                VectorXd b = DQ_robotics_extensions::CVectorXd({vfi_gain*(square_error) + residual});
+                _add_vfi_constraint(Jd, b, direction);
+                //#############-log data-###############
+                const double d = std::sqrt(square_d);
+                VFI_LOG_DATA data;
+                data.vfi_class = VFI_CLASS::RPOINT_TO_POINT;
+                data.distance = d;
+                data.square_distance = square_d;
+                data.distance_error = d-safe_distance;
+                data.square_distance_error = square_error;
+                data.line_to_line_angle_rad = -1;
+                _update_vfi_parameters_map(tag, stack_position, data);
+                //######################################
+                break;
+            }
+            case VFI_CLASS::RLINE_TO_LINE_ANGLE:
+            {
+                const DQ workspace_line = (workspace_pose.P())*workspace_attached_direction*(workspace_pose.P().conj());
+                const double safe_angle = safe_distance*(pi/180);  //Convert to radians
+                const DQ& robot_line_direction = robot_attached_direction;
+                const MatrixXd Jl = DQ_Kinematics::line_jacobian(robot_pose_jacobian, robot_pose,robot_line_direction);
+                const DQ r = robot_pose.P();
+                const DQ robot_line = r*(robot_line_direction)*r.conj();
+                const MatrixXd Jfphi = DQ_Kinematics::line_to_line_angle_jacobian(Jl,robot_line,workspace_line);
+                const double fsafe = 2-2*cos(safe_angle);
+                const double phi = DQ_Geometry::line_to_line_angle(robot_line, workspace_line);
+                const double f = 2-2*cos(phi);
+                const double ferror = f-fsafe;
+                const double residual = DQ_Kinematics::line_to_line_angle_residual(robot_line,workspace_line,-workspace_derivative);
+                VectorXd b = DQ_robotics_extensions::CVectorXd({vfi_gain*(ferror) + residual});
+                _add_vfi_constraint(Jfphi, b, direction);
+                //#############-log data-###############
+                VFI_LOG_DATA data;
+                data.vfi_class = VFI_CLASS::RLINE_TO_LINE_ANGLE;
+                data.distance = f;
+                data.square_distance = -1;
+                data.distance_error = ferror;
+                data.square_distance_error = -1;
+                data.line_to_line_angle_rad = phi;
+                _update_vfi_parameters_map(tag, stack_position, data);
+                //######################################
+                break;
+            }
+            case VFI_CLASS::RLINE_TO_LINE:
+            {
+                throw std::runtime_error("VFI_CLASS::RLINE_TO_LINE is unsupported");
+                break;
+            }
+
+            case VFI_CLASS::RLINE_TO_POINT:
+            {
+                throw std::runtime_error("VFI_CLASS::RLINE_TO_POINT is unsupported");
+                break;
+            }
+            }
+    }else
+    {
+        if (!robot_2)
+            throw std::runtime_error("VFI_manager::add_vfi_constraint: Invalid robot_2 pointer!");
+
+
+    }
+}
+
 
 /**
  * @brief VFI_manager::set_configuration_limits sets the configuration limits
@@ -520,6 +673,20 @@ std::tuple<double, double, double, double, double, std::string> VFI_manager::get
             data.square_distance_error,
             data.line_to_line_angle_rad,
             map_vfiClass_to_string(data.vfi_class)};
+}
+
+
+std::tuple<DQ, MatrixXd> VFI_manager::_get_robot_pose_and_pose_jacobian(const std::shared_ptr<DQ_Kinematics>& robot,
+                                                                        const VectorXd &q,
+                                                                        const int& index,
+                                                                        const DQ& offset)
+{
+    const int robot_dim = robot->get_dim_configuration_space();
+    DQ x = (robot->fkm(q, index))*offset;
+    MatrixXd J = haminus8(offset)*robot->pose_jacobian(q, index);
+    if (J.cols() != robot_dim)
+        J = DQ_robotics_extensions::Numpy::resize(J, J.rows(), robot_dim);
+    return {x, J};
 }
 
 

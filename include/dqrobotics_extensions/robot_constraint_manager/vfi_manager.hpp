@@ -98,13 +98,24 @@ protected:
 
 
     void _check_vector_initialization(const VectorXd& q, const std::string &msg);
+    std::tuple<DQ, MatrixXd> _get_robot_pose_and_pose_jacobian(const std::shared_ptr<DQ_Kinematics>& robot,
+                                                               const VectorXd &q,
+                                                               const int& index,
+                                                               const DQ& offset);
 
 public:
     VFI_manager()=delete;
     VFI_manager(const int& dim_configuration,
                 const LEVEL& level = LEVEL::VELOCITIES);
 
+    void add_vfi_constraint(const VFI_BUILD_DATA& build_data,
+                            const int& stack_position,
+                            const std::shared_ptr<DQ_Kinematics>& robot_1,
+                            const VectorXd &q1,
+                            const std::shared_ptr<DQ_Kinematics>& robot_2 = nullptr,
+                            const VectorXd &q2 = VectorXd::Zero(0));
 
+    [[deprecated]]
     void add_vfi_constraint(const std::string& tag,
                             const int& stack_position,
                             const DIRECTION& direction,

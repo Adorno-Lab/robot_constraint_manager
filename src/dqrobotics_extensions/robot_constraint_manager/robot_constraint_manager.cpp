@@ -215,13 +215,6 @@ void RobotConstraintManager::add_inequality_constraint(const MatrixXd &A, const 
 }
 
 
-/*
-void RobotConstraintManager::_set_vfi_configuration_constraints_gain(const double &vfi_position_constraints_gain)
-{
-    configuration_limit_constraint_gain_ = vfi_position_constraints_gain;
-}
-*/
-
 /**
  * @brief RobotConstraintManager::_check_unit throws an exception if the input string is not
  */
