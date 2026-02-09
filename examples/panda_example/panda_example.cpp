@@ -42,49 +42,21 @@ int main()
         controller.set_damping(0.01);
 
 
-//
-        auto vcr = std::make_shared<DQ_robotics_extensions::VFIConfigurationFileYaml>();
 
+        auto vcr = std::make_shared<DQ_robotics_extensions::VFIConfigurationFileYaml>();
         DQ_robotics_extensions::RobotConstraintManager rcm{cs, panda, panda_model, vcr,
                                                             "vfi_constraints_2.yaml", true};
 
+        // The new format does not include the configuration limits or configuration velocity limits.
+        // However, we can still added in the code
 
-
-        /*
-        std::string yaml_path = "vfi_constraints.yaml";
-        DQ_robotics_extensions::RobotConstraintManager rcm{cs, panda, panda_model, yaml_path, true};
-        */
-
-        /*
-        auto tags = rcm.get_vfi_tags();
-        for (auto& tag : tags)
-        {
-            std::cout<<"-------------"<<std::endl;
-            std::cout<<tag<<std::endl;
-            auto yaml_raw_data  = rcm.get_raw_yaml_data(tag);
-            std::cout<<"Raw data"<<std::endl;
-            std::cout<<yaml_raw_data.vfi_mode<<std::endl;
-            std::cout<<yaml_raw_data.cs_entity_one_or_environment<<std::endl;
-            std::cout<<yaml_raw_data.cs_entity_two_or_robot<<std::endl;
-            std::cout<<yaml_raw_data.entity_one_primitive_type_or_environment<<std::endl;
-            std::cout<<yaml_raw_data.entity_two_primitive_type_or_robot<<std::endl;
-            std::cout<<yaml_raw_data.joint_index_one_or_joint_index<<std::endl;
-            std::cout<<yaml_raw_data.joint_index_two<<std::endl;
-            std::cout<<yaml_raw_data.safe_distance<<std::endl;
-            std::cout<<yaml_raw_data.vfi_gain<<std::endl;
-            std::cout<<yaml_raw_data.direction<<std::endl;
-            std::cout<<yaml_raw_data.entity_robot_attached_direction<<std::endl;
-            std::cout<<yaml_raw_data.entity_environment_attached_direction<<std::endl;
-            std::cout<<yaml_raw_data.tag<<std::endl;
-            std::cout<<"-------------"<<std::endl;
-
-
-            auto build_data = rcm.get_vfi_build_data(tag);
-
-        }
-*/
-
-
+        VectorXd q_min = (VectorXd(7) << -2.3093,-1.5133,-2.4937, -2.7478,-2.4800, 0.8521, -2.6895).finished();
+        VectorXd q_max = (VectorXd(7) <<  2.3093, 1.5133, 2.4937, -0.4461, 2.4800, 4.2094,  2.6895).finished();
+        VectorXd q_dot_min = (VectorXd(7) <<-2, -1, -1.5, -1.25, -3, -1.5, -3).finished();
+        VectorXd q_dot_max = (VectorXd(7) <<2,  1,  1.5,  1.25,  3,  1.5,  3).finished();
+        rcm.set_configuration_limits({q_min, q_max});
+        rcm.set_configuration_limits_gain(1.0);
+        rcm.set_configuration_velocity_limits({q_dot_min, q_dot_max});
         cs->start_simulation();
 
 
@@ -98,7 +70,7 @@ int main()
         {
             DQ xd = cs->get_object_pose("ReferenceFrame");
             auto q = panda->get_configuration();
-            auto [A,b] = rcm.get_inequality_constraints(q, false, false);
+            auto [A,b] = rcm.get_inequality_constraints(q);
             controller.set_inequality_constraint(A,b);
             auto u = controller.compute_setpoint_control_signal(q, xd.translation().vec4());
             panda->set_target_configuration_velocities(u);

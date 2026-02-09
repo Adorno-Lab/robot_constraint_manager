@@ -93,7 +93,8 @@ RobotConstraintManager::RobotConstraintManager(const std::shared_ptr<DQ_Coppelia
     coppelia_robot_{coppeliasim_robot},
     config_file_reader_{config_file_reader},
     rce_compatible_{true},
-    verbosity_{verbosity}
+    verbosity_{verbosity},
+    configuration_limit_constraint_gain_{1}
 {
     VFI_M_ = std::make_shared<DQ_robotics_extensions::VFI_manager>(robot->get_dim_configuration_space());
     try {
@@ -214,14 +215,12 @@ void RobotConstraintManager::add_inequality_constraint(const MatrixXd &A, const 
 }
 
 
-/**
- * @brief RobotConstraintManager::set_vfi_configuration_constraints_gain sets the gain for the configuration constraints.
- * @param vfi_position_constraints_gain
- */
+/*
 void RobotConstraintManager::_set_vfi_configuration_constraints_gain(const double &vfi_position_constraints_gain)
 {
     configuration_limit_constraint_gain_ = vfi_position_constraints_gain;
 }
+*/
 
 /**
  * @brief RobotConstraintManager::_check_unit throws an exception if the input string is not
@@ -528,6 +527,15 @@ void RobotConstraintManager::set_configuration_velocity_limits(const std::tuple<
 }
 
 
+/**
+ * @brief RobotConstraintManager::set_configuration_limits_gain sets the gain for the configuration constraints.
+ * @param configuration_limits_gain
+ */
+void RobotConstraintManager::set_configuration_limits_gain(const double& configuration_limits_gain)
+{
+    configuration_limit_constraint_gain_ = configuration_limits_gain;
+}
+
 
 /**
  * @brief RobotConstraintManager::_get_robot_primitive_offset_from_coppeliasim computes the primitive offsets
@@ -741,7 +749,7 @@ void RobotConstraintManager::_initial_settings()
                         q_max = DQ_robotics::deg2rad(q_max);
                     }
                     VFI_M_->set_configuration_limits({q_min, q_max});
-                    _set_vfi_configuration_constraints_gain(vfi_gain);
+                    set_configuration_limits_gain(vfi_gain);
                     if (verbosity_)
                     {
                         std::cout<<"---------------------------------------------"<<std::endl;

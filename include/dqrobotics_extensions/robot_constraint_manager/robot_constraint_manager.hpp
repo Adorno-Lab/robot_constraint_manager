@@ -105,7 +105,7 @@ protected:
     bool verbosity_{true};
     DQ   _get_robot_primitive_offset_from_coppeliasim(const std::string& object_name, const int& joint_index);
     void _initial_settings();
-    void _set_vfi_configuration_constraints_gain(const double& vfi_position_constraints_gain);
+    //void _set_vfi_configuration_constraints_gain(const double& vfi_position_constraints_gain);
     void _check_unit(const std::string& unit);
     void _create_build_data();
 public:
@@ -158,6 +158,7 @@ public:
     std::tuple<VectorXd, VectorXd> get_configuration_limits() const;
     std::tuple<VectorXd, VectorXd> get_configuration_velocity_limits() const;
     void set_configuration_limits(const std::tuple<VectorXd, VectorXd>& configuration_limits);
+    void set_configuration_limits_gain(const double& configuration_limits_gain);
     void set_configuration_velocity_limits(const std::tuple<VectorXd, VectorXd> &configuration_velocity_limits);
 
 };
