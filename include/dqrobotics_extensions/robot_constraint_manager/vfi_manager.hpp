@@ -90,6 +90,14 @@ protected:
                              const VectorXd& b,
                              const DIRECTION& direction);
 
+    void _add_vfi_constraint(const MatrixXd& Jd,
+                             const double& vfi_gain,
+                             const double& error,
+                             const double& residual,
+                             const DIRECTION& direction,
+                             const double& buffer = 0);
+        //vfi_gain*(square_error) + residual
+
     VectorXd q_dot_min_ = VectorXd::Zero(0);
     VectorXd q_dot_max_ = VectorXd::Zero(0);
     VectorXd q_min_ = VectorXd::Zero(0);

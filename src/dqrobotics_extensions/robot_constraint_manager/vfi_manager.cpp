@@ -103,6 +103,42 @@ void VFI_manager::_add_vfi_constraint(const MatrixXd &Jd, const VectorXd &b, con
 }
 
 /**
+ * @brief VFI_manager::_add_vfi_constraint the inequality constraint in the stack
+ *
+ *              The buffer and the slack variable are based on
+ *              S. J. Derwent, D., Watson, S., & Adorno, B. V. (2025).
+ *              Multi-contact Posture Generation using Vector Field Inequalities.
+ *              In Towards Autonomous Robotic Systems: 26th Annual Conference, TAROS 2025, York, UK,
+ *              August 20–22, 2025, Proceedings (Lecture Notes in Computer Science).
+ *              Springer Nature. https://doi.org/10.1007/978-3-032-01486-3_10
+ * @param Jd The distance Jacobian
+ * @param vfi_gain The proportional gain
+ * @param error The distance error or square distance error
+ * @param residual The residual
+ * @param direction Use RESTRICTED_ZONE, or  SAFE_ZONE to define the VFI behaviour.
+ * @param buffer The buffer distance
+ */
+void VFI_manager::_add_vfi_constraint(const MatrixXd& Jd,
+                                      const double& vfi_gain,
+                                      const double& error,
+                                      const double& residual,
+                                      const DIRECTION& direction,
+                                      const double& buffer)
+{
+    const double& nd = vfi_gain; // Aliasing
+    if(direction == DIRECTION::RESTRICTED_ZONE) //KEEP_ROBOT_OUTSIDE
+    {
+        VectorXd b = DQ_robotics_extensions::CVectorXd({nd*(error-buffer) + residual});
+        constraint_manager_->add_inequality_constraint(-Jd, b);
+    }
+    else //SAFE_ZONE        //KEEP_ROBOT_INSIDE
+    {
+        VectorXd b = DQ_robotics_extensions::CVectorXd({vfi_gain*(error+buffer) + residual});
+        constraint_manager_->add_inequality_constraint(Jd, -b);
+    }
+}
+
+/**
  * @brief VFI_manager::_check_vector_initialization throws an exception with a custom message if
  *                     the given vector is not initialized.
  * @param q The vector to be checked.
@@ -426,7 +462,7 @@ void VFI_manager::add_vfi_constraint(const VFI_BUILD_DATA& build_data,
                 const double residual = DQ_Kinematics::point_to_point_residual(p, p_, workspace_derivative);
                 const double square_error = square_d- square_safe_distance;
                 VectorXd b = DQ_robotics_extensions::CVectorXd({vfi_gain*(square_error) + residual});
-                _add_vfi_constraint(Jd, b, direction);
+                _add_vfi_constraint(Jd, vfi_gain, square_error,residual, direction);
                 //#############-log data-###############
                 const double d = std::sqrt(square_d);
                 VFI_LOG_DATA data;
@@ -465,7 +501,7 @@ void VFI_manager::add_vfi_constraint(const VFI_BUILD_DATA& build_data,
                 const double d = DQ_Geometry::point_to_plane_distance(p, workspace_plane);
                 const double error = d - safe_distance;
                 VectorXd b = DQ_robotics_extensions::CVectorXd({vfi_gain*(error) + residual});
-                _add_vfi_constraint(Jd, b, direction);
+                _add_vfi_constraint(Jd, vfi_gain, error,residual, direction);
                 //#############-log data-###############
                 VFI_LOG_DATA data;
                 data.vfi_class = VFI_CLASS::RPOINT_TO_PLANE;
@@ -505,7 +541,7 @@ void VFI_manager::add_vfi_constraint(const VFI_BUILD_DATA& build_data,
                 const double square_d = DQ_Geometry::point_to_line_squared_distance(p, workspace_line);
                 const double square_error = square_d - square_safe_distance;
                 VectorXd b = DQ_robotics_extensions::CVectorXd({vfi_gain*(square_error) + residual});
-                _add_vfi_constraint(Jd, b, direction);
+                _add_vfi_constraint(Jd, vfi_gain, square_error,residual, direction);
                 //#############-log data-###############
                 const double d = std::sqrt(square_d);
                 VFI_LOG_DATA data;
@@ -547,7 +583,7 @@ void VFI_manager::add_vfi_constraint(const VFI_BUILD_DATA& build_data,
                 const double ferror = f-fsafe;
                 const double residual = DQ_Kinematics::line_to_line_angle_residual(robot_line,workspace_line,-workspace_derivative);
                 VectorXd b = DQ_robotics_extensions::CVectorXd({vfi_gain*(ferror) + residual});
-                _add_vfi_constraint(Jfphi, b, direction);
+                _add_vfi_constraint(Jfphi, vfi_gain, ferror,residual, direction);
                 //#############-log data-###############
                 VFI_LOG_DATA data;
                 data.vfi_class = VFI_CLASS::RLINE_TO_LINE_ANGLE;
