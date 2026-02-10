@@ -11,22 +11,8 @@
 #include <dqrobotics_extensions/robot_constraint_editor/vfi_configuration_file_yaml.hpp>
 
 
-/*********************************************
- * SIGNAL HANDLER
- * *******************************************/
-#include<signal.h>
-static std::atomic_bool kill_this_process(false);
-void sig_int_handler(int);
-void sig_int_handler(int)
-{
-    kill_this_process = true;
-}
-
 int main()
 {
-    if(signal(SIGINT, sig_int_handler) == SIG_ERR)
-        throw std::runtime_error("::Error setting the signal int handler.");
-
 
     auto cs = std::make_shared<DQ_CoppeliaSimInterfaceZMQ>();
     try {
@@ -63,21 +49,31 @@ int main()
         std::cout<<"Starting teleoperation "<<std::endl;
 
         int i=0;
-        double T=0.05;
+        double T=0.01;
         double w=0.1;
 
-        while ( not kill_this_process)
+        int ITERATIONS = 10000;
+        std::string tag = "C5";
+        int losses = 0;
+        for (int i=0;i<ITERATIONS;i++)
         {
+
             DQ xd = cs->get_object_pose("ReferenceFrame");
             auto q = panda->get_configuration();
-            auto [A,b] = rcm.get_inequality_constraints(q);
+            auto [A,b] = rcm.get_inequality_constraints(q, false, false);
+
             controller.set_inequality_constraint(A,b);
             auto u = controller.compute_setpoint_control_signal(q, xd.translation().vec4());
             panda->set_target_configuration_velocities(u);
 
 
-            std::string tag = "C3";
-            std::cout<<"Constraint tag="+tag+". distance_error: "<<rcm.get_vfi_distance_error(tag)<<std::endl;
+            double dist = rcm.get_vfi_distance_error(tag);
+            std::cout<<"Constraint tag="+tag+". distance_error: "<<dist<<std::endl;
+            if (dist < 0)
+            {
+                std::cerr<<"Perdimos parce!"<<std::endl;
+                losses++;
+            }
 
             // Varying-time VFI
 
@@ -90,11 +86,11 @@ int main()
             rcm.update_vfi_workspace_pose(ctag, xsphere);
             rcm.update_vfi_workspace_derivative(ctag, z_dot);
             cs->trigger_next_simulation_step();
-            i++;
         }
         std::cout<<"Teleoperation finished."<<std::endl;
 
         cs->stop_simulation();
+        std::cout<<"Losses: "<<losses<<std::endl;
 
 
     }
@@ -102,6 +98,7 @@ int main()
     {
         std::cerr<<e.what()<<std::endl;
     }
+    return 0;
 }
 
 

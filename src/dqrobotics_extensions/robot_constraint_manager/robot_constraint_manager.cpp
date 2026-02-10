@@ -260,6 +260,9 @@ std::tuple<MatrixXd, VectorXd> RobotConstraintManager::get_inequality_constraint
 
     for (int i = 0; i<n; i++)
     {
+        VFI_M_->add_vfi_constraint(vfi_build_data_list.at(i),i,robot_,q,robot_,q);
+
+        /*
         if (vfi_build_data_list.at(i).vfi_type == VFI_manager::VFI_TYPE::ENVIRONMENT_TO_ROBOT)
         {
             const int index = vfi_build_data_list.at(i).joint_index_one;
@@ -268,6 +271,7 @@ std::tuple<MatrixXd, VectorXd> RobotConstraintManager::get_inequality_constraint
             MatrixXd J = haminus8(offset)*robot_->pose_jacobian(q, index);
             if (J.cols() != robot_dim)
                 J = DQ_robotics_extensions::Numpy::resize(J, J.rows(), robot_dim);
+
 
             VFI_M_->add_vfi_constraint(vfi_build_data_list.at(i).tag,
                                        i,
@@ -281,8 +285,6 @@ std::tuple<MatrixXd, VectorXd> RobotConstraintManager::get_inequality_constraint
                                        vfi_build_data_list.at(i).environment_poses.at(0), // x_workspace
                                        vfi_build_data_list.at(i).environment_attached_direction,
                                        vfi_build_data_list.at(i).workspace_derivative);
-
-
         }
         else{ //vfi_mode_list_.at(i) == VFI_manager::VFI_MODE::ROBOT_TO_ROBOT
             const int index_1 = vfi_build_data_list.at(i).joint_index_one;
@@ -297,6 +299,8 @@ std::tuple<MatrixXd, VectorXd> RobotConstraintManager::get_inequality_constraint
             DQ x2 =  (robot_->fkm(q, index_2))*offset_2;
             MatrixXd J2 = haminus8(offset_2)*robot_->pose_jacobian(q, index_2);
 
+            VFI_M_->add_vfi_constraint(vfi_build_data_list.at(i),i,robot_,q,robot_,q);
+
 
             VFI_M_->add_vfi_rpoint_to_rpoint(vfi_build_data_list.at(i).tag,
                                              i,
@@ -304,7 +308,8 @@ std::tuple<MatrixXd, VectorXd> RobotConstraintManager::get_inequality_constraint
                                              vfi_build_data_list.at(i).vfi_gain,
                                              {J1, x1},
                                              {J2, x2});
-        }
+
+        }*/
     }
     return VFI_M_->get_inequality_constraints();
 }

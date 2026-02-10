@@ -408,7 +408,7 @@ void VFI_manager::add_vfi_constraint(const VFI_BUILD_DATA& build_data,
             {
                 const auto [robot_pose, robot_pose_jacobian]  =
                 _get_robot_pose_and_pose_jacobian(robot_1, q1,
-                                                  build_data.robot_index_one,
+                                                  build_data.joint_index_one,
                                                   build_data.primitive_offsets_one.at(0));
                 const double& safe_distance = build_data.safe_distance;
                 const DQ& workspace_pose = build_data.environment_poses.at(0);
@@ -444,7 +444,7 @@ void VFI_manager::add_vfi_constraint(const VFI_BUILD_DATA& build_data,
             {
                 const auto [robot_pose, robot_pose_jacobian]  =
                     _get_robot_pose_and_pose_jacobian(robot_1, q1,
-                                                      build_data.robot_index_one,
+                                                      build_data.joint_index_one,
                                                       build_data.primitive_offsets_one.at(0));
                 const double& safe_distance = build_data.safe_distance;
                 const DQ& workspace_pose = build_data.environment_poses.at(0);
@@ -452,7 +452,7 @@ void VFI_manager::add_vfi_constraint(const VFI_BUILD_DATA& build_data,
                 const VFI_Framework::DIRECTION& direction = build_data.direction;
                 const double& vfi_gain = build_data.vfi_gain;
                 const std::string& tag = build_data.tag;
-                const DQ workspace_attached_direction = k_;
+                const DQ workspace_attached_direction = build_data.environment_attached_direction;
 
                 const DQ p = robot_pose.translation();
                 const DQ& x_ = workspace_pose;
@@ -483,7 +483,7 @@ void VFI_manager::add_vfi_constraint(const VFI_BUILD_DATA& build_data,
             {
                 const auto [robot_pose, robot_pose_jacobian]  =
                     _get_robot_pose_and_pose_jacobian(robot_1, q1,
-                                                      build_data.robot_index_one,
+                                                      build_data.joint_index_one,
                                                       build_data.primitive_offsets_one.at(0));
                 const double& safe_distance = build_data.safe_distance;
                 const DQ& workspace_pose = build_data.environment_poses.at(0);
@@ -491,7 +491,7 @@ void VFI_manager::add_vfi_constraint(const VFI_BUILD_DATA& build_data,
                 const VFI_Framework::DIRECTION& direction = build_data.direction;
                 const double& vfi_gain = build_data.vfi_gain;
                 const std::string& tag = build_data.tag;
-                const DQ workspace_attached_direction = k_;
+                const DQ workspace_attached_direction = build_data.environment_attached_direction;
 
                 const DQ& x= workspace_pose;
                 const DQ l_= (x.P())*workspace_attached_direction*(x.P().conj());
@@ -523,7 +523,7 @@ void VFI_manager::add_vfi_constraint(const VFI_BUILD_DATA& build_data,
             {
                 const auto [robot_pose, robot_pose_jacobian]  =
                     _get_robot_pose_and_pose_jacobian(robot_1, q1,
-                                                      build_data.robot_index_one,
+                                                      build_data.joint_index_one,
                                                       build_data.primitive_offsets_one.at(0));
                 const double& safe_distance = build_data.safe_distance;
                 const DQ& workspace_pose = build_data.environment_poses.at(0);
@@ -531,8 +531,8 @@ void VFI_manager::add_vfi_constraint(const VFI_BUILD_DATA& build_data,
                 const VFI_Framework::DIRECTION& direction = build_data.direction;
                 const double& vfi_gain = build_data.vfi_gain;
                 const std::string& tag = build_data.tag;
-                const DQ workspace_attached_direction = k_;
-                const DQ robot_attached_direction = k_;
+                const DQ workspace_attached_direction = build_data.environment_attached_direction;
+                const DQ robot_attached_direction =  build_data.robot_attached_direction;
 
                 const DQ workspace_line = (workspace_pose.P())*workspace_attached_direction*(workspace_pose.P().conj());
                 const double safe_angle = safe_distance*(pi/180);  //Convert to radians

@@ -112,8 +112,8 @@ public:
                             const int& stack_position,
                             const std::shared_ptr<DQ_Kinematics>& robot_1,
                             const VectorXd &q1,
-                            const std::shared_ptr<DQ_Kinematics>& robot_2 = nullptr,
-                            const VectorXd &q2 = VectorXd::Zero(0));
+                            const std::shared_ptr<DQ_Kinematics>& robot_2,
+                            const VectorXd &q2);
 
     [[deprecated]]
     void add_vfi_constraint(const std::string& tag,
