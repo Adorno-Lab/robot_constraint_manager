@@ -51,6 +51,7 @@ public:
         VFI_Framework::VFI_CLASS vfi_class;
         VFI_Framework::DIRECTION direction;
         double safe_distance;
+        double buffer;
         double vfi_gain;
         int joint_index_one;
         int joint_index_two;
@@ -95,7 +96,7 @@ protected:
                              const double& error,
                              const double& residual,
                              const DIRECTION& direction,
-                             const double& buffer = 0);
+                             const double& buffer);
         //vfi_gain*(square_error) + residual
 
     VectorXd q_dot_min_ = VectorXd::Zero(0);

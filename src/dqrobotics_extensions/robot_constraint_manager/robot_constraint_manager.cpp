@@ -141,6 +141,7 @@ void RobotConstraintManager::_create_build_data()
                                                                             arg.entity_environment_primitive_type);
                 vfi_data.direction = VFI_Framework::map_string_to_vfiDirection(arg.direction);
                 vfi_data.safe_distance = arg.safe_distance;
+                vfi_data.buffer = 0.0;
                 vfi_data.vfi_gain = arg.vfi_gain;
                 vfi_data.robot_index_one = arg.robot_index-robot_index_convention_;
                 vfi_data.robot_index_two = -1;
@@ -164,6 +165,7 @@ void RobotConstraintManager::_create_build_data()
                                                                             arg.entity_two_primitive_type);
                 vfi_data.direction = VFI_Framework::DIRECTION::RESTRICTED_ZONE;
                 vfi_data.safe_distance = arg.safe_distance;
+                vfi_data.buffer = 0.0;
                 vfi_data.vfi_gain = arg.vfi_gain;
                 vfi_data.robot_index_one = arg.robot_index_one-robot_index_convention_;
                 vfi_data.robot_index_two = arg.robot_index_two-robot_index_convention_;
@@ -435,6 +437,7 @@ void RobotConstraintManager::show_vfi_build_data(const std::string &tag) const
         std::cout<<"VFI class:                       "<<VFI_Framework::map_vfiClass_to_string(data.vfi_class)<<std::endl;
         std::cout<<"Direction:                       "<<VFI_Framework::map_vfiDirection_to_string(data.direction)<<std::endl;
         std::cout<<"Safe distance:                   "<<data.safe_distance<<std::endl;
+        std::cout<<"buffer:                          "<<data.buffer<<std::endl;
         std::cout<<"VFI gain:                        "<<data.vfi_gain<<std::endl;
         std::cout<<"Joint index one:                 "<<data.joint_index_one<<std::endl;
         std::cout<<"Joint index two:                 "<<data.joint_index_two<<std::endl;
@@ -655,6 +658,7 @@ void RobotConstraintManager::_initial_settings()
                     vfi_data.direction = VFI_Framework::map_string_to_vfiDirection(raw_direction);
                     vfi_data.safe_distance = raw_safe_distance;
                     vfi_data.vfi_gain = raw_vfi_gain;
+                    vfi_data.buffer = 0.0;
                     vfi_data.joint_index_one = raw_joint_index;
                     vfi_data.joint_index_two = -1;
                     vfi_data.primitive_offsets_one = {_get_robot_primitive_offset_from_coppeliasim(raw_cs_entity_robot,
@@ -714,6 +718,7 @@ void RobotConstraintManager::_initial_settings()
                                                                               raw_entity_two_primitive_type);
                     vfi_data.direction = VFI_Framework::DIRECTION::RESTRICTED_ZONE;
                     vfi_data.safe_distance = raw_safe_distance;
+                    vfi_data.buffer = 0.0;
                     vfi_data.vfi_gain = raw_vfi_gain;
                     vfi_data.joint_index_one = raw_joint_index_one;
                     vfi_data.joint_index_two = raw_joint_index_two;
