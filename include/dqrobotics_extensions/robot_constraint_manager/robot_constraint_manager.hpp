@@ -154,6 +154,7 @@ public:
     void show_vfi_build_data(const std::string& tag) const;
     void update_vfi_workspace_pose(const std::string& tag, const DQ& workspace_pose);
     void update_vfi_workspace_derivative(const std::string& tag, const DQ& workspace_derivative);
+    void update_vfi_buffer(const std::string& tag, const double& buffer);
 
     std::tuple<VectorXd, VectorXd> get_configuration_limits() const;
     std::tuple<VectorXd, VectorXd> get_configuration_velocity_limits() const;

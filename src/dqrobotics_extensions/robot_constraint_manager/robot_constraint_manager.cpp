@@ -489,6 +489,24 @@ void RobotConstraintManager::update_vfi_workspace_pose(const std::string &tag, c
     }
 }
 
+/**
+ * @brief RobotConstraintManager::update_vfi_buffer updates the buffer parameter for the desired VFI
+ *              constraint.
+ * @param tag
+ * @param buffer
+ */
+void RobotConstraintManager::update_vfi_buffer(const std::string& tag, const double& buffer)
+{
+    try{
+        VFI_manager::VFI_BUILD_DATA data = vfi_build_data_map_.at(tag);
+        data.buffer = buffer;
+        vfi_build_data_map_.insert_or_assign(tag, data);
+    } catch (const std::runtime_error& e) {
+        std::cerr<<e.what()<<std::endl;
+        throw std::runtime_error("RobotConstraintManager::update_vfi_buffer: Fail to update the VFI data!");
+    }
+}
+
 
 /**
  * @brief RobotConstraintManager::get_configuration_limits returns the configuration limits.
