@@ -245,8 +245,7 @@ std::tuple<MatrixXd, VectorXd> RobotConstraintManager::get_inequality_constraint
                                                                                   const bool &include_configuration_velocity_constraints)
 {
     const int n = vfi_build_data_map_.size();
-    const int robot_dim = robot_->get_dim_configuration_space();
-
+    //const int robot_dim = robot_->get_dim_configuration_space();
     std::vector<VFI_manager::VFI_BUILD_DATA> vfi_build_data_list;
     vfi_build_data_list.reserve(n);
 
@@ -259,10 +258,13 @@ std::tuple<MatrixXd, VectorXd> RobotConstraintManager::get_inequality_constraint
         VFI_M_->add_configuration_velocity_limits();
 
     for (int i = 0; i<n; i++)
+        VFI_M_->add_vfi_constraint(vfi_build_data_list.at(i),i,robot_,q,robot_,q);
+    /*
+    for (int i = 0; i<n; i++)
     {
         VFI_M_->add_vfi_constraint(vfi_build_data_list.at(i),i,robot_,q,robot_,q);
 
-        /*
+
         if (vfi_build_data_list.at(i).vfi_type == VFI_manager::VFI_TYPE::ENVIRONMENT_TO_ROBOT)
         {
             const int index = vfi_build_data_list.at(i).joint_index_one;
@@ -309,8 +311,8 @@ std::tuple<MatrixXd, VectorXd> RobotConstraintManager::get_inequality_constraint
                                              {J1, x1},
                                              {J2, x2});
 
-        }*/
-    }
+        }
+    }*/
     return VFI_M_->get_inequality_constraints();
 }
 
