@@ -162,7 +162,7 @@ void RobotConstraintManager::_create_build_data()
                 vfi_data.vfi_type  = VFI_manager::VFI_TYPE::ROBOT_TO_ROBOT;
                 vfi_data.vfi_class = VFI_Framework::map_strings_to_vfiClass(arg.entity_one_primitive_type,
                                                                             arg.entity_two_primitive_type);
-                vfi_data.direction = VFI_Framework::DIRECTION::KEEP_ROBOT_OUTSIDE;
+                vfi_data.direction = VFI_Framework::DIRECTION::RESTRICTED_ZONE;
                 vfi_data.safe_distance = arg.safe_distance;
                 vfi_data.vfi_gain = arg.vfi_gain;
                 vfi_data.robot_index_one = arg.robot_index_one-robot_index_convention_;
@@ -712,7 +712,7 @@ void RobotConstraintManager::_initial_settings()
                     vfi_data.vfi_type = VFI_manager::VFI_TYPE::ROBOT_TO_ROBOT;
                     vfi_data.vfi_class = VFI_Framework::map_strings_to_vfiClass(raw_entity_one_primitive_type,
                                                                               raw_entity_two_primitive_type);
-                    vfi_data.direction = VFI_Framework::DIRECTION::KEEP_ROBOT_OUTSIDE;
+                    vfi_data.direction = VFI_Framework::DIRECTION::RESTRICTED_ZONE;
                     vfi_data.safe_distance = raw_safe_distance;
                     vfi_data.vfi_gain = raw_vfi_gain;
                     vfi_data.joint_index_one = raw_joint_index_one;

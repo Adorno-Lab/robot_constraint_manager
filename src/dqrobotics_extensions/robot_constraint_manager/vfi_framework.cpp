@@ -6,11 +6,11 @@ VFI_Framework::DIRECTION VFI_Framework::map_string_to_vfiDirection(const std::st
     DIRECTION direction;
     if (str == std::string("KEEP_ROBOT_OUTSIDE") || str == std::string("RESTRICTED_ZONE"))
     {
-        direction = DIRECTION::KEEP_ROBOT_OUTSIDE;
+        direction = DIRECTION::RESTRICTED_ZONE;
     }
     else if  (str == std::string("KEEP_ROBOT_INSIDE") || str == std::string("SAFE_ZONE"))
     {
-        direction = DIRECTION::KEEP_ROBOT_INSIDE;
+        direction = DIRECTION::SAFE_ZONE;
     }
     else
     {
@@ -88,10 +88,10 @@ std::string VFI_Framework::map_vfiDirection_to_string(const DIRECTION &direction
 {
     switch(direction){
 
-    case DIRECTION::KEEP_ROBOT_OUTSIDE:
-        return "KEEP_ROBOT_OUTSIDE";
-    case DIRECTION::KEEP_ROBOT_INSIDE:
-        return "KEEP_ROBOT_INSIDE";
+    case DIRECTION::RESTRICTED_ZONE: //KEEP_ROBOT_OUTSIDE
+        return "RESTRICTED_ZONE";
+    case DIRECTION::SAFE_ZONE:  //KEEP_ROBOT_INSIDE
+        return "SAFE_ZONE";
     default:
         throw std::runtime_error("VFI_Framework::map_direction_to_string: Wrong argument!");
     }

@@ -49,8 +49,8 @@ public:
         RLINE_TO_POINT
     };
     enum class DIRECTION{
-        KEEP_ROBOT_OUTSIDE,
-        KEEP_ROBOT_INSIDE
+        RESTRICTED_ZONE, //KEEP_ROBOT_OUTSIDE
+        SAFE_ZONE        //KEEP_ROBOT_INSIDE
     };
     enum class PRIMITIVE{
         POINT,

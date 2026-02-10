@@ -96,9 +96,9 @@ VFI_manager::VFI_LOG_DATA VFI_manager::_get_data_from_vfi_parameters_map(const s
  */
 void VFI_manager::_add_vfi_constraint(const MatrixXd &Jd, const VectorXd &b, const DIRECTION &direction)
 {
-    if(direction == DIRECTION::KEEP_ROBOT_OUTSIDE)
+    if(direction == DIRECTION::RESTRICTED_ZONE) //KEEP_ROBOT_OUTSIDE
         constraint_manager_->add_inequality_constraint(-Jd, b);
-    else
+    else //SAFE_ZONE        //KEEP_ROBOT_INSIDE
         constraint_manager_->add_inequality_constraint(Jd, -b);
 }
 
@@ -204,7 +204,7 @@ void VFI_manager::add_vfi_rpoint_to_rpoint(const std::string &tag,
     const double residual = 0;
     const double square_error = square_d- square_safe_distance;
     VectorXd b = DQ_robotics_extensions::CVectorXd({vfi_gain*(square_error) + residual});
-    _add_vfi_constraint(Jd, b, VFI_Framework::DIRECTION::KEEP_ROBOT_OUTSIDE);
+    _add_vfi_constraint(Jd, b, VFI_Framework::DIRECTION::RESTRICTED_ZONE);
     //#############-log data-###############
     const double d = std::sqrt(square_d);
     VFI_LOG_DATA data;
