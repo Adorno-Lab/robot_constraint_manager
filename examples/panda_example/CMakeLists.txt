@@ -56,7 +56,8 @@ if (${LOCAL_TESTS})
 endif()
 
 add_executable(${PROJECT_NAME}
-               ${PROJECT_NAME}.cpp)
+               ${PROJECT_NAME}.cpp
+               DQ_CustomQPController.h DQ_CustomQPController.cpp)
 
 target_link_libraries(${PROJECT_NAME}
     dqrobotics

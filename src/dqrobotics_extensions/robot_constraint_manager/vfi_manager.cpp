@@ -463,6 +463,7 @@ void VFI_manager::add_vfi_constraint(const VFI_BUILD_DATA& build_data,
                 const std::string& tag = build_data.tag;
 
                 const double square_safe_distance = pow(safe_distance, 2);
+                const double square_buffer = pow(build_data.buffer, 2);
                 const DQ p = robot_pose.translation();
                 const DQ p_ = workspace_pose.translation();
                 const MatrixXd Jt     = DQ_Kinematics::translation_jacobian(robot_pose_jacobian, robot_pose);
@@ -470,8 +471,8 @@ void VFI_manager::add_vfi_constraint(const VFI_BUILD_DATA& build_data,
                 const double square_d = DQ_Geometry::point_to_point_squared_distance(p, p_);
                 const double residual = DQ_Kinematics::point_to_point_residual(p, p_, workspace_derivative);
                 const double square_error = square_d- square_safe_distance;
-                VectorXd b = DQ_robotics_extensions::CVectorXd({vfi_gain*(square_error) + residual});
-                _add_vfi_constraint(Jd, vfi_gain, square_error,residual, direction, build_data.buffer);
+                //VectorXd b = DQ_robotics_extensions::CVectorXd({vfi_gain*(square_error) + residual});
+                _add_vfi_constraint(Jd, vfi_gain, square_error,residual, direction, square_buffer);
                 //#############-log data-###############
                 const double d = std::sqrt(square_d);
                 VFI_LOG_DATA data;
@@ -509,7 +510,7 @@ void VFI_manager::add_vfi_constraint(const VFI_BUILD_DATA& build_data,
                 const double residual =  DQ_Kinematics::point_to_plane_residual(p, workspace_derivative);
                 const double d = DQ_Geometry::point_to_plane_distance(p, workspace_plane);
                 const double error = d - safe_distance;
-                VectorXd b = DQ_robotics_extensions::CVectorXd({vfi_gain*(error) + residual});
+                //VectorXd b = DQ_robotics_extensions::CVectorXd({vfi_gain*(error) + residual});
                 _add_vfi_constraint(Jd, vfi_gain, error,residual, direction, build_data.buffer);
                 //#############-log data-###############
                 VFI_LOG_DATA data;
@@ -543,14 +544,15 @@ void VFI_manager::add_vfi_constraint(const VFI_BUILD_DATA& build_data,
                 const DQ p_= x.translation();
                 const DQ workspace_line = l_ + E_*cross(p_, l_);
                 const double square_safe_distance = pow(safe_distance, 2);
+                const double square_buffer = pow(build_data.buffer, 2);
                 const DQ p = robot_pose.translation();
                 const MatrixXd Jt =  DQ_Kinematics::translation_jacobian(robot_pose_jacobian, robot_pose);
                 const MatrixXd Jd = DQ_Kinematics::point_to_line_distance_jacobian(Jt, p, workspace_line);
                 const double residual = DQ_Kinematics::point_to_line_residual(p, workspace_line, workspace_derivative);
                 const double square_d = DQ_Geometry::point_to_line_squared_distance(p, workspace_line);
                 const double square_error = square_d - square_safe_distance;
-                VectorXd b = DQ_robotics_extensions::CVectorXd({vfi_gain*(square_error) + residual});
-                _add_vfi_constraint(Jd, vfi_gain, square_error,residual, direction, build_data.buffer);
+                //VectorXd b = DQ_robotics_extensions::CVectorXd({vfi_gain*(square_error) + residual});
+                _add_vfi_constraint(Jd, vfi_gain, square_error,residual, direction, square_buffer);
                 //#############-log data-###############
                 const double d = std::sqrt(square_d);
                 VFI_LOG_DATA data;
@@ -591,7 +593,7 @@ void VFI_manager::add_vfi_constraint(const VFI_BUILD_DATA& build_data,
                 const double f = 2-2*cos(phi);
                 const double ferror = f-fsafe;
                 const double residual = DQ_Kinematics::line_to_line_angle_residual(robot_line,workspace_line,-workspace_derivative);
-                VectorXd b = DQ_robotics_extensions::CVectorXd({vfi_gain*(ferror) + residual});
+                //VectorXd b = DQ_robotics_extensions::CVectorXd({vfi_gain*(ferror) + residual});
                 _add_vfi_constraint(Jfphi, vfi_gain, ferror,residual, direction, build_data.buffer);
                 //#############-log data-###############
                 VFI_LOG_DATA data;
