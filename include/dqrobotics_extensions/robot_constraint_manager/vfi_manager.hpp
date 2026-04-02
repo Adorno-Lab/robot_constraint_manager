@@ -44,6 +44,28 @@ namespace DQ_robotics_extensions  {
 
 class VFI_manager: public VFI_Framework
 {
+public:
+
+    struct VFI_BUILD_DATA{
+        VFI_Framework::VFI_TYPE vfi_type;
+        VFI_Framework::VFI_CLASS vfi_class;
+        VFI_Framework::DIRECTION direction;
+        double safe_distance;
+        double buffer;
+        double vfi_gain;
+        int joint_index_one;
+        int joint_index_two;
+        int robot_index_one;
+        int robot_index_two;
+        std::vector<DQ> primitive_offsets_one;
+        std::vector<DQ> primitive_offsets_two;
+        DQ robot_attached_direction;
+        DQ environment_attached_direction;
+        DQ workspace_derivative;
+        std::vector<DQ> environment_poses;
+        std::string tag;
+    };
+
 protected:
     struct VFI_LOG_DATA{
         double distance;
@@ -51,7 +73,7 @@ protected:
         double distance_error;
         double square_distance_error;
         double line_to_line_angle_rad;
-        VFI_Framework::VFI_TYPE vfi_type;
+        VFI_Framework::VFI_CLASS vfi_class;
     };
 
     std::unordered_map<std::string, int> tag_stack_position_list_;
@@ -69,6 +91,14 @@ protected:
                              const VectorXd& b,
                              const DIRECTION& direction);
 
+    void _add_vfi_constraint(const MatrixXd& Jd,
+                             const double& vfi_gain,
+                             const double& error,
+                             const double& residual,
+                             const DIRECTION& direction,
+                             const double& buffer);
+        //vfi_gain*(square_error) + residual
+
     VectorXd q_dot_min_ = VectorXd::Zero(0);
     VectorXd q_dot_max_ = VectorXd::Zero(0);
     VectorXd q_min_ = VectorXd::Zero(0);
@@ -77,17 +107,28 @@ protected:
 
 
     void _check_vector_initialization(const VectorXd& q, const std::string &msg);
+    std::tuple<DQ, MatrixXd> _get_robot_pose_and_pose_jacobian(const std::shared_ptr<DQ_Kinematics>& robot,
+                                                               const VectorXd &q,
+                                                               const int& index,
+                                                               const DQ& offset);
 
 public:
     VFI_manager()=delete;
     VFI_manager(const int& dim_configuration,
                 const LEVEL& level = LEVEL::VELOCITIES);
 
+    void add_vfi_constraint(const VFI_BUILD_DATA& build_data,
+                            const int& stack_position,
+                            const std::shared_ptr<DQ_Kinematics>& robot_1,
+                            const VectorXd &q1,
+                            const std::shared_ptr<DQ_Kinematics>& robot_2,
+                            const VectorXd &q2);
 
+    [[deprecated]]
     void add_vfi_constraint(const std::string& tag,
                             const int& stack_position,
                             const DIRECTION& direction,
-                            const VFI_TYPE& vfi_type,
+                            const VFI_CLASS& vfi_class,
                             const double& safe_distance,
                             const double& vfi_gain,
                             const MatrixXd &robot_pose_jacobian,
@@ -96,6 +137,8 @@ public:
                             const DQ& workspace_pose,
                             const DQ& workspace_attached_direction,
                             const DQ& workspace_derivative = DQ(0));
+
+
 
 
     void add_vfi_rpoint_to_rpoint(const std::string& tag,

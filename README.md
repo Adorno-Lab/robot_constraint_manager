@@ -3,7 +3,7 @@
 
 <img src="https://github.com/user-attachments/assets/810414b6-5dbc-4889-83c4-802c863807ea" alt="drawing" width="600"/>
 
-This project implements the VFIs constraints using a yaml configuration file.
+This project implements the VFIs constraints using a YAML configuration file.
 A version is described in this [publication](https://ieeexplore.ieee.org/document/10399868)
 
 ```bibtext
@@ -73,6 +73,15 @@ macOS:
 ```
 brew update
 brew install yaml-cpp
+```
+
+#### Robot Constraint Editor
+
+```shell
+git clone https://github.com/Adorno-Lab/robot_constraint_editor
+cd robot_constraint_editor
+mkdir -p build && cd build
+cmake .. && make && sudo make install
 ```
 
 ### Install (UNIX)

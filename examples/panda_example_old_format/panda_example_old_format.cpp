@@ -11,8 +11,22 @@
 #include <dqrobotics_extensions/robot_constraint_editor/vfi_configuration_file_yaml.hpp>
 
 
+/*********************************************
+ * SIGNAL HANDLER
+ * *******************************************/
+#include<signal.h>
+static std::atomic_bool kill_this_process(false);
+void sig_int_handler(int);
+void sig_int_handler(int)
+{
+    kill_this_process = true;
+}
+
 int main()
 {
+    if(signal(SIGINT, sig_int_handler) == SIG_ERR)
+        throw std::runtime_error("::Error setting the signal int handler.");
+
 
     auto cs = std::make_shared<DQ_CoppeliaSimInterfaceZMQ>();
     try {
@@ -28,52 +42,59 @@ int main()
         controller.set_damping(0.01);
 
 
+        std::string yaml_path = "vfi_constraints.yaml";
+        DQ_robotics_extensions::RobotConstraintManager rcm{cs, panda, panda_model, yaml_path, true};
 
-        auto vcr = std::make_shared<DQ_robotics_extensions::VFIConfigurationFileYaml>();
-        DQ_robotics_extensions::RobotConstraintManager rcm{cs, panda, panda_model, vcr,
-                                                            "vfi_constraints_2.yaml", true};
 
-        // The new format does not include the configuration limits or configuration velocity limits.
-        // However, we can still added in the code
 
-        VectorXd q_min = (VectorXd(7) << -2.3093,-1.5133,-2.4937, -2.7478,-2.4800, 0.8521, -2.6895).finished();
-        VectorXd q_max = (VectorXd(7) <<  2.3093, 1.5133, 2.4937, -0.4461, 2.4800, 4.2094,  2.6895).finished();
-        VectorXd q_dot_min = (VectorXd(7) <<-2, -1, -1.5, -1.25, -3, -1.5, -3).finished();
-        VectorXd q_dot_max = (VectorXd(7) <<2,  1,  1.5,  1.25,  3,  1.5,  3).finished();
-        rcm.set_configuration_limits({q_min, q_max});
-        rcm.set_configuration_limits_gain(1.0);
-        rcm.set_configuration_velocity_limits({q_dot_min, q_dot_max});
+        auto tags = rcm.get_vfi_tags();
+        for (auto& tag : tags)
+        {
+            std::cout<<"-------------"<<std::endl;
+            std::cout<<tag<<std::endl;
+            auto yaml_raw_data  = rcm.get_raw_yaml_data(tag);
+            std::cout<<"Raw data"<<std::endl;
+            std::cout<<yaml_raw_data.vfi_mode<<std::endl;
+            std::cout<<yaml_raw_data.cs_entity_one_or_environment<<std::endl;
+            std::cout<<yaml_raw_data.cs_entity_two_or_robot<<std::endl;
+            std::cout<<yaml_raw_data.entity_one_primitive_type_or_environment<<std::endl;
+            std::cout<<yaml_raw_data.entity_two_primitive_type_or_robot<<std::endl;
+            std::cout<<yaml_raw_data.joint_index_one_or_joint_index<<std::endl;
+            std::cout<<yaml_raw_data.joint_index_two<<std::endl;
+            std::cout<<yaml_raw_data.safe_distance<<std::endl;
+            std::cout<<yaml_raw_data.vfi_gain<<std::endl;
+            std::cout<<yaml_raw_data.direction<<std::endl;
+            std::cout<<yaml_raw_data.entity_robot_attached_direction<<std::endl;
+            std::cout<<yaml_raw_data.entity_environment_attached_direction<<std::endl;
+            std::cout<<yaml_raw_data.tag<<std::endl;
+            std::cout<<"-------------"<<std::endl;
+            auto build_data = rcm.get_vfi_build_data(tag);
+
+        }
+
+
+
         cs->start_simulation();
 
 
         std::cout<<"Starting teleoperation "<<std::endl;
 
         int i=0;
-        double T=0.01;
+        double T=0.05;
         double w=0.1;
 
-        int ITERATIONS = 10000;
-        std::string tag = "C5";
-        int losses = 0;
-        for (int i=0;i<ITERATIONS;i++)
+        while ( not kill_this_process)
         {
-
             DQ xd = cs->get_object_pose("ReferenceFrame");
             auto q = panda->get_configuration();
             auto [A,b] = rcm.get_inequality_constraints(q, false, false);
-
             controller.set_inequality_constraint(A,b);
             auto u = controller.compute_setpoint_control_signal(q, xd.translation().vec4());
             panda->set_target_configuration_velocities(u);
 
 
-            double dist = rcm.get_vfi_distance_error(tag);
-            std::cout<<"Constraint tag="+tag+". distance_error: "<<dist<<std::endl;
-            if (dist < 0)
-            {
-                std::cerr<<"Collision!"<<std::endl;
-                losses++;
-            }
+            std::string tag = "C3";
+            std::cout<<"Constraint tag="+tag+". distance_error: "<<rcm.get_vfi_distance_error(tag)<<std::endl;
 
             // Varying-time VFI
 
@@ -86,11 +107,11 @@ int main()
             rcm.update_vfi_workspace_pose(ctag, xsphere);
             rcm.update_vfi_workspace_derivative(ctag, z_dot);
             cs->trigger_next_simulation_step();
+            i++;
         }
         std::cout<<"Teleoperation finished."<<std::endl;
 
         cs->stop_simulation();
-        std::cout<<"Losses: "<<losses<<std::endl;
 
 
     }
@@ -98,7 +119,6 @@ int main()
     {
         std::cerr<<e.what()<<std::endl;
     }
-    return 0;
 }
 
 

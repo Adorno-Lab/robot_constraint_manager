@@ -4,13 +4,13 @@ namespace DQ_robotics_extensions  {
 VFI_Framework::DIRECTION VFI_Framework::map_string_to_vfiDirection(const std::string &str)
 {
     DIRECTION direction;
-    if (str == std::string("KEEP_ROBOT_OUTSIDE"))
+    if (str == std::string("KEEP_ROBOT_OUTSIDE") || str == std::string("RESTRICTED_ZONE"))
     {
-        direction = DIRECTION::KEEP_ROBOT_OUTSIDE;
+        direction = DIRECTION::RESTRICTED_ZONE;
     }
-    else if  (str == std::string("KEEP_ROBOT_INSIDE"))
+    else if  (str == std::string("KEEP_ROBOT_INSIDE") || str == std::string("SAFE_ZONE"))
     {
-        direction = DIRECTION::KEEP_ROBOT_INSIDE;
+        direction = DIRECTION::SAFE_ZONE;
     }
     else
     {
@@ -20,37 +20,37 @@ VFI_Framework::DIRECTION VFI_Framework::map_string_to_vfiDirection(const std::st
     return direction;
 }
 
-VFI_Framework::VFI_TYPE VFI_Framework::map_strings_to_vfiType(const std::string &entity_robot_primitive_type,
+VFI_Framework::VFI_CLASS VFI_Framework::map_strings_to_vfiClass(const std::string &entity_robot_primitive_type,
                                                           const std::string &entity_enviroment_primitive_type)
 {
     auto robot_primitive = map_string_to_primitive(entity_robot_primitive_type);
     auto environment_primitive = map_string_to_primitive(entity_enviroment_primitive_type);
-    VFI_TYPE vfy_type;
+    VFI_CLASS vfi_class;
 
     switch (robot_primitive ) {
     case PRIMITIVE::POINT:
         switch (environment_primitive) {
         case PRIMITIVE::POINT:
-            vfy_type = VFI_TYPE::RPOINT_TO_POINT;
+            vfi_class = VFI_CLASS::RPOINT_TO_POINT;
             break;
         case PRIMITIVE::LINE:
-            vfy_type = VFI_TYPE::RPOINT_TO_LINE;
+            vfi_class = VFI_CLASS::RPOINT_TO_LINE;
             break;
         case PRIMITIVE::PLANE:
-            vfy_type = VFI_TYPE::RPOINT_TO_PLANE;
+            vfi_class = VFI_CLASS::RPOINT_TO_PLANE;
             break;
         default:
             throw std::runtime_error("Error in map_string_to_vfiType. Combination of primitives "
                                      + map_primitive_to_string(robot_primitive) + "-"
                                      + map_primitive_to_string(environment_primitive)
-                                     + "not supported.");
+                                     + " not supported.");
             break;
         }
         break;
     case PRIMITIVE::LINE_ANGLE:
         if (environment_primitive == PRIMITIVE::LINE_ANGLE)
         {
-            vfy_type = VFI_TYPE::RLINE_TO_LINE_ANGLE;
+            vfi_class = VFI_CLASS::RLINE_TO_LINE_ANGLE;
         }else
         {
             throw std::runtime_error("Error in map_string_to_vfiType. Both primitives are required to be LINE_ANGLE for "
@@ -60,10 +60,10 @@ VFI_Framework::VFI_TYPE VFI_Framework::map_strings_to_vfiType(const std::string 
     case PRIMITIVE::LINE:
         switch (environment_primitive) {
         case PRIMITIVE::POINT:
-            vfy_type = VFI_TYPE::RLINE_TO_POINT;
+            vfi_class = VFI_CLASS::RLINE_TO_POINT;
             break;
         case PRIMITIVE::LINE:
-            vfy_type = VFI_TYPE::RLINE_TO_LINE;
+            vfi_class = VFI_CLASS::RLINE_TO_LINE;
             break;
         default:
             throw std::runtime_error("Error in map_string_to_vfiType. Combination of primitives "
@@ -80,7 +80,7 @@ VFI_Framework::VFI_TYPE VFI_Framework::map_strings_to_vfiType(const std::string 
                                  + "not supported.");
         break;
     }
-    return vfy_type;
+    return vfi_class;
 
 }
 
@@ -88,46 +88,46 @@ std::string VFI_Framework::map_vfiDirection_to_string(const DIRECTION &direction
 {
     switch(direction){
 
-    case DIRECTION::KEEP_ROBOT_OUTSIDE:
-        return "KEEP_ROBOT_OUTSIDE";
-    case DIRECTION::KEEP_ROBOT_INSIDE:
-        return "KEEP_ROBOT_INSIDE";
+    case DIRECTION::RESTRICTED_ZONE: //KEEP_ROBOT_OUTSIDE
+        return "RESTRICTED_ZONE";
+    case DIRECTION::SAFE_ZONE:  //KEEP_ROBOT_INSIDE
+        return "SAFE_ZONE";
     default:
         throw std::runtime_error("VFI_Framework::map_direction_to_string: Wrong argument!");
     }
 }
 
-std::string VFI_Framework::map_vfiType_to_string(const VFI_TYPE &vfi_type)
+std::string VFI_Framework::map_vfiClass_to_string(const VFI_CLASS &vfi_class)
 {
     std::string str;
-    switch (vfi_type) {
-    case VFI_TYPE::RPOINT_TO_POINT:
+    switch (vfi_class) {
+    case VFI_CLASS::RPOINT_TO_POINT:
         str = std::string("RPOINT_TO_POINT");
         break;
-    case VFI_TYPE::RPOINT_TO_LINE:
+    case VFI_CLASS::RPOINT_TO_LINE:
         str = std::string("RPOINT_TO_LINE");
         break;
-    case VFI_TYPE::RPOINT_TO_PLANE:
+    case VFI_CLASS::RPOINT_TO_PLANE:
         str = std::string("RPOINT_TO_PLANE");
         break;
-    case VFI_TYPE::RLINE_TO_LINE_ANGLE:
+    case VFI_CLASS::RLINE_TO_LINE_ANGLE:
         str = std::string("RLINE_TO_LINE_ANGLE");
         break;
-    case VFI_TYPE::RLINE_TO_LINE:
+    case VFI_CLASS::RLINE_TO_LINE:
         str = std::string("RLINE_TO_LINE");
         break;
-    case VFI_TYPE::RLINE_TO_POINT:
+    case VFI_CLASS::RLINE_TO_POINT:
         str = std::string("RLINE_TO_POINT");
     }
     return str;
 }
 
-std::string VFI_Framework::map_vfiMode_to_string(const VFI_MODE &vfi_mode)
+std::string VFI_Framework::map_vfiType_to_string(const VFI_TYPE &vfi_type)
 {
-    switch (vfi_mode) {
-    case VFI_MODE::ENVIRONMENT_TO_ROBOT:
+    switch (vfi_type) {
+    case VFI_TYPE::ENVIRONMENT_TO_ROBOT:
         return "ENVIRONMENT_TO_ROBOT";
-    case VFI_MODE::ROBOT_TO_ROBOT:
+    case VFI_TYPE::ROBOT_TO_ROBOT:
         return "ROBOT_TO_ROBOT";
     default:
         throw std::runtime_error("VFI_Framework::map_vfyMode_to_string: Wrong argument!");

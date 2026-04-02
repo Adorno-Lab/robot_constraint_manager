@@ -52,6 +52,13 @@ jobs:
         run: | 
           cd cpp-interface-coppeliasim-zmq
           sh ../cpp/.github/scripts/macos/install.sh
+
+      - name: Install robot-constrait-editor
+        run: |
+          git clone https://github.com/Adorno-Lab/robot_constraint_editor 
+          cd robot_constraint_editor
+          mkdir -p build && cd build
+          cmake .. && make && sudo make install      
           
       - name: Build
         run: sh cpp/.github/scripts/macos/build.sh

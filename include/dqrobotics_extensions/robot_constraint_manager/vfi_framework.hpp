@@ -35,12 +35,12 @@ class VFI_Framework
 
 public:
 
-    enum class VFI_MODE{
+    enum class VFI_TYPE{  // MODE
         ENVIRONMENT_TO_ROBOT,
         ROBOT_TO_ROBOT
     };
 
-    enum class VFI_TYPE{
+    enum class VFI_CLASS{  // TYPE
         RPOINT_TO_POINT,
         RPOINT_TO_PLANE,
         RPOINT_TO_LINE,
@@ -49,8 +49,8 @@ public:
         RLINE_TO_POINT
     };
     enum class DIRECTION{
-        KEEP_ROBOT_OUTSIDE,
-        KEEP_ROBOT_INSIDE
+        RESTRICTED_ZONE, //KEEP_ROBOT_OUTSIDE
+        SAFE_ZONE        //KEEP_ROBOT_INSIDE
     };
     enum class PRIMITIVE{
         POINT,
@@ -68,10 +68,10 @@ public:
     static DIRECTION   map_string_to_vfiDirection  (const std::string& str);
     static std::string map_vfiDirection_to_string (const DIRECTION& direction);
 
-    static VFI_TYPE  map_strings_to_vfiType   (const std::string& entity_robot_primitive_type,
+    static VFI_CLASS  map_strings_to_vfiClass   (const std::string& entity_robot_primitive_type,
                                                const std::string& entity_enviroment_primitive_type);
+    static std::string map_vfiClass_to_string   (const VFI_CLASS& vfi_class);
     static std::string map_vfiType_to_string   (const VFI_TYPE& vfi_type);
-    static std::string map_vfiMode_to_string   (const VFI_MODE& vfi_mode);
     static std::string map_primitive_to_string(const PRIMITIVE& primitive);
 
     static DQ map_attached_direction_string_to_dq(const std::string& str);

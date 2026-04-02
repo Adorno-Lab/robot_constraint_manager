@@ -26,6 +26,7 @@
 #include <dqrobotics/interfaces/coppeliasim/DQ_CoppeliaSimInterfaceZMQ.h>
 #include <dqrobotics/interfaces/coppeliasim/DQ_CoppeliaSimRobot.h>
 #include <dqrobotics_extensions/robot_constraint_manager/vfi_manager.hpp>
+#include <dqrobotics_extensions/robot_constraint_editor/vfi_configuration_file.hpp>
 #include <dqrobotics/utils/DQ_Math.h>
 #include <memory>
 #include <unordered_map>
@@ -40,6 +41,7 @@ namespace DQ_robotics_extensions
 class RobotConstraintManager
 {
 public:
+    // Deprecated
     struct YAML_RAW_DATA{
         std::string vfi_mode;
         std::string cs_entity_one_or_environment;
@@ -56,36 +58,31 @@ public:
         std::string tag;
     };
 
-    struct VFI_BUILD_DATA{
-        VFI_Framework::VFI_MODE vfi_mode;
-        VFI_Framework::VFI_TYPE vfi_type;
-        VFI_Framework::DIRECTION direction;
-        double safe_distance;
-        double vfi_gain;
-        int joint_index_one;
-        int joint_index_two;
-        DQ primitive_offset_one;
-        DQ primitive_offset_two;
-        DQ robot_attached_direction;
-        DQ environment_attached_direction;
-        DQ workspace_derivative;
-        DQ cs_entity_environment_pose;
-        std::string tag;
-    };
+
+
+
 
 private:
     class Impl;
     std::shared_ptr<Impl> impl_;
 
+    std::vector<DQ> _get_coppeliasim_offsets(const std::vector<std::string>& primitives,
+                                             const int& robot_index,
+                                             const int& joint_index);
+    std::vector<DQ> _get_workspace_poses(const std::vector<std::string>& entity_environment_primitives);
+
+
+    std::vector<VFIConfigurationFile::Data> data_list_;
+    std::unordered_map<std::string, VFIConfigurationFile::Data> data_map_;
+
 protected:
 
     //std::vector<VFI_BUILD_DATA> vfi_build_data_list_;
-    std::unordered_map<std::string, VFI_BUILD_DATA> vfi_build_data_map_;
-
+    //----Deprecated--------------------------------------------------
+    std::unordered_map<std::string, VFI_manager::VFI_BUILD_DATA> vfi_build_data_map_;
     std::vector<YAML_RAW_DATA> yaml_raw_data_list_;
     std::unordered_map<std::string, YAML_RAW_DATA> yaml_raw_data_map_;
-
-
+    //-----------------------------------------------------------------
 
 protected:
     std::shared_ptr<DQ_CoppeliaSimInterface> cs_;
@@ -94,24 +91,40 @@ protected:
     std::shared_ptr<DQ_Kinematics> robot_;
     std::shared_ptr<DQ_CoppeliaSimRobot> coppelia_robot_;
     std::shared_ptr<DQ_robotics_extensions::VFI_manager> VFI_M_;
+    std::shared_ptr<DQ_robotics_extensions::VFIConfigurationFile> config_file_reader_;
+    bool rce_compatible_;
+    int robot_index_convention_;
+    int vfi_file_version_;
+    bool vfi_zero_indexed_;
+
     double configuration_limit_constraint_gain_;
 
     VectorXd initial_robot_configuration_;
     int number_of_constraints_;
 
     bool verbosity_{true};
-    DQ _get_robot_primitive_offset_from_coppeliasim(const std::string& object_name, const int& joint_index);
+    DQ   _get_robot_primitive_offset_from_coppeliasim(const std::string& object_name, const int& joint_index);
     void _initial_settings();
-    void _set_vfi_configuration_constraints_gain(const double& vfi_position_constraints_gain);
-
+    //void _set_vfi_configuration_constraints_gain(const double& vfi_position_constraints_gain);
     void _check_unit(const std::string& unit);
+    void _create_build_data();
 public:
+    [[deprecated]]
     RobotConstraintManager(const std::shared_ptr<DQ_CoppeliaSimInterface>& coppelia_interface,
                            const std::shared_ptr<DQ_CoppeliaSimRobot>& coppeliasim_robot,
                            const std::shared_ptr<DQ_Kinematics>& robot,
                            const std::string &yaml_file_path,
                            const bool& verbosity = false,
                            const VFI_manager::LEVEL& level = VFI_manager::LEVEL::VELOCITIES);
+
+    RobotConstraintManager(const std::shared_ptr<DQ_CoppeliaSimInterface>& coppelia_interface,
+                           const std::shared_ptr<DQ_CoppeliaSimRobot>& coppeliasim_robot,
+                           const std::shared_ptr<DQ_Kinematics>& robot,
+                           const std::shared_ptr<VFIConfigurationFile>& config_file_reader,
+                           const std::string &yaml_file_path,
+                           const bool& verbosity = false,
+                           const VFI_manager::LEVEL& level = VFI_manager::LEVEL::VELOCITIES);
+
 
 
     int get_number_of_vfi_constraints() const;
@@ -122,18 +135,18 @@ public:
                                                               const bool& include_configuration_velocity_constraints=true
                                                               );
 
-
-
-
-
     std::tuple<double, double, double, double, double, std::string> get_vfi_log_data(const std::string &tag) const;
     std::tuple<int, DQ, int, DQ> get_primitive_index_and_offset(const std::string& tag) const;
 
-    [[deprecated("This method is experimental")]]
+    [[deprecated("This method is deprecated")]]
     YAML_RAW_DATA get_raw_yaml_data(const std::string& tag) const;
 
-    [[deprecated("This method is experimental")]]
-    VFI_BUILD_DATA get_vfi_build_data(const std::string& tag) const;
+    [[deprecated("This method is deprecated")]]
+    VFI_manager::VFI_BUILD_DATA get_vfi_build_data(const std::string& tag) const;
+
+    VFIConfigurationFile::Data get_data(const std::string& tag) const;
+
+
 
     std::vector<std::string> get_vfi_tags() const;
     double get_vfi_distance_error(const std::string& tag) const;
@@ -141,10 +154,12 @@ public:
     void show_vfi_build_data(const std::string& tag) const;
     void update_vfi_workspace_pose(const std::string& tag, const DQ& workspace_pose);
     void update_vfi_workspace_derivative(const std::string& tag, const DQ& workspace_derivative);
+    void update_vfi_buffer(const std::string& tag, const double& buffer);
 
     std::tuple<VectorXd, VectorXd> get_configuration_limits() const;
     std::tuple<VectorXd, VectorXd> get_configuration_velocity_limits() const;
     void set_configuration_limits(const std::tuple<VectorXd, VectorXd>& configuration_limits);
+    void set_configuration_limits_gain(const double& configuration_limits_gain);
     void set_configuration_velocity_limits(const std::tuple<VectorXd, VectorXd> &configuration_velocity_limits);
 
 };

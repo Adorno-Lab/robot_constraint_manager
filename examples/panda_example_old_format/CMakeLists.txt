@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.5...3.26)
 
 
 
-project(panda_example LANGUAGES CXX)
+project(panda_example_old_format LANGUAGES CXX)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
@@ -74,12 +74,6 @@ add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
         ${YAML_FILE}
         $<TARGET_FILE_DIR:${PROJECT_NAME}>)
 
-# COPY the Yaml config file to the build folder
-set(YAML_FILE ${CMAKE_CURRENT_SOURCE_DIR}/cfg/vfi_constraints_2.yaml)
-add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
-    COMMAND ${CMAKE_COMMAND} -E copy_if_different
-        ${YAML_FILE}
-        $<TARGET_FILE_DIR:${PROJECT_NAME}>)
 
 if (APPLE)
     # For some reason, on my local tests running on my macOS, 
