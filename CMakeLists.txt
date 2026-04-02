@@ -6,7 +6,15 @@ project(robot_constraint_manager LANGUAGES CXX)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-
+include(FetchContent)
+FetchContent_Declare(
+  googletest
+  #URL https://github.com/google/googletest/archive/03597a01ee50ed33e9dfd640b249b4be3799d395.zip
+  URL https://github.com/google/googletest/archive/refs/tags/v1.17.0.zip
+)
+# For Windows: Prevent overriding the parent project's compiler/linker settings
+set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
+FetchContent_MakeAvailable(googletest)
 
 find_package(Eigen3 REQUIRED)
 
@@ -80,3 +88,25 @@ INSTALL(FILES
     include/dqrobotics_extensions/robot_constraint_manager/vfi_manager.hpp
 
     DESTINATION "include/dqrobotics_extensions/robot_constraint_manager")
+
+# For unit tests
+
+add_executable(unit_tests
+    tests/unit_tests.cpp)
+
+target_link_libraries(unit_tests
+    dqrobotics
+    dqrobotics-interface-coppeliasim-zmq
+    gtest_main
+    ${PROJECT_NAME}
+     robot_constraint_editor
+)
+
+# COPY the Yaml config file to the build folder
+set(YAML_FILE ${CMAKE_CURRENT_SOURCE_DIR}/examples/panda_example/cfg/vfi_constraints_3.yaml)
+
+
+add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different
+        ${YAML_FILE}
+        $<TARGET_FILE_DIR:${PROJECT_NAME}>)

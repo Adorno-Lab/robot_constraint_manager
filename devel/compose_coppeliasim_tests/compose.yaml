@@ -1,0 +1,40 @@
+
+services:
+  ubuntu_dev:
+    build:
+      context: ../..  # Contexto: directorio raíz del proyecto
+      dockerfile: devel/ubuntu_dev/Dockerfile
+    environment:
+      DISPLAY: $DISPLAY  # x server related
+    privileged: true # Needed for some gpu configurations.
+    volumes:
+      #- repo-data:/root/sas_tutorial_workspace/src/sas_ur_control_template/
+      - /tmp/.X11-unix:/tmp/.X11-unix # x server related
+      - ~/.Xauthority:/root/.Xauthority # x server related
+    network_mode: "host" # x server related and for ROS2 networking
+    ipc: "host"
+    command: /bin/bash -c "
+      echo 'Waiting for CoppeliaSim to be ready...';
+      sleep 10;
+      echo 'Starting unit tests...';
+      cd /root/git/robot_constraint_manager/build && ./unit_tests"
+
+  coppeliasim:
+    image: murilomarinho/coppeliasim:noble_470rev4
+    platform: linux/amd64
+    stop_signal: SIGINT
+    environment:
+      DISPLAY: $DISPLAY 
+    privileged: true
+    volumes:
+      - ../../examples/panda_example:/root/examples/panda_example/  # Go up two levels
+      - /tmp/.X11-unix:/tmp/.X11-unix
+      #- ${XAUTHORITY:-$HOME/.Xauthority}:/root/.Xauthority
+      - ~/.Xauthority:/root/.Xauthority # x server related
+    network_mode: "host" # x server related
+    command: /bin/bash -c "
+      cd $${COPPELIASIM_PATH}
+      && ./coppeliaSim.sh -s0 /root/examples/panda_example/panda_example.ttt"  
+
+      
+        
