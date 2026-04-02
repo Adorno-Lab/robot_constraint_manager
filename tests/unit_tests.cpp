@@ -18,6 +18,11 @@ protected:
     std::shared_ptr<FrankaEmikaPandaCoppeliaSimZMQRobot> panda_;
     std::shared_ptr<DQ_SerialManipulatorMDH> robot_model_;
 
+    std::unordered_map<std::string, double> precomputed_distances_ =
+        {
+            {"C1", 0.0}, {"C2", 0.315},{"C3", 0.115},{"C4", 0.029}, {"C5", 0.065}
+        };
+
     VectorXd q_min_ = (VectorXd(7) << -2.3093,-1.5133,-2.4937, -2.7478,-2.4800, 0.8521, -2.6895).finished();
     VectorXd q_max_ = (VectorXd(7) <<  2.3093, 1.5133, 2.4937, -0.4461, 2.4800, 4.2094,  2.6895).finished();
     VectorXd q_dot_min_ = (VectorXd(7) <<-2, -1, -1.5, -1.25, -3, -1.5, -3).finished();
@@ -67,7 +72,9 @@ TEST_F(InterfaceUnitTests, distances){
     for (auto& tag : tags)
     {
         double distance = rcm_->get_vfi_distance_error(tag);
-        std::cout<<tag + " distance: "<<distance<<std::endl;
+        double precomputed_distance = precomputed_distances_.at(tag);
+        std::cout<<tag + " distance: "<<distance<<" Precomp: "<<precomputed_distance<<std::endl;
+        EXPECT_NEAR(distance, precomputed_distance, 1e-2)<<"Error in distances. Tag: "+tag;
     }
 
 };
