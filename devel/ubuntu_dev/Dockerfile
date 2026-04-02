@@ -18,7 +18,7 @@ RUN echo "source /etc/bash_env" >> ~/.bashrc
 
 
 # Clone the robot_constraint_manager package 
-RUN cd ~/git && git clone --branch unit_tests https://github.com/Adorno-Lab/robot_constraint_manager 
+RUN cd ~/git && git clone --branch robot_constrint_editor https://github.com/Adorno-Lab/robot_constraint_manager 
 RUN cd ~/git/robot_constraint_manager && mkdir -p build && cd build && cmake .. && make
 
  

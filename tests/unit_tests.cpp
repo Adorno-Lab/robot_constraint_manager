@@ -31,7 +31,7 @@ protected:
     VectorXd q_panda_home_ = (VectorXd(7)<<0, -M_PI_4, 0, -3 * M_PI_4, 0, M_PI_2, M_PI_4).finished();
     InterfaceUnitTests() {
         cs_ = std::make_unique<DQ_CoppeliaSimInterfaceZMQ>();
-        cs_->connect("localhost", 23000, 10000);
+        cs_->connect("localhost", 23000, 20000);
         panda_ = std::make_shared<FrankaEmikaPandaCoppeliaSimZMQRobot>("Franka", cs_);
         robot_model_ = std::make_shared<DQ_SerialManipulatorMDH>(panda_->kinematics());
 

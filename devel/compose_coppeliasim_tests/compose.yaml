@@ -2,20 +2,19 @@
 services:
   ubuntu_dev:
     build:
-      context: ../..  # Contexto: directorio raíz del proyecto
+      context: ../..  
       dockerfile: devel/ubuntu_dev/Dockerfile
     environment:
-      DISPLAY: $DISPLAY  # x server related
+      DISPLAY: ${DISPLAY:-:99}  # Use :99 for CI, or local display
     privileged: true # Needed for some gpu configurations.
     volumes:
-      #- repo-data:/root/sas_tutorial_workspace/src/sas_ur_control_template/
       - /tmp/.X11-unix:/tmp/.X11-unix # x server related
       - ~/.Xauthority:/root/.Xauthority # x server related
     network_mode: "host" # x server related and for ROS2 networking
     ipc: "host"
     command: /bin/bash -c "
       echo 'Waiting for CoppeliaSim to be ready...';
-      sleep 10;
+      sleep 20;
       echo 'Starting unit tests...';
       cd /root/git/robot_constraint_manager/build && ./unit_tests"
 
@@ -24,12 +23,11 @@ services:
     platform: linux/amd64
     stop_signal: SIGINT
     environment:
-      DISPLAY: $DISPLAY 
+      DISPLAY: ${DISPLAY:-:99}
     privileged: true
     volumes:
-      - ../../examples/panda_example:/root/examples/panda_example/  # Go up two levels
+      - ../../examples/panda_example:/root/examples/panda_example/ 
       - /tmp/.X11-unix:/tmp/.X11-unix
-      #- ${XAUTHORITY:-$HOME/.Xauthority}:/root/.Xauthority
       - ~/.Xauthority:/root/.Xauthority # x server related
     network_mode: "host" # x server related
     command: /bin/bash -c "
