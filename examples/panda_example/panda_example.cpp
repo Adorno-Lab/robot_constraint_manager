@@ -71,7 +71,7 @@ int main()
             std::cout<<"Constraint tag="+tag+". distance_error: "<<dist<<std::endl;
             if (dist < 0)
             {
-                std::cerr<<"Perdimos parce!"<<std::endl;
+                std::cerr<<"Collision!"<<std::endl;
                 losses++;
             }
 
