@@ -85,7 +85,8 @@ RobotConstraintManager::RobotConstraintManager(const std::shared_ptr<DQ_Coppelia
                                                const std::shared_ptr<DQ_Kinematics> &robot,
                                                const std::shared_ptr<VFIConfigurationFile> &config_file_reader,
                                                const std::string &yaml_file_path,
-                                               const bool &verbosity, const VFI_Framework::LEVEL &level)
+                                               const bool &verbosity,
+                                               const VFI_Framework::LEVEL &level)
     :cs_{coppelia_interface},
     config_path_{yaml_file_path},
     level_{level},
@@ -93,8 +94,8 @@ RobotConstraintManager::RobotConstraintManager(const std::shared_ptr<DQ_Coppelia
     coppelia_robot_{coppeliasim_robot},
     config_file_reader_{config_file_reader},
     rce_compatible_{true},
-    verbosity_{verbosity},
-    configuration_limit_constraint_gain_{1}
+    configuration_limit_constraint_gain_{1},
+    verbosity_{verbosity}
 {
     VFI_M_ = std::make_shared<DQ_robotics_extensions::VFI_manager>(robot->get_dim_configuration_space());
     try {
@@ -127,12 +128,12 @@ void RobotConstraintManager::_create_build_data()
     if (!rce_compatible_)
         throw std::runtime_error("Invalid call. This private method requires the version 2 of the configuration File Specification");
 
-    const int n = data_map_.size();
-    std::vector<VFI_manager::VFI_BUILD_DATA> build_data;
-    build_data.reserve(n);
+    //const int n = data_map_.size();
+    //std::vector<VFI_manager::VFI_BUILD_DATA> build_data;
+    //build_data.reserve(n);
     for (auto& data_item : data_list_)
     {
-        std::visit([this, &build_data](auto&& arg){
+        std::visit([this](auto&& arg){
             using T = std::decay_t<decltype(arg)>;
             if constexpr (std::is_same_v<T, VFIConfigurationFile::ENVIRONMENT_TO_ROBOT_DATA>) {
                 VFI_manager::VFI_BUILD_DATA vfi_data;
@@ -141,7 +142,7 @@ void RobotConstraintManager::_create_build_data()
                                                                             arg.entity_environment_primitive_type);
                 vfi_data.direction = VFI_Framework::map_string_to_vfiDirection(arg.direction);
                 vfi_data.safe_distance = arg.safe_distance;
-                vfi_data.buffer = 0.0;
+                vfi_data.buffer = arg.buffer;
                 vfi_data.vfi_gain = arg.vfi_gain;
                 vfi_data.robot_index_one = arg.robot_index-robot_index_convention_;
                 vfi_data.robot_index_two = -1;
@@ -165,7 +166,7 @@ void RobotConstraintManager::_create_build_data()
                                                                             arg.entity_two_primitive_type);
                 vfi_data.direction = VFI_Framework::DIRECTION::RESTRICTED_ZONE;
                 vfi_data.safe_distance = arg.safe_distance;
-                vfi_data.buffer = 0.0;
+                vfi_data.buffer = arg.buffer;
                 vfi_data.vfi_gain = arg.vfi_gain;
                 vfi_data.robot_index_one = arg.robot_index_one-robot_index_convention_;
                 vfi_data.robot_index_two = arg.robot_index_two-robot_index_convention_;
@@ -607,7 +608,7 @@ std::vector<DQ> RobotConstraintManager::_get_workspace_poses(const std::vector<s
     return poses;
 }
 
-
+//This is used by an old constructor of the class. It will be deprecated
 /**
  * @brief RobotConstraintManager::_initial_settings reads the yaml file used to build the VFIs.
  */
