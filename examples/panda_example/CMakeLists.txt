@@ -82,7 +82,7 @@ add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
         $<TARGET_FILE_DIR:${PROJECT_NAME}>)
 
 if (APPLE)
-    # For some reason, on my local tests running on my macOS, 
+    # For some reason, on my local tests running on macOS,
     # qpOASES is not found in /usr/local/lib/. Because of that, I am
     # copying the library from /usr/local/lib/ to the target directory
     set(qpOASES_LIBRARY32 /usr/local/lib/libqpOASES.3.2.dylib)
