@@ -85,6 +85,11 @@ int main()
 
             rcm.update_vfi_workspace_pose(ctag, xsphere);
             rcm.update_vfi_workspace_derivative(ctag, z_dot);
+
+            rcm.get_buffer("X90");
+            rcm.get_safe_distance(ctag);
+            rcm.get_vfi_gain(ctag);
+
             cs->trigger_next_simulation_step();
         }
         std::cout<<"Teleoperation finished."<<std::endl;

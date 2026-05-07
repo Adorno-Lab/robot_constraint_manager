@@ -374,7 +374,55 @@ RobotConstraintManager::YAML_RAW_DATA RobotConstraintManager::get_raw_yaml_data(
  */
 VFIConfigurationFile::Data RobotConstraintManager::get_data(const std::string& tag) const
 {
-    return data_map_.at(tag);
+
+    try {
+        return data_map_.at(tag);
+    }catch (const std::exception& e){
+        std::cerr<<"Tag "+tag+" not found!"<<std::endl;
+        throw std::runtime_error(e.what());
+    }
+}
+
+/**
+ * @brief RobotConstraintManager::get_buffer
+ * @param tag The tag of the constraint.
+ * @return the buffer
+ */
+double RobotConstraintManager::get_buffer(const std::string &tag) const
+{
+    try {
+        return std::visit([](const auto& d) { return d.buffer; }, get_data(tag));
+    }catch (const std::exception& e) {
+        throw std::runtime_error(e.what());
+    }
+}
+
+/**
+ * @brief RobotConstraintManager::get_safe_distance
+ * @param tag The tag of the constraint.
+ * @return The safe distance
+ */
+double RobotConstraintManager::get_safe_distance(const std::string &tag) const
+{
+    try {
+        return std::visit([](const auto& d) { return d.safe_distance; }, get_data(tag));
+    }catch (const std::exception& e) {
+        throw std::runtime_error(e.what());
+    }
+}
+
+/**
+ * @brief RobotConstraintManager::get_vfi_gain
+ * @param tag The tag of the constraint.
+ * @return The VFI gain
+ */
+double RobotConstraintManager::get_vfi_gain(const std::string &tag) const
+{
+    try {
+        return std::visit([](const auto& d) { return d.vfi_gain; }, get_data(tag));
+    }catch (const std::exception& e) {
+        throw std::runtime_error(e.what());
+    }
 }
 
 /**

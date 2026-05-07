@@ -146,6 +146,12 @@ public:
 
     VFIConfigurationFile::Data get_data(const std::string& tag) const;
 
+    //Methods to obtaint data from a VFIConfigurationFile::Data type
+    double get_buffer(const std::string& tag) const;
+    double get_safe_distance(const std::string& tag) const;
+    double get_vfi_gain(const std::string& tag) const;
+
+
 
 
     std::vector<std::string> get_vfi_tags() const;
