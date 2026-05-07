@@ -426,6 +426,77 @@ double RobotConstraintManager::get_vfi_gain(const std::string &tag) const
 }
 
 /**
+ * @brief RobotConstraintManager::get_vfi_direction
+ * @param tag The tag of the constraint.
+ * @return The vfi direction
+ */
+std::string RobotConstraintManager::get_vfi_direction(const std::string &tag) const
+{
+    try {
+        return std::visit([](const auto& d) { return d.direction; }, get_data(tag));
+    }catch (const std::exception& e) {
+        throw std::runtime_error(e.what());
+    }
+}
+
+/**
+ * @brief RobotConstraintManager::get_vfi_type
+ * @param tag The tag of the constraint.
+ * @return The vfi type
+ */
+std::string RobotConstraintManager::get_vfi_type(const std::string &tag) const
+{
+    try {
+        return std::visit([](const auto& d) { return d.vfi_type; }, get_data(tag));
+    }catch (const std::exception& e) {
+        throw std::runtime_error(e.what());
+    }
+}
+
+/**
+ * @brief RobotConstraintManager::get_coppeliasim_entity_one_or_entity_environment_names
+ * @param tag The tag of the constraint.
+ * @return A vector of strings containing the names of the entity one or entity environment names(according to the VFI type)
+ */
+std::vector<std::string> RobotConstraintManager::get_coppeliasim_entity_one_or_entity_environment_names(const std::string &tag) const
+{
+    try {
+        return std::visit([](const auto& d) -> std::vector<std::string> {
+            using T = std::decay_t<decltype(d)>;
+            if constexpr (std::is_same_v<T, VFIConfigurationFile::ENVIRONMENT_TO_ROBOT_DATA>) {
+                return d.cs_entity_environment;
+            } else {
+                return d.cs_entity_one;
+            }
+        }, get_data(tag));
+    } catch (const std::exception& e) {
+        throw std::runtime_error(std::string("Failed to get entities for tag '") + tag + "': " + e.what());
+    }
+}
+
+/**
+ * @brief RobotConstraintManager::get_coppeliasim_entity_two_or_entity_robot_names
+ * @param tag The tag of the constraint.
+ * @return A vector of strings containing the names of the entity two or entity robot names(according to the VFI type)
+ */
+std::vector<std::string> RobotConstraintManager::get_coppeliasim_entity_two_or_entity_robot_names(const std::string &tag) const
+{
+    try {
+        return std::visit([](const auto& d) -> std::vector<std::string> {
+            using T = std::decay_t<decltype(d)>;
+            if constexpr (std::is_same_v<T, VFIConfigurationFile::ENVIRONMENT_TO_ROBOT_DATA>) {
+                return d.cs_entity_robot;
+            } else {
+                return d.cs_entity_two;
+            }
+        }, get_data(tag));
+    } catch (const std::exception& e) {
+        throw std::runtime_error(std::string("Failed to get entities for tag '") + tag + "': " + e.what());
+    }
+}
+
+
+/**
  * @brief RobotConstraintManager::get_vfi_tags returns all tags used in the configuration file
  * @return A vector containing all tags
  */

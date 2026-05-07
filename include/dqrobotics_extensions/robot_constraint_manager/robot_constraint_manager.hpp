@@ -152,6 +152,12 @@ public:
     double get_safe_distance(const std::string& tag) const;
     double get_vfi_gain(const std::string& tag) const;
 
+    std::string get_vfi_direction(const std::string& tag) const;
+    std::string get_vfi_type(const std::string& tag) const;
+
+    std::vector<std::string> get_coppeliasim_entity_one_or_entity_environment_names(const std::string& tag) const;
+    std::vector<std::string> get_coppeliasim_entity_two_or_entity_robot_names(const std::string& tag) const;
+
 
 
 
