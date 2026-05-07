@@ -104,6 +104,8 @@ protected:
 
     bool verbosity_{true};
     DQ   _get_robot_primitive_offset_from_coppeliasim(const std::string& object_name, const int& joint_index);
+
+     [[deprecated("This method is deprecated")]]
     void _initial_settings();
     //void _set_vfi_configuration_constraints_gain(const double& vfi_position_constraints_gain);
     void _check_unit(const std::string& unit);
@@ -141,7 +143,6 @@ public:
     [[deprecated("This method is deprecated")]]
     YAML_RAW_DATA get_raw_yaml_data(const std::string& tag) const;
 
-    [[deprecated("This method is deprecated")]]
     VFI_manager::VFI_BUILD_DATA get_vfi_build_data(const std::string& tag) const;
 
     VFIConfigurationFile::Data get_data(const std::string& tag) const;
