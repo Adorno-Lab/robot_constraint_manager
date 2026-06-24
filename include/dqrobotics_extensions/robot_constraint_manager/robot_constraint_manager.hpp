@@ -170,7 +170,7 @@ public:
     void update_vfi_workspace_derivative(const std::string& tag, const DQ& workspace_derivative);
     void update_vfi_buffer(const std::string& tag, const double& buffer);
 
-    void set_vfi_status(const std::string& tag, const bool status);
+    void set_vfi_status(const std::string& tag, const bool& status);
 
     std::tuple<VectorXd, VectorXd> get_configuration_limits() const;
     std::tuple<VectorXd, VectorXd> get_configuration_velocity_limits() const;
