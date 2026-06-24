@@ -642,7 +642,7 @@ void RobotConstraintManager::update_vfi_buffer(const std::string& tag, const dou
  * @param status true to enable, false to disable
  * @throws std::runtime_error if tag doesn't exist
  */
-void RobotConstraintManager::set_vfi_status(const std::string& tag, const bool status)
+void RobotConstraintManager::set_vfi_status(const std::string& tag, const bool &status)
 {
     try{
         vfi_enable_status_map_.at(tag) = status;
