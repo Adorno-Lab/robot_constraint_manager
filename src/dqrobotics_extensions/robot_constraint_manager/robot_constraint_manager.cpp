@@ -156,6 +156,7 @@ void RobotConstraintManager::_create_build_data()
                 vfi_data.environment_poses = _get_workspace_poses(arg.cs_entity_environment);
                 vfi_data.tag = arg.tag;
                 vfi_build_data_map_.try_emplace(vfi_data.tag, vfi_data);
+                vfi_enable_status_map_.try_emplace(vfi_data.tag, true);
                 if (verbosity_)
                     show_vfi_build_data(vfi_data.tag);
 
@@ -183,6 +184,7 @@ void RobotConstraintManager::_create_build_data()
 
                 //vfi_build_data_list_.push_back(vfi_data);
                 vfi_build_data_map_.try_emplace(vfi_data.tag, vfi_data);
+                vfi_enable_status_map_.try_emplace(vfi_data.tag, true);
                 if (verbosity_)
                     show_vfi_build_data(vfi_data.tag);
             }else {
@@ -253,14 +255,20 @@ std::tuple<MatrixXd, VectorXd> RobotConstraintManager::get_inequality_constraint
     vfi_build_data_list.reserve(n);
 
     for (auto& pair : vfi_build_data_map_)
-        vfi_build_data_list.push_back(pair.second);
+    {
+        auto data = pair.second;
+        if (vfi_enable_status_map_.at(data.tag))
+            vfi_build_data_list.push_back(pair.second);
+    }
+
+
 
     if (include_configuration_constraints)
         VFI_M_->add_configuration_limits(configuration_limit_constraint_gain_, q);
     if (include_configuration_velocity_constraints)
         VFI_M_->add_configuration_velocity_limits();
 
-    for (int i = 0; i<n; i++)
+    for (int i = 0; i<vfi_build_data_list.size(); i++)
         VFI_M_->add_vfi_constraint(vfi_build_data_list.at(i),i,robot_,q,robot_,q);
     /*
     for (int i = 0; i<n; i++)
@@ -624,6 +632,23 @@ void RobotConstraintManager::update_vfi_buffer(const std::string& tag, const dou
     } catch (const std::runtime_error& e) {
         std::cerr<<e.what()<<std::endl;
         throw std::runtime_error("RobotConstraintManager::update_vfi_buffer: Fail to update the VFI data!");
+    }
+}
+
+/**
+ * @brief RobotConstraintManager::set_vfi_status Enable or disable a VFI constraint by its tag
+ *
+ * @param tag   VFI constraint identifier (must exist in the system)
+ * @param status true to enable, false to disable
+ * @throws std::runtime_error if tag doesn't exist
+ */
+void RobotConstraintManager::set_vfi_status(const std::string& tag, const bool status)
+{
+    try{
+        vfi_enable_status_map_.at(tag) = status;
+    } catch (const std::runtime_error& e) {
+        std::cerr<<e.what()<<std::endl;
+        throw std::runtime_error("RobotConstraintManager::set_vfi_status: Fail to update the VFI data!");
     }
 }
 

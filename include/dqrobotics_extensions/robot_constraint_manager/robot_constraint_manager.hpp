@@ -80,6 +80,7 @@ protected:
     //std::vector<VFI_BUILD_DATA> vfi_build_data_list_;
     //----Deprecated--------------------------------------------------
     std::unordered_map<std::string, VFI_manager::VFI_BUILD_DATA> vfi_build_data_map_;
+    std::unordered_map<std::string, bool> vfi_enable_status_map_;
     std::vector<YAML_RAW_DATA> yaml_raw_data_list_;
     std::unordered_map<std::string, YAML_RAW_DATA> yaml_raw_data_map_;
     //-----------------------------------------------------------------
@@ -168,6 +169,8 @@ public:
     void update_vfi_workspace_pose(const std::string& tag, const DQ& workspace_pose);
     void update_vfi_workspace_derivative(const std::string& tag, const DQ& workspace_derivative);
     void update_vfi_buffer(const std::string& tag, const double& buffer);
+
+    void set_vfi_status(const std::string& tag, const bool status);
 
     std::tuple<VectorXd, VectorXd> get_configuration_limits() const;
     std::tuple<VectorXd, VectorXd> get_configuration_velocity_limits() const;

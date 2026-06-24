@@ -60,13 +60,15 @@ int main()
 
             DQ xd = cs->get_object_pose("ReferenceFrame");
             auto q = panda->get_configuration();
+            rcm.set_vfi_status("C5", false);
+            rcm.set_vfi_status("C4", false);
             auto [A,b] = rcm.get_inequality_constraints(q, false, false);
 
             controller.set_inequality_constraint(A,b);
             auto u = controller.compute_setpoint_control_signal(q, xd.translation().vec4());
             panda->set_target_configuration_velocities(u);
 
-
+/*
             double dist = rcm.get_vfi_distance_error(tag);
             std::cout<<"Constraint tag="+tag+". distance_error: "<<dist<<std::endl;
             if (dist < 0)
@@ -74,6 +76,7 @@ int main()
                 std::cerr<<"Collision!"<<std::endl;
                 losses++;
             }
+*/
 
             // Varying-time VFI
 
@@ -86,9 +89,10 @@ int main()
             rcm.update_vfi_workspace_pose(ctag, xsphere);
             rcm.update_vfi_workspace_derivative(ctag, z_dot);
 
-            rcm.get_buffer("X90");
-            rcm.get_safe_distance(ctag);
-            rcm.get_vfi_gain(ctag);
+
+           // rcm.get_buffer("X90");
+           // rcm.get_safe_distance(ctag);
+           // rcm.get_vfi_gain(ctag);
 
             cs->trigger_next_simulation_step();
         }
