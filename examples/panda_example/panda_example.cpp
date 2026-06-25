@@ -9,7 +9,7 @@
 #include <dqrobotics/solvers/DQ_QPOASESSolver.h>
 #include <dqrobotics_extensions/robot_constraint_manager/robot_constraint_manager.hpp>
 #include <dqrobotics_extensions/robot_constraint_editor/vfi_configuration_file_yaml.hpp>
-
+#include <dqrobotics_extensions/robot_constraint_manager/data_recorder.hpp>
 
 int main()
 {
@@ -26,6 +26,8 @@ int main()
         controller.set_control_objective(ControlObjective::Translation);
         controller.set_gain(1.0);
         controller.set_damping(0.01);
+
+        DQ_robotics_extensions::DataRecorder dr_distance{DQ_robotics_extensions::DataRecorder::TYPE::VECTORXD};
 
 
 
@@ -60,8 +62,8 @@ int main()
 
             DQ xd = cs->get_object_pose("ReferenceFrame");
             auto q = panda->get_configuration();
-            rcm.set_vfi_status("C5", false);
-            rcm.set_vfi_status("C4", false);
+            //rcm.set_vfi_status("C5", false);
+            //rcm.set_vfi_status("C4", false);
             auto [A,b] = rcm.get_inequality_constraints(q, false, false);
 
             controller.set_inequality_constraint(A,b);
@@ -93,6 +95,9 @@ int main()
            // rcm.get_buffer("X90");
            // rcm.get_safe_distance(ctag);
            // rcm.get_vfi_gain(ctag);
+            auto [distance, square_distance, distance_error, square_distance_error, line_to_line_angle_rad, vfi_type] = rcm.get_vfi_log_data("C4");
+
+            dr_distance.add_data(distance);
 
             cs->trigger_next_simulation_step();
         }
@@ -100,6 +105,8 @@ int main()
 
         cs->stop_simulation();
         std::cout<<"Losses: "<<losses<<std::endl;
+
+        dr_distance.save_data("test");
 
 
     }

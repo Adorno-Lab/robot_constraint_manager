@@ -43,6 +43,7 @@ if (${LOCAL_TESTS})
         ../../src/dqrobotics_extensions/robot_constraint_manager/vfi_manager.cpp
         ../../src/dqrobotics_extensions/robot_constraint_manager/constraints_manager.cpp
         ../../src/dqrobotics_extensions/robot_constraint_manager/utils.cpp
+        ../../src/dqrobotics_extensions/robot_constraint_manager/data_recorder.cpp
     )
     add_library(robot_constraint_manager
         ${RCM_SOURCES}
