@@ -56,7 +56,8 @@ public:
 RobotConstraintManager::RobotConstraintManager(const std::shared_ptr<DQ_CoppeliaSimInterface> &coppelia_interface,
                                                const std::shared_ptr<DQ_CoppeliaSimRobot> &coppeliasim_robot,
                                                const std::shared_ptr<DQ_Kinematics> &robot,
-                                               const std::string &yaml_file_path, const bool &verbosity,
+                                               const std::string &yaml_file_path,
+                                               const bool &verbosity,
                                                const VFI_Framework::LEVEL &level)
     :cs_{coppelia_interface}, config_path_{yaml_file_path}, level_{level},
     robot_{robot}, coppelia_robot_{coppeliasim_robot},
@@ -268,7 +269,7 @@ std::tuple<MatrixXd, VectorXd> RobotConstraintManager::get_inequality_constraint
     if (include_configuration_velocity_constraints)
         VFI_M_->add_configuration_velocity_limits();
 
-    for (int i = 0; i<vfi_build_data_list.size(); i++)
+    for (size_t i = 0; i<vfi_build_data_list.size(); i++)
         VFI_M_->add_vfi_constraint(vfi_build_data_list.at(i),i,robot_,q,robot_,q);
     /*
     for (int i = 0; i<n; i++)
@@ -729,7 +730,7 @@ DQ RobotConstraintManager::_get_robot_primitive_offset_from_coppeliasim(const st
 }
 
 std::vector<DQ> RobotConstraintManager::_get_coppeliasim_offsets(const std::vector<std::string>& primitives,
-                                                                 const int& robot_index,
+                                                                 [[maybe_unused]] const int& robot_index,
                                                                  const int& joint_index)
 {
     const int n = primitives.size();
