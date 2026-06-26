@@ -27,7 +27,7 @@ int main()
         controller.set_gain(1.0);
         controller.set_damping(0.01);
 
-        DQ_robotics_extensions::DataRecorder dr_distance{DQ_robotics_extensions::DataRecorder::TYPE::VECTORXD};
+        DQ_robotics_extensions::DataRecorder dr_distance{};
 
 
 

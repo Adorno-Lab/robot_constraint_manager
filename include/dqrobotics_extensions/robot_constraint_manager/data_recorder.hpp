@@ -37,12 +37,9 @@ using namespace Eigen;
 namespace DQ_robotics_extensions {
 class DataRecorder
 {
-public:
-    enum class TYPE{
-        VECTORXD,
-    };
+
 private:
-    TYPE type_;
+    //TYPE type_;
     std::ofstream data_logger_;
     bool first_call_{true};
     MatrixXd matrix_data_;
@@ -50,7 +47,7 @@ private:
     int i_{0};
     //list_vel_ref.open("list_vel_ref.csv");
 public:
-    DataRecorder(const TYPE& type);
+    DataRecorder();
 
 
     void add_data(const VectorXd& data);

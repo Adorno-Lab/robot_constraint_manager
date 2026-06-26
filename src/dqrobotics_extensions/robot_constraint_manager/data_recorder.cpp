@@ -3,8 +3,7 @@
 #include <string>
 
 
-DQ_robotics_extensions::DataRecorder::DataRecorder(const TYPE &type)
-:type_{type}
+DQ_robotics_extensions::DataRecorder::DataRecorder()
 {
 
 }
@@ -12,25 +11,15 @@ DQ_robotics_extensions::DataRecorder::DataRecorder(const TYPE &type)
 
 void DQ_robotics_extensions::DataRecorder::add_data(const VectorXd &data)
 {
-    switch (type_) {
-        case TYPE::VECTORXD:
-        {
-            if (first_call_)
-            {
-                vector_size_ =  data.size();
-                matrix_data_ = data;
-                first_call_ = false;
-            }
-            matrix_data_ = Numpy::resize(matrix_data_, matrix_data_.rows(), matrix_data_.cols()+1);
-            i_ = i_ + 1;
-            matrix_data_.block(0,i_, vector_size_, 1) = data;
-            //matrix_data_.block(0, matrix_data_.cols() - 1, vector_size_, 1) = data;
-            break;
-        };
-        default:
-            throw std::runtime_error("DataRecorder::add_data: Wrong type of data.");
-
+    if (first_call_)
+    {
+        vector_size_ =  data.size();
+        matrix_data_ = data;
+        first_call_ = false;
     }
+    matrix_data_ = Numpy::resize(matrix_data_, matrix_data_.rows(), matrix_data_.cols()+1);
+    i_ = i_ + 1;
+    matrix_data_.block(0,i_, vector_size_, 1) = data;
 }
 
 void DQ_robotics_extensions::DataRecorder::add_data(const double &data)
