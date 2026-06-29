@@ -840,6 +840,8 @@ void RobotConstraintManager::_initial_settings()
                     if (verbosity_)
                         show_vfi_build_data(vfi_data.tag);
 
+                    vfi_enable_status_map_.try_emplace(vfi_data.tag, true);
+
                 }else if (raw_vfi_mode == "ROBOT_TO_ROBOT"){
 
                     auto raw_cs_entity_one = pos["cs_entity_one"].as<std::string>();
@@ -901,6 +903,7 @@ void RobotConstraintManager::_initial_settings()
                     vfi_build_data_map_.try_emplace(vfi_data.tag, vfi_data);
                     if (verbosity_)
                         show_vfi_build_data(vfi_data.tag);
+                    vfi_enable_status_map_.try_emplace(vfi_data.tag, true);
 
 
                 }else if(raw_vfi_mode =="CONFIGURATION_LIMITS"){
@@ -951,8 +954,6 @@ void RobotConstraintManager::_initial_settings()
                         std::cout<<"q_dot_max:    "<<q_dot_max.transpose()<<std::endl;
                         std::cout<<"---------------------------------------------"<<std::endl;
                     }
-
-
                 }
                 else{
                     throw std::runtime_error("Wrong vfi mode. USE ENVIRONMENT_TO_ROBOT, ROBOT_TO_ROBOT, CONFIGURATION_LIMITS or"
