@@ -583,18 +583,20 @@ void VFI_manager::add_vfi_constraint(const VFI_BUILD_DATA& build_data,
 
                 const DQ workspace_line = (workspace_pose.P())*workspace_attached_direction*(workspace_pose.P().conj());
                 const double safe_angle = safe_distance*(pi/180);  //Convert to radians
+                const double buffer_angle = build_data.buffer*(pi/180);  //Convert to radians
                 const DQ& robot_line_direction = robot_attached_direction;
                 const MatrixXd Jl = DQ_Kinematics::line_jacobian(robot_pose_jacobian, robot_pose,robot_line_direction);
                 const DQ r = robot_pose.P();
                 const DQ robot_line = r*(robot_line_direction)*r.conj();
                 const MatrixXd Jfphi = DQ_Kinematics::line_to_line_angle_jacobian(Jl,robot_line,workspace_line);
-                const double fsafe = 2-2*cos(safe_angle);
+                const double fsafe   = 2-2*cos(safe_angle);
+                const double fbuffer = 2-2*cos(buffer_angle);
                 const double phi = DQ_Geometry::line_to_line_angle(robot_line, workspace_line);
                 const double f = 2-2*cos(phi);
                 const double ferror = f-fsafe;
                 const double residual = DQ_Kinematics::line_to_line_angle_residual(robot_line,workspace_line,-workspace_derivative);
                 //VectorXd b = DQ_robotics_extensions::CVectorXd({vfi_gain*(ferror) + residual});
-                _add_vfi_constraint(Jfphi, vfi_gain, ferror,residual, direction, build_data.buffer);
+                _add_vfi_constraint(Jfphi, vfi_gain, ferror,residual, direction, fbuffer);
                 //#############-log data-###############
                 VFI_LOG_DATA data;
                 data.vfi_class = VFI_CLASS::RLINE_TO_LINE_ANGLE;
