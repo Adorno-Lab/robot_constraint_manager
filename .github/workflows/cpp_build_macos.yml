@@ -55,7 +55,7 @@ jobs:
 
       - name: Install robot-constrait-editor
         run: |
-          git clone https://github.com/Adorno-Lab/robot_constraint_editor 
+          git clone -b new_config_file https://github.com/Adorno-Lab/robot_constraint_editor
           cd robot_constraint_editor
           mkdir -p build && cd build
           cmake .. && make && sudo make install      
