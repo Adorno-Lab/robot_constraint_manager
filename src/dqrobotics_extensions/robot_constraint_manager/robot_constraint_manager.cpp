@@ -187,6 +187,7 @@ RobotConstraintManager::RobotConstraintManager(const std::shared_ptr<DQ_Kinemati
     vfi_zero_indexed_ = document_v3_.zero_indexed;
     robot_index_convention_ = vfi_zero_indexed_ ? 0 : 1;
     number_of_constraints_ = document_v3_.vfi_array.size();
+    _create_build_data_v3();
 }
 
 /**
@@ -269,6 +270,104 @@ void RobotConstraintManager::_create_build_data_v2()
     }
 
 
+}
+
+
+/**
+ * @brief RobotConstraintManager::_create_build_data_v3 creates the build data of the VFIs defined in a
+ *        version 3 configuration file. The primitive offsets, the workspace poses, and the attached directions
+ *        are obtained from the entities defined in the file.
+ */
+void RobotConstraintManager::_create_build_data_v3()
+{
+    std::unordered_map<std::string, const VFIConfigurationFile::ENVIRONMENT_ENTITY*> environment_entities;
+    for (const auto& entity : document_v3_.environment_entities)
+        environment_entities.try_emplace(entity.name, &entity);
+
+    std::unordered_map<std::string, const VFIConfigurationFile::ROBOT_ENTITY*> robot_entities;
+    for (const auto& entity : document_v3_.robot_entities)
+        robot_entities.try_emplace(entity.name, &entity);
+
+    // The document is validated in the constructor. Therefore, every entity name exists in its table, and the
+    // entities of a LINESEGMENT have the same robot_index and joint_index.
+    auto get_offsets = [&robot_entities](const std::vector<std::string>& names)
+    {
+        std::vector<DQ> offsets;
+        offsets.reserve(names.size());
+        for (const auto& name : names)
+            offsets.emplace_back(VFIConfigurationFileV3::pose_to_dq(robot_entities.at(name)->offset));
+        return offsets;
+    };
+    auto get_poses = [&environment_entities](const std::vector<std::string>& names)
+    {
+        std::vector<DQ> poses;
+        poses.reserve(names.size());
+        for (const auto& name : names)
+            poses.emplace_back(VFIConfigurationFileV3::pose_to_dq(environment_entities.at(name)->pose));
+        return poses;
+    };
+
+    for (const auto& data_item : document_v3_.vfi_array)
+    {
+        std::visit([&](const auto& arg){
+            using T = std::decay_t<decltype(arg)>;
+            if constexpr (std::is_same_v<T, VFIConfigurationFile::ENVIRONMENT_TO_ROBOT_DATA_V3>) {
+                const auto& robot_entity = *robot_entities.at(arg.entity_robot.at(0));
+                const auto& environment_entity = *environment_entities.at(arg.entity_environment.at(0));
+
+                VFI_manager::VFI_BUILD_DATA vfi_data;
+                vfi_data.vfi_type  = VFI_manager::VFI_TYPE::ENVIRONMENT_TO_ROBOT;
+                vfi_data.vfi_class = VFI_Framework::map_strings_to_vfiClass(arg.entity_robot_primitive_type,
+                                                                            arg.entity_environment_primitive_type);
+                vfi_data.direction = VFI_Framework::map_string_to_vfiDirection(arg.direction);
+                vfi_data.safe_distance = arg.safe_distance;
+                vfi_data.buffer = arg.buffer;
+                vfi_data.vfi_gain = arg.vfi_gain;
+                vfi_data.robot_index_one = robot_entity.robot_index-robot_index_convention_;
+                vfi_data.robot_index_two = -1;
+                vfi_data.joint_index_one = robot_entity.joint_index-robot_index_convention_;
+                vfi_data.joint_index_two = -1;
+                vfi_data.primitive_offsets_one = get_offsets(arg.entity_robot);
+                vfi_data.primitive_offsets_two = {DQ(-1)};
+                vfi_data.robot_attached_direction =
+                    VFI_Framework::map_attached_direction_string_to_dq(robot_entity.attached_direction);
+                vfi_data.environment_attached_direction =
+                    VFI_Framework::map_attached_direction_string_to_dq(environment_entity.attached_direction);
+                vfi_data.workspace_derivative = DQ(0);
+                vfi_data.environment_poses = get_poses(arg.entity_environment);
+                vfi_data.tag = arg.tag;
+                _add_build_data(vfi_data);
+
+            }else if constexpr (std::is_same_v<T, VFIConfigurationFile::ROBOT_TO_ROBOT_DATA_V3>){
+                const auto& robot_entity_one = *robot_entities.at(arg.entity_one.at(0));
+                const auto& robot_entity_two = *robot_entities.at(arg.entity_two.at(0));
+
+                VFI_manager::VFI_BUILD_DATA vfi_data;
+                vfi_data.vfi_type  = VFI_manager::VFI_TYPE::ROBOT_TO_ROBOT;
+                vfi_data.vfi_class = VFI_Framework::map_strings_to_vfiClass(arg.entity_one_primitive_type,
+                                                                            arg.entity_two_primitive_type);
+                // As in version 2, the direction and the attached directions are not used yet.
+                vfi_data.direction = VFI_Framework::DIRECTION::RESTRICTED_ZONE;
+                vfi_data.safe_distance = arg.safe_distance;
+                vfi_data.buffer = arg.buffer;
+                vfi_data.vfi_gain = arg.vfi_gain;
+                vfi_data.robot_index_one = robot_entity_one.robot_index-robot_index_convention_;
+                vfi_data.robot_index_two = robot_entity_two.robot_index-robot_index_convention_;
+                vfi_data.joint_index_one = robot_entity_one.joint_index-robot_index_convention_;
+                vfi_data.joint_index_two = robot_entity_two.joint_index-robot_index_convention_;
+                vfi_data.primitive_offsets_one = get_offsets(arg.entity_one);
+                vfi_data.primitive_offsets_two = get_offsets(arg.entity_two);
+                vfi_data.robot_attached_direction = DQ(-1);
+                vfi_data.environment_attached_direction = DQ(-1);
+                vfi_data.workspace_derivative = DQ(0);
+                vfi_data.environment_poses = {DQ(-1)};
+                vfi_data.tag = arg.tag;
+                _add_build_data(vfi_data);
+            }else {
+                throw std::runtime_error("Unsupported VFI TYPE!");
+            }
+        }, data_item);
+    }
 }
 
 

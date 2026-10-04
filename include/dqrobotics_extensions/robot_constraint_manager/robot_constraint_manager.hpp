@@ -111,6 +111,7 @@ protected:
     //void _set_vfi_configuration_constraints_gain(const double& vfi_position_constraints_gain);
     void _check_unit(const std::string& unit);
     void _create_build_data_v2();
+    void _create_build_data_v3();
     void _add_build_data(const VFI_manager::VFI_BUILD_DATA& vfi_data);
 public:
     [[deprecated("This constructor is deprecated")]]
