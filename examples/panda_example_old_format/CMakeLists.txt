@@ -6,7 +6,7 @@ project(panda_example_old_format LANGUAGES CXX)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-set(LOCAL_TESTS ON)
+set(LOCAL_TESTS OFF)
 
 find_package(Eigen3 REQUIRED)
 if (APPLE)

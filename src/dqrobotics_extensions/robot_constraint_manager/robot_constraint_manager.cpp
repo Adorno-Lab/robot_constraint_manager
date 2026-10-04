@@ -23,6 +23,7 @@
 
 #include <dqrobotics_extensions/robot_constraint_manager/robot_constraint_manager.hpp>
 #include <dqrobotics_extensions/robot_constraint_editor/utils.hpp>
+#include <dqrobotics_extensions/robot_constraint_editor/vfi_configuration_file_v3.hpp>
 #include <yaml-cpp/yaml.h>
 
 
@@ -105,6 +106,10 @@ RobotConstraintManager::RobotConstraintManager(const std::shared_ptr<DQ_Coppelia
         throw std::runtime_error(e.what());
     }
 
+    if (config_file_reader_->get_vfi_file_version() == 3)
+        throw std::runtime_error("RobotConstraintManager: The configuration file " + config_path_ + " uses the version 3. "
+                                 "Use the constructor that does not require CoppeliaSim.");
+
     if (!config_file_reader_->is_zero_indexed())
         robot_index_convention_ = 1;
     else
@@ -120,11 +125,104 @@ RobotConstraintManager::RobotConstraintManager(const std::shared_ptr<DQ_Coppelia
         std::visit([&tag](const auto& d){tag = d.tag;}, data_item);
         data_map_.try_emplace(tag, data_item);
     }
-    _create_build_data();
+    _create_build_data_v2();
 
 }
 
+/**
+ * @brief RobotConstraintManager::RobotConstraintManager constructor of the class. It requires a version 3
+ *        configuration file, which contains the poses and offsets of the entities. Therefore, CoppeliaSim is not required.
+ * @param robot The kinematic model used to build the constraints.
+ * @param config_file_reader The object used to read the configuration file.
+ * @param yaml_file_path The path of the version 3 configuration file.
+ * @param verbosity
+ * @param level
+ */
+RobotConstraintManager::RobotConstraintManager(const std::shared_ptr<DQ_Kinematics> &robot,
+                                               const std::shared_ptr<VFIConfigurationFile> &config_file_reader,
+                                               const std::string &yaml_file_path,
+                                               const bool &verbosity,
+                                               const VFI_Framework::LEVEL &level)
+    :config_path_{yaml_file_path},
+    level_{level},
+    robot_{robot},
+    config_file_reader_{config_file_reader},
+    rce_compatible_{true},
+    configuration_limit_constraint_gain_{1},
+    verbosity_{verbosity}
+{
+    if (!robot_)
+        throw std::runtime_error("RobotConstraintManager: The robot cannot be a null pointer.");
+    if (!config_file_reader_)
+        throw std::runtime_error("RobotConstraintManager: The config_file_reader cannot be a null pointer.");
+
+    VFI_M_ = std::make_shared<DQ_robotics_extensions::VFI_manager>(robot_->get_dim_configuration_space());
+    try {
+        config_file_reader_->load_data(config_path_);
+    } catch (const std::exception& e) {
+        throw std::runtime_error(e.what());
+    }
+
+    vfi_file_version_ = config_file_reader_->get_vfi_file_version();
+    if (vfi_file_version_ != 3)
+        throw std::runtime_error("RobotConstraintManager: The configuration file " + config_path_ + " uses the version "
+                                 + std::to_string(vfi_file_version_) + ". This constructor requires the version 3. "
+                                 "Use the constructor that requires CoppeliaSim instead.");
+
+    document_v3_ = std::get<VFIConfigurationFile::DOCUMENT_V3>(config_file_reader_->get_document());
+
+    // The reader is not required to validate the document. Rule 2 is completed below.
+    try {
+        VFIConfigurationFileV3::validate(document_v3_);
+    } catch (const std::exception& e) {
+        throw std::runtime_error("RobotConstraintManager: Invalid configuration file " + config_path_ + ". " + e.what());
+    }
+
+    const int dim_configuration = document_v3_.robots.at(0).dim_configuration;
+    if (dim_configuration != robot_->get_dim_configuration_space())
+        throw std::runtime_error("RobotConstraintManager: The configuration file " + config_path_ + " defines a robot with "
+                                 + std::to_string(dim_configuration) + " DoF, but the kinematic model has "
+                                 + std::to_string(robot_->get_dim_configuration_space()) + " DoF.");
+
+    vfi_zero_indexed_ = document_v3_.zero_indexed;
+    robot_index_convention_ = vfi_zero_indexed_ ? 0 : 1;
+    number_of_constraints_ = document_v3_.vfi_array.size();
+    for (const auto& data_item : document_v3_.vfi_array)
+    {
+        std::string tag;
+        std::visit([&tag](const auto& d){tag = d.tag;}, data_item);
+        data_v3_map_.try_emplace(tag, data_item);
+    }
+    _create_build_data_v3();
+}
+
+/**
+ * @brief RobotConstraintManager::_add_build_data stores the build data of a VFI and enables it.
+ * @param vfi_data The build data of the VFI.
+ */
+void RobotConstraintManager::_add_build_data(const VFI_manager::VFI_BUILD_DATA &vfi_data)
+{
+    vfi_build_data_map_.try_emplace(vfi_data.tag, vfi_data);
+    vfi_enable_status_map_.try_emplace(vfi_data.tag, true);
+    if (verbosity_)
+        show_vfi_build_data(vfi_data.tag);
+}
+
+/**
+ * @brief RobotConstraintManager::_create_build_data creates the build data of the VFIs defined in a
+ *        version 2 configuration file. This method is deprecated and kept for backward compatibility.
+ *        Use _create_build_data_v2() instead.
+ */
 void RobotConstraintManager::_create_build_data()
+{
+    _create_build_data_v2();
+}
+
+/**
+ * @brief RobotConstraintManager::_create_build_data_v2 creates the build data of the VFIs defined in a
+ *        version 2 configuration file. The primitive offsets and the workspace poses are obtained from CoppeliaSim.
+ */
+void RobotConstraintManager::_create_build_data_v2()
 {
     if (!rce_compatible_)
         throw std::runtime_error("Invalid call. This private method requires the version 2 of the configuration File Specification");
@@ -156,10 +254,7 @@ void RobotConstraintManager::_create_build_data()
                 vfi_data.workspace_derivative = DQ(0);
                 vfi_data.environment_poses = _get_workspace_poses(arg.cs_entity_environment);
                 vfi_data.tag = arg.tag;
-                vfi_build_data_map_.try_emplace(vfi_data.tag, vfi_data);
-                vfi_enable_status_map_.try_emplace(vfi_data.tag, true);
-                if (verbosity_)
-                    show_vfi_build_data(vfi_data.tag);
+                _add_build_data(vfi_data);
 
             }else if constexpr (std::is_same_v<T, VFIConfigurationFile::ROBOT_TO_ROBOT_DATA>){
                 VFI_manager::VFI_BUILD_DATA vfi_data;
@@ -182,12 +277,7 @@ void RobotConstraintManager::_create_build_data()
                 vfi_data.workspace_derivative = DQ(0);
                 vfi_data.environment_poses = {DQ(-1)};
                 vfi_data.tag = arg.tag;
-
-                //vfi_build_data_list_.push_back(vfi_data);
-                vfi_build_data_map_.try_emplace(vfi_data.tag, vfi_data);
-                vfi_enable_status_map_.try_emplace(vfi_data.tag, true);
-                if (verbosity_)
-                    show_vfi_build_data(vfi_data.tag);
+                _add_build_data(vfi_data);
             }else {
                 throw std::runtime_error("Unsupported VFI TYPE!");
             }
@@ -196,6 +286,109 @@ void RobotConstraintManager::_create_build_data()
     }
 
 
+}
+
+
+/**
+ * @brief RobotConstraintManager::_create_build_data_v3 creates the build data of the VFIs defined in a
+ *        version 3 configuration file. The primitive offsets, the workspace poses, and the attached directions
+ *        are obtained from the entities defined in the file.
+ */
+void RobotConstraintManager::_create_build_data_v3()
+{
+    std::unordered_map<std::string, const VFIConfigurationFile::ENVIRONMENT_ENTITY*> environment_entities;
+    for (const auto& entity : document_v3_.environment_entities)
+    {
+        environment_entities.try_emplace(entity.name, &entity);
+        environment_entity_usage_.try_emplace(entity.name);
+    }
+
+    std::unordered_map<std::string, const VFIConfigurationFile::ROBOT_ENTITY*> robot_entities;
+    for (const auto& entity : document_v3_.robot_entities)
+        robot_entities.try_emplace(entity.name, &entity);
+
+    // The document is validated in the constructor. Therefore, every entity name exists in its table, and the
+    // entities of a LINESEGMENT have the same robot_index and joint_index.
+    auto get_offsets = [&robot_entities](const std::vector<std::string>& names)
+    {
+        std::vector<DQ> offsets;
+        offsets.reserve(names.size());
+        for (const auto& name : names)
+            offsets.emplace_back(VFIConfigurationFileV3::pose_to_dq(robot_entities.at(name)->offset));
+        return offsets;
+    };
+    auto get_poses = [&environment_entities](const std::vector<std::string>& names)
+    {
+        std::vector<DQ> poses;
+        poses.reserve(names.size());
+        for (const auto& name : names)
+            poses.emplace_back(VFIConfigurationFileV3::pose_to_dq(environment_entities.at(name)->pose));
+        return poses;
+    };
+
+    for (const auto& data_item : document_v3_.vfi_array)
+    {
+        std::visit([&](const auto& arg){
+            using T = std::decay_t<decltype(arg)>;
+            if constexpr (std::is_same_v<T, VFIConfigurationFile::ENVIRONMENT_TO_ROBOT_DATA_V3>) {
+                const auto& robot_entity = *robot_entities.at(arg.entity_robot.at(0));
+                const auto& environment_entity = *environment_entities.at(arg.entity_environment.at(0));
+
+                VFI_manager::VFI_BUILD_DATA vfi_data;
+                vfi_data.vfi_type  = VFI_manager::VFI_TYPE::ENVIRONMENT_TO_ROBOT;
+                vfi_data.vfi_class = VFI_Framework::map_strings_to_vfiClass(arg.entity_robot_primitive_type,
+                                                                            arg.entity_environment_primitive_type);
+                vfi_data.direction = VFI_Framework::map_string_to_vfiDirection(arg.direction);
+                vfi_data.safe_distance = arg.safe_distance;
+                vfi_data.buffer = arg.buffer;
+                vfi_data.vfi_gain = arg.vfi_gain;
+                vfi_data.robot_index_one = robot_entity.robot_index-robot_index_convention_;
+                vfi_data.robot_index_two = -1;
+                vfi_data.joint_index_one = robot_entity.joint_index-robot_index_convention_;
+                vfi_data.joint_index_two = -1;
+                vfi_data.primitive_offsets_one = get_offsets(arg.entity_robot);
+                vfi_data.primitive_offsets_two = {DQ(-1)};
+                vfi_data.robot_attached_direction =
+                    VFI_Framework::map_attached_direction_string_to_dq(robot_entity.attached_direction);
+                vfi_data.environment_attached_direction =
+                    VFI_Framework::map_attached_direction_string_to_dq(environment_entity.attached_direction);
+                vfi_data.workspace_derivative = DQ(0);
+                vfi_data.environment_poses = get_poses(arg.entity_environment);
+                for (std::size_t i = 0; i < arg.entity_environment.size(); i++)
+                    environment_entity_usage_.at(arg.entity_environment.at(i)).emplace_back(arg.tag, i);
+                vfi_data.tag = arg.tag;
+                _add_build_data(vfi_data);
+
+            }else if constexpr (std::is_same_v<T, VFIConfigurationFile::ROBOT_TO_ROBOT_DATA_V3>){
+                const auto& robot_entity_one = *robot_entities.at(arg.entity_one.at(0));
+                const auto& robot_entity_two = *robot_entities.at(arg.entity_two.at(0));
+
+                VFI_manager::VFI_BUILD_DATA vfi_data;
+                vfi_data.vfi_type  = VFI_manager::VFI_TYPE::ROBOT_TO_ROBOT;
+                vfi_data.vfi_class = VFI_Framework::map_strings_to_vfiClass(arg.entity_one_primitive_type,
+                                                                            arg.entity_two_primitive_type);
+                // As in version 2, the direction and the attached directions are not used yet.
+                vfi_data.direction = VFI_Framework::DIRECTION::RESTRICTED_ZONE;
+                vfi_data.safe_distance = arg.safe_distance;
+                vfi_data.buffer = arg.buffer;
+                vfi_data.vfi_gain = arg.vfi_gain;
+                vfi_data.robot_index_one = robot_entity_one.robot_index-robot_index_convention_;
+                vfi_data.robot_index_two = robot_entity_two.robot_index-robot_index_convention_;
+                vfi_data.joint_index_one = robot_entity_one.joint_index-robot_index_convention_;
+                vfi_data.joint_index_two = robot_entity_two.joint_index-robot_index_convention_;
+                vfi_data.primitive_offsets_one = get_offsets(arg.entity_one);
+                vfi_data.primitive_offsets_two = get_offsets(arg.entity_two);
+                vfi_data.robot_attached_direction = DQ(-1);
+                vfi_data.environment_attached_direction = DQ(-1);
+                vfi_data.workspace_derivative = DQ(0);
+                vfi_data.environment_poses = {DQ(-1)};
+                vfi_data.tag = arg.tag;
+                _add_build_data(vfi_data);
+            }else {
+                throw std::runtime_error("Unsupported VFI TYPE!");
+            }
+        }, data_item);
+    }
 }
 
 
@@ -250,27 +443,20 @@ std::tuple<MatrixXd, VectorXd> RobotConstraintManager::get_inequality_constraint
                                                                                   const bool &include_configuration_constraints,
                                                                                   const bool &include_configuration_velocity_constraints)
 {
-    const int n = vfi_build_data_map_.size();
-    //const int robot_dim = robot_->get_dim_configuration_space();
-    std::vector<VFI_manager::VFI_BUILD_DATA> vfi_build_data_list;
-    vfi_build_data_list.reserve(n);
-
-    for (auto& pair : vfi_build_data_map_)
-    {
-        auto data = pair.second;
-        if (vfi_enable_status_map_.at(data.tag))
-            vfi_build_data_list.push_back(pair.second);
-    }
-
-
-
     if (include_configuration_constraints)
         VFI_M_->add_configuration_limits(configuration_limit_constraint_gain_, q);
     if (include_configuration_velocity_constraints)
         VFI_M_->add_configuration_velocity_limits();
 
-    for (size_t i = 0; i<vfi_build_data_list.size(); i++)
-        VFI_M_->add_vfi_constraint(vfi_build_data_list.at(i),i,robot_,q,robot_,q);
+    // VFI_manager requires each tag to keep the same stack position across calls. Therefore, the position
+    // counts every VFI, including the disabled ones, so enabling or disabling a VFI does not shift the others.
+    int stack_position = 0;
+    for (const auto& [tag, data] : vfi_build_data_map_)
+    {
+        if (vfi_enable_status_map_.at(tag))
+            VFI_M_->add_vfi_constraint(data, stack_position, robot_, q, robot_, q);
+        stack_position++;
+    }
     /*
     for (int i = 0; i<n; i++)
     {
@@ -371,18 +557,21 @@ VFI_manager::VFI_BUILD_DATA RobotConstraintManager::get_vfi_build_data(const std
 RobotConstraintManager::YAML_RAW_DATA RobotConstraintManager::get_raw_yaml_data(const std::string &tag) const
 {
     if (rce_compatible_)
-        throw std::runtime_error("Invalid call. This method is not available for version 2.0");
+        throw std::runtime_error("Invalid call. This method is not available for versions 2 and 3.");
 
     return yaml_raw_data_map_.at(tag);
 }
 
 /**
- * @brief RobotConstraintManager::get_data returns the data from the YAML file.
+ * @brief RobotConstraintManager::get_data returns the data from a version 2 configuration file.
+ *        For version 3 files, use get_data_v3().
  * @param tag The tag of the constraint.
  * @return the data of the constraint.
  */
 VFIConfigurationFile::Data RobotConstraintManager::get_data(const std::string& tag) const
 {
+    if (vfi_file_version_ == 3)
+        throw std::runtime_error("Invalid call. get_data() supports only version 2 files. Use get_data_v3() instead.");
 
     try {
         return data_map_.at(tag);
@@ -393,6 +582,52 @@ VFIConfigurationFile::Data RobotConstraintManager::get_data(const std::string& t
 }
 
 /**
+ * @brief RobotConstraintManager::get_data_v3 returns the data from a version 3 configuration file.
+ *        For version 2 files, use get_data().
+ * @param tag The tag of the constraint.
+ * @return the data of the constraint.
+ */
+VFIConfigurationFile::DataV3 RobotConstraintManager::get_data_v3(const std::string& tag) const
+{
+    if (vfi_file_version_ != 3)
+        throw std::runtime_error("Invalid call. get_data_v3() supports only version 3 files. Use get_data() instead.");
+
+    try {
+        return data_v3_map_.at(tag);
+    }catch (const std::exception& e){
+        std::cerr<<"Tag "+tag+" not found!"<<std::endl;
+        throw std::runtime_error(e.what());
+    }
+}
+
+/**
+ * @brief RobotConstraintManager::get_document returns the complete content of the configuration file.
+ * @return A DOCUMENT_V2 or a DOCUMENT_V3, depending on the file version.
+ */
+VFIConfigurationFile::Document RobotConstraintManager::get_document() const
+{
+    if (!rce_compatible_)
+        throw std::runtime_error("Invalid call. This method requires the version 2 or 3 of the configuration File Specification");
+
+    if (vfi_file_version_ == 3)
+        return document_v3_;
+    return VFIConfigurationFile::DOCUMENT_V2{vfi_zero_indexed_, data_list_};
+}
+
+/**
+ * @brief RobotConstraintManager::_get_base_data returns the data shared by every VFI type and file version.
+ * @param tag The tag of the constraint.
+ * @return The BASE_DATA of the constraint.
+ */
+VFIConfigurationFile::BASE_DATA RobotConstraintManager::_get_base_data(const std::string &tag) const
+{
+    auto to_base_data = [](const auto& d) -> VFIConfigurationFile::BASE_DATA { return d; };
+    if (vfi_file_version_ == 3)
+        return std::visit(to_base_data, get_data_v3(tag));
+    return std::visit(to_base_data, get_data(tag));
+}
+
+/**
  * @brief RobotConstraintManager::get_buffer
  * @param tag The tag of the constraint.
  * @return the buffer
@@ -400,7 +635,7 @@ VFIConfigurationFile::Data RobotConstraintManager::get_data(const std::string& t
 double RobotConstraintManager::get_buffer(const std::string &tag) const
 {
     try {
-        return std::visit([](const auto& d) { return d.buffer; }, get_data(tag));
+        return _get_base_data(tag).buffer;
     }catch (const std::exception& e) {
         throw std::runtime_error(e.what());
     }
@@ -414,7 +649,7 @@ double RobotConstraintManager::get_buffer(const std::string &tag) const
 double RobotConstraintManager::get_safe_distance(const std::string &tag) const
 {
     try {
-        return std::visit([](const auto& d) { return d.safe_distance; }, get_data(tag));
+        return _get_base_data(tag).safe_distance;
     }catch (const std::exception& e) {
         throw std::runtime_error(e.what());
     }
@@ -428,7 +663,7 @@ double RobotConstraintManager::get_safe_distance(const std::string &tag) const
 double RobotConstraintManager::get_vfi_gain(const std::string &tag) const
 {
     try {
-        return std::visit([](const auto& d) { return d.vfi_gain; }, get_data(tag));
+        return _get_base_data(tag).vfi_gain;
     }catch (const std::exception& e) {
         throw std::runtime_error(e.what());
     }
@@ -442,7 +677,7 @@ double RobotConstraintManager::get_vfi_gain(const std::string &tag) const
 std::string RobotConstraintManager::get_vfi_direction(const std::string &tag) const
 {
     try {
-        return std::visit([](const auto& d) { return d.direction; }, get_data(tag));
+        return _get_base_data(tag).direction;
     }catch (const std::exception& e) {
         throw std::runtime_error(e.what());
     }
@@ -456,7 +691,7 @@ std::string RobotConstraintManager::get_vfi_direction(const std::string &tag) co
 std::string RobotConstraintManager::get_vfi_type(const std::string &tag) const
 {
     try {
-        return std::visit([](const auto& d) { return d.vfi_type; }, get_data(tag));
+        return _get_base_data(tag).vfi_type;
     }catch (const std::exception& e) {
         throw std::runtime_error(e.what());
     }
@@ -464,41 +699,85 @@ std::string RobotConstraintManager::get_vfi_type(const std::string &tag) const
 
 /**
  * @brief RobotConstraintManager::get_coppeliasim_entity_one_or_entity_environment_names
+ *        This method is deprecated. Use get_entity_one_or_entity_environment_names() instead.
  * @param tag The tag of the constraint.
  * @return A vector of strings containing the names of the entity one or entity environment names(according to the VFI type)
  */
 std::vector<std::string> RobotConstraintManager::get_coppeliasim_entity_one_or_entity_environment_names(const std::string &tag) const
 {
+    if (vfi_file_version_ == 3)
+        throw std::runtime_error("Invalid call. Version 3 files do not use CoppeliaSim names. "
+                                 "Use get_entity_one_or_entity_environment_names() instead.");
+    return get_entity_one_or_entity_environment_names(tag);
+}
+
+/**
+ * @brief RobotConstraintManager::get_coppeliasim_entity_two_or_entity_robot_names
+ *        This method is deprecated. Use get_entity_two_or_entity_robot_names() instead.
+ * @param tag The tag of the constraint.
+ * @return A vector of strings containing the names of the entity two or entity robot names(according to the VFI type)
+ */
+std::vector<std::string> RobotConstraintManager::get_coppeliasim_entity_two_or_entity_robot_names(const std::string &tag) const
+{
+    if (vfi_file_version_ == 3)
+        throw std::runtime_error("Invalid call. Version 3 files do not use CoppeliaSim names. "
+                                 "Use get_entity_two_or_entity_robot_names() instead.");
+    return get_entity_two_or_entity_robot_names(tag);
+}
+
+/**
+ * @brief RobotConstraintManager::get_entity_one_or_entity_environment_names
+ * @param tag The tag of the constraint.
+ * @return A vector of strings containing the names of the entity one or entity environment names (according to the VFI type).
+ *         These are CoppeliaSim object names in version 2 files, and entity names in version 3 files.
+ */
+std::vector<std::string> RobotConstraintManager::get_entity_one_or_entity_environment_names(const std::string &tag) const
+{
+    auto get_names = [](const auto& d) -> std::vector<std::string> {
+        using T = std::decay_t<decltype(d)>;
+        if constexpr (std::is_same_v<T, VFIConfigurationFile::ENVIRONMENT_TO_ROBOT_DATA>) {
+            return d.cs_entity_environment;
+        } else if constexpr (std::is_same_v<T, VFIConfigurationFile::ROBOT_TO_ROBOT_DATA>) {
+            return d.cs_entity_one;
+        } else if constexpr (std::is_same_v<T, VFIConfigurationFile::ENVIRONMENT_TO_ROBOT_DATA_V3>) {
+            return d.entity_environment;
+        } else {
+            return d.entity_one;
+        }
+    };
     try {
-        return std::visit([](const auto& d) -> std::vector<std::string> {
-            using T = std::decay_t<decltype(d)>;
-            if constexpr (std::is_same_v<T, VFIConfigurationFile::ENVIRONMENT_TO_ROBOT_DATA>) {
-                return d.cs_entity_environment;
-            } else {
-                return d.cs_entity_one;
-            }
-        }, get_data(tag));
+        if (vfi_file_version_ == 3)
+            return std::visit(get_names, get_data_v3(tag));
+        return std::visit(get_names, get_data(tag));
     } catch (const std::exception& e) {
         throw std::runtime_error(std::string("Failed to get entities for tag '") + tag + "': " + e.what());
     }
 }
 
 /**
- * @brief RobotConstraintManager::get_coppeliasim_entity_two_or_entity_robot_names
+ * @brief RobotConstraintManager::get_entity_two_or_entity_robot_names
  * @param tag The tag of the constraint.
- * @return A vector of strings containing the names of the entity two or entity robot names(according to the VFI type)
+ * @return A vector of strings containing the names of the entity two or entity robot names (according to the VFI type).
+ *         These are CoppeliaSim object names in version 2 files, and entity names in version 3 files.
  */
-std::vector<std::string> RobotConstraintManager::get_coppeliasim_entity_two_or_entity_robot_names(const std::string &tag) const
+std::vector<std::string> RobotConstraintManager::get_entity_two_or_entity_robot_names(const std::string &tag) const
 {
+    auto get_names = [](const auto& d) -> std::vector<std::string> {
+        using T = std::decay_t<decltype(d)>;
+        if constexpr (std::is_same_v<T, VFIConfigurationFile::ENVIRONMENT_TO_ROBOT_DATA>) {
+            return d.cs_entity_robot;
+        } else if constexpr (std::is_same_v<T, VFIConfigurationFile::ROBOT_TO_ROBOT_DATA>) {
+            return d.cs_entity_two;
+        } else if constexpr (std::is_same_v<T, VFIConfigurationFile::ENVIRONMENT_TO_ROBOT_DATA_V3>) {
+            return d.entity_robot;
+        } else {
+            return d.entity_two;
+        }
+    };
     try {
-        return std::visit([](const auto& d) -> std::vector<std::string> {
-            using T = std::decay_t<decltype(d)>;
-            if constexpr (std::is_same_v<T, VFIConfigurationFile::ENVIRONMENT_TO_ROBOT_DATA>) {
-                return d.cs_entity_robot;
-            } else {
-                return d.cs_entity_two;
-            }
-        }, get_data(tag));
+        if (vfi_file_version_ == 3)
+            return std::visit(get_names, get_data_v3(tag));
+        return std::visit(get_names, get_data(tag));
     } catch (const std::exception& e) {
         throw std::runtime_error(std::string("Failed to get entities for tag '") + tag + "': " + e.what());
     }
@@ -577,7 +856,7 @@ void RobotConstraintManager::show_vfi_build_data(const std::string &tag) const
         std::cout<<"workspace derivative:            "<<data.workspace_derivative<<std::endl;
         std::cout<<"cs_entity_environment_pose:      "<<data.environment_poses.at(0)<<std::endl;
         std::cout<<"---------------------------------------------"<<std::endl;
-    } catch (const std::runtime_error& e) {
+    } catch (const std::exception& e) {
         std::cerr<<e.what()<<std::endl;
         throw std::runtime_error("RobotConstraintManager::show_vfi_build_data: VFI TAG not found!");
 }
@@ -591,11 +870,12 @@ void RobotConstraintManager::show_vfi_build_data(const std::string &tag) const
  */
 void RobotConstraintManager::update_vfi_workspace_derivative(const std::string &tag, const DQ &workspace_derivative)
 {
+    _warn_if_shared_environment_entity(tag, "update_vfi_workspace_derivative");
     try{
         VFI_manager::VFI_BUILD_DATA data = vfi_build_data_map_.at(tag);
         data.workspace_derivative = workspace_derivative;
         vfi_build_data_map_.insert_or_assign(tag,data);
-    } catch (const std::runtime_error& e) {
+    } catch (const std::exception& e) {
         std::cerr<<e.what()<<std::endl;
         throw std::runtime_error("RobotConstraintManager::update_vfi_workspace_derivative: Fail to update the VFI data!");
     }
@@ -608,14 +888,107 @@ void RobotConstraintManager::update_vfi_workspace_derivative(const std::string &
  */
 void RobotConstraintManager::update_vfi_workspace_pose(const std::string &tag, const DQ &workspace_pose)
 {
+    _warn_if_shared_environment_entity(tag, "update_vfi_workspace_pose");
     try{
         VFI_manager::VFI_BUILD_DATA data = vfi_build_data_map_.at(tag);
         data.environment_poses.at(0) = workspace_pose;
         vfi_build_data_map_.insert_or_assign(tag,data);
-    } catch (const std::runtime_error& e) {
+    } catch (const std::exception& e) {
         std::cerr<<e.what()<<std::endl;
         throw std::runtime_error("RobotConstraintManager::update_vfi_workspace: Fail to update the VFI data!");
     }
+}
+
+/**
+ * @brief RobotConstraintManager::update_environment_entity_pose updates the pose of an environment entity
+ *        in every VFI that uses it, including the disabled ones. The attached direction of the entity is constant
+ *        and expressed in the entity frame. Therefore, it is applied to the updated pose.
+ *        The loaded configuration file and the document returned by get_document() are not modified.
+ *        This method requires a version 3 configuration file.
+ * @param name The name of the environment entity, as defined in the configuration file.
+ * @param pose The new pose of the entity, expressed in the same frame as DQ_Kinematics::fkm().
+ */
+void RobotConstraintManager::update_environment_entity_pose(const std::string &name, const DQ &pose)
+{
+    if (vfi_file_version_ != 3)
+        throw std::runtime_error("RobotConstraintManager::update_environment_entity_pose: This method requires a "
+                                 "version 3 configuration file. Use update_vfi_workspace_pose() instead.");
+
+    const auto usage = environment_entity_usage_.find(name);
+    if (usage == environment_entity_usage_.end())
+        throw std::runtime_error("RobotConstraintManager::update_environment_entity_pose: '" + name +
+                                 "' is not an environment entity.");
+
+    if (!is_unit(pose))
+        throw std::runtime_error("RobotConstraintManager::update_environment_entity_pose: The pose of '" + name +
+                                 "' must be a unit dual quaternion.");
+
+    for (const auto& [tag, index] : usage->second)
+        vfi_build_data_map_.at(tag).environment_poses.at(index) = pose;
+}
+
+/**
+ * @brief RobotConstraintManager::_warn_if_shared_environment_entity shows a warning, once per tag, if the
+ *        first environment entity of the VFI is used by other VFIs. In that case, a per-tag update does
+ *        not update the other VFIs. This check applies only to version 3 configuration files.
+ * @param tag The tag of the constraint.
+ * @param method_name The name of the per-tag method, used in the warning.
+ */
+void RobotConstraintManager::_warn_if_shared_environment_entity(const std::string &tag, const std::string &method_name)
+{
+    if (vfi_file_version_ != 3 || shared_entity_warned_tags_.count(tag))
+        return;
+
+    const auto data = data_v3_map_.find(tag);
+    if (data == data_v3_map_.end())
+        return;
+    const auto* env_data = std::get_if<VFIConfigurationFile::ENVIRONMENT_TO_ROBOT_DATA_V3>(&data->second);
+    if (!env_data)
+        return;
+
+    const std::string& name = env_data->entity_environment.at(0);
+    std::vector<std::string> other_tags;
+    for (const auto& [other_tag, index] : environment_entity_usage_.at(name))
+        if (other_tag != tag)
+            other_tags.push_back(other_tag);
+    if (other_tags.empty())
+        return;
+
+    shared_entity_warned_tags_.insert(tag);
+    std::cerr<<"Warning: RobotConstraintManager::"<<method_name<<": The environment entity '"<<name
+             <<"' of the VFI "<<tag<<" is also used by other VFIs ("<<join_vector(other_tags)<<"), which are not updated. "
+             <<"Use the update_environment_entity_* methods to update all of them. "
+             <<"This warning is shown once per tag."<<std::endl;
+}
+
+/**
+ * @brief RobotConstraintManager::update_environment_entity_derivative updates the time derivative of the pose of an
+ *        environment entity in every VFI that uses it, including the disabled ones.
+ *        The loaded configuration file and the document returned by get_document() are not modified.
+ *        This method requires a version 3 configuration file.
+ * @param name The name of the environment entity, as defined in the configuration file.
+ * @param derivative The new derivative of the entity.
+ */
+void RobotConstraintManager::update_environment_entity_derivative(const std::string &name, const DQ &derivative)
+{
+    if (vfi_file_version_ != 3)
+        throw std::runtime_error("RobotConstraintManager::update_environment_entity_derivative: This method requires a "
+                                 "version 3 configuration file. Use update_vfi_workspace_derivative() instead.");
+
+    const auto usage = environment_entity_usage_.find(name);
+    if (usage == environment_entity_usage_.end())
+        throw std::runtime_error("RobotConstraintManager::update_environment_entity_derivative: '" + name +
+                                 "' is not an environment entity.");
+
+    // Each VFI stores a single workspace derivative, which corresponds to its first environment entity.
+    for (const auto& [tag, index] : usage->second)
+        if (index != 0)
+            throw std::runtime_error("RobotConstraintManager::update_environment_entity_derivative: '" + name +
+                                     "' is not the first environment entity of the VFI " + tag +
+                                     ". Its derivative is not supported.");
+
+    for (const auto& [tag, index] : usage->second)
+        vfi_build_data_map_.at(tag).workspace_derivative = derivative;
 }
 
 /**
@@ -630,7 +1003,7 @@ void RobotConstraintManager::update_vfi_buffer(const std::string& tag, const dou
         VFI_manager::VFI_BUILD_DATA data = vfi_build_data_map_.at(tag);
         data.buffer = buffer;
         vfi_build_data_map_.insert_or_assign(tag, data);
-    } catch (const std::runtime_error& e) {
+    } catch (const std::exception& e) {
         std::cerr<<e.what()<<std::endl;
         throw std::runtime_error("RobotConstraintManager::update_vfi_buffer: Fail to update the VFI data!");
     }
@@ -647,10 +1020,32 @@ void RobotConstraintManager::set_vfi_status(const std::string& tag, const bool &
 {
     try{
         vfi_enable_status_map_.at(tag) = status;
-    } catch (const std::runtime_error& e) {
+    } catch (const std::exception& e) {
         std::cerr<<e.what()<<std::endl;
         throw std::runtime_error("RobotConstraintManager::set_vfi_status: Fail to update the VFI data!");
     }
+}
+
+/**
+ * @brief RobotConstraintManager::enable_vfi enables a VFI constraint by its tag. It is equivalent to
+ *        set_vfi_status(tag, true).
+ * @param tag VFI constraint identifier (must exist in the system)
+ * @throws std::runtime_error if tag doesn't exist
+ */
+void RobotConstraintManager::enable_vfi(const std::string &tag)
+{
+    set_vfi_status(tag, true);
+}
+
+/**
+ * @brief RobotConstraintManager::disable_vfi disables a VFI constraint by its tag. It is equivalent to
+ *        set_vfi_status(tag, false).
+ * @param tag VFI constraint identifier (must exist in the system)
+ * @throws std::runtime_error if tag doesn't exist
+ */
+void RobotConstraintManager::disable_vfi(const std::string &tag)
+{
+    set_vfi_status(tag, false);
 }
 
 

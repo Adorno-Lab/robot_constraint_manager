@@ -44,7 +44,7 @@ jobs:
 
       - name: Install robot-constrait-editor
         run: |
-          git clone https://github.com/Adorno-Lab/robot_constraint_editor 
+          git clone https://github.com/Adorno-Lab/robot_constraint_editor
           cd robot_constraint_editor
           mkdir -p build && cd build
           cmake .. && make && sudo make install
@@ -56,6 +56,14 @@ jobs:
           
       - name: Install
         run: sh ./cpp/.github/scripts/macos/install.sh
+
+      - name: Run unit tests for version 3 files (no CoppeliaSim)
+        run: |
+             # Update the cache of the dynamic linker, so the libraries installed in /usr/local/lib are found
+             sudo ldconfig
+             cmake -S . -B build_tests
+             cmake --build build_tests --target unit_tests_v3
+             ./build_tests/unit_tests_v3
 
       - name: Build examples (panda_example)
         run: |

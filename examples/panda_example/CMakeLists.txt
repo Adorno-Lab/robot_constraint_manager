@@ -44,6 +44,8 @@ if (${LOCAL_TESTS})
         ../../src/dqrobotics_extensions/robot_constraint_manager/constraints_manager.cpp
         ../../src/dqrobotics_extensions/robot_constraint_manager/utils.cpp
         ../../src/dqrobotics_extensions/robot_constraint_manager/data_recorder.cpp
+        ../../src/dqrobotics_extensions/robot_constraint_manager/vfi_configuration_file_v3_generator.cpp
+        ../../src/dqrobotics_extensions/robot_constraint_manager/vfi_coppeliasim_scene.cpp
     )
     add_library(robot_constraint_manager
         ${RCM_SOURCES}
@@ -81,6 +83,31 @@ add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E copy_if_different
         ${YAML_FILE}
         $<TARGET_FILE_DIR:${PROJECT_NAME}>)
+
+# COPY the Yaml config file to the build folder
+set(YAML_FILE ${CMAKE_CURRENT_SOURCE_DIR}/cfg/vfi_constraints_v3.yaml)
+add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different
+        ${YAML_FILE}
+        $<TARGET_FILE_DIR:${PROJECT_NAME}>)
+
+# Tool to create version 3 configuration files using the CoppeliaSim scene
+add_executable(panda_v3_generator
+               panda_v3_generator.cpp)
+
+target_link_libraries(panda_v3_generator
+    dqrobotics
+    dqrobotics-interface-coppeliasim-zmq
+    robot_constraint_manager
+    robot_constraint_editor
+    Eigen3::Eigen)
+
+# COPY the Yaml template to the build folder
+set(YAML_FILE ${CMAKE_CURRENT_SOURCE_DIR}/cfg/vfi_constraints_v3_template.yaml)
+add_custom_command(TARGET panda_v3_generator POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different
+        ${YAML_FILE}
+        $<TARGET_FILE_DIR:panda_v3_generator>)
 
 if (APPLE)
     # For some reason, on my local tests running on macOS,

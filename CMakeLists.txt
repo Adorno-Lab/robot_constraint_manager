@@ -53,6 +53,8 @@ add_library(${PROJECT_NAME} SHARED
     src/dqrobotics_extensions/robot_constraint_manager/constraints_manager.cpp
     src/dqrobotics_extensions/robot_constraint_manager/utils.cpp
     src/dqrobotics_extensions/robot_constraint_manager/data_recorder.cpp
+    src/dqrobotics_extensions/robot_constraint_manager/vfi_configuration_file_v3_generator.cpp
+    src/dqrobotics_extensions/robot_constraint_manager/vfi_coppeliasim_scene.cpp
 )
 
 target_include_directories(${PROJECT_NAME} PRIVATE
@@ -88,6 +90,8 @@ INSTALL(FILES
     include/dqrobotics_extensions/robot_constraint_manager/vfi_framework.hpp
     include/dqrobotics_extensions/robot_constraint_manager/vfi_manager.hpp
     include/dqrobotics_extensions/robot_constraint_manager/data_recorder.hpp
+    include/dqrobotics_extensions/robot_constraint_manager/vfi_configuration_file_v3_generator.hpp
+    include/dqrobotics_extensions/robot_constraint_manager/vfi_coppeliasim_scene.hpp
 
     DESTINATION "include/dqrobotics_extensions/robot_constraint_manager")
 
@@ -104,8 +108,23 @@ target_link_libraries(unit_tests
      robot_constraint_editor
 )
 
+# Unit tests for version 3 configuration files. CoppeliaSim is not required.
+add_executable(unit_tests_v3
+    tests/unit_tests_v3.cpp
+    tests/unit_tests_v3_generator.cpp)
+
+target_compile_definitions(unit_tests_v3 PRIVATE
+    V3_TEST_CONFIG_FILE="${CMAKE_CURRENT_SOURCE_DIR}/tests/cfg/vfi_constraints_v3.yaml")
+
+target_link_libraries(unit_tests_v3
+    dqrobotics
+    gtest_main
+    ${PROJECT_NAME}
+    robot_constraint_editor
+)
+
 # COPY the Yaml config file to the build folder
-set(YAML_FILE ${CMAKE_CURRENT_SOURCE_DIR}/examples/panda_example/cfg/vfi_constraints_3.yaml)
+set(YAML_FILE ${CMAKE_CURRENT_SOURCE_DIR}/examples/panda_example/cfg/vfi_constraints_2.yaml)
 
 
 add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD

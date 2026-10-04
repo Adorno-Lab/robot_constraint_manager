@@ -30,6 +30,7 @@
 #include <dqrobotics/utils/DQ_Math.h>
 #include <memory>
 #include <unordered_map>
+#include <unordered_set>
 
 using namespace Eigen;
 using namespace DQ_robotics;
@@ -74,6 +75,14 @@ private:
 
     std::vector<VFIConfigurationFile::Data> data_list_;
     std::unordered_map<std::string, VFIConfigurationFile::Data> data_map_;
+    VFIConfigurationFile::DOCUMENT_V3 document_v3_;
+    std::unordered_map<std::string, VFIConfigurationFile::DataV3> data_v3_map_;
+    // For each environment entity, the (tag, index in environment_poses) of the VFIs that use it.
+    std::unordered_map<std::string, std::vector<std::pair<std::string, std::size_t>>> environment_entity_usage_;
+    std::unordered_set<std::string> shared_entity_warned_tags_;
+    void _warn_if_shared_environment_entity(const std::string& tag, const std::string& method_name);
+
+    VFIConfigurationFile::BASE_DATA _get_base_data(const std::string& tag) const;
 
 protected:
 
@@ -95,7 +104,7 @@ protected:
     std::shared_ptr<DQ_robotics_extensions::VFIConfigurationFile> config_file_reader_;
     bool rce_compatible_;
     int robot_index_convention_;
-    int vfi_file_version_;
+    int vfi_file_version_{0}; // 0: legacy file used by the deprecated constructor
     bool vfi_zero_indexed_;
 
     double configuration_limit_constraint_gain_;
@@ -109,7 +118,11 @@ protected:
     void _initial_settings();
     //void _set_vfi_configuration_constraints_gain(const double& vfi_position_constraints_gain);
     void _check_unit(const std::string& unit);
+    [[deprecated("This method is deprecated. Use _create_build_data_v2() instead.")]]
     void _create_build_data();
+    void _create_build_data_v2();
+    void _create_build_data_v3();
+    void _add_build_data(const VFI_manager::VFI_BUILD_DATA& vfi_data);
 public:
     [[deprecated("This constructor is deprecated")]]
     RobotConstraintManager(const std::shared_ptr<DQ_CoppeliaSimInterface>& coppelia_interface,
@@ -119,6 +132,8 @@ public:
                            const bool& verbosity = false,
                            const VFI_manager::LEVEL& level = VFI_manager::LEVEL::VELOCITIES);
 
+    [[deprecated("This constructor is deprecated. Use a version 3 configuration file with the constructor "
+                 "that does not require CoppeliaSim.")]]
     RobotConstraintManager(const std::shared_ptr<DQ_CoppeliaSimInterface>& coppelia_interface,
                            const std::shared_ptr<DQ_CoppeliaSimRobot>& coppeliasim_robot,
                            const std::shared_ptr<DQ_Kinematics>& robot,
@@ -127,6 +142,12 @@ public:
                            const bool& verbosity = false,
                            const VFI_manager::LEVEL& level = VFI_manager::LEVEL::VELOCITIES);
 
+
+    RobotConstraintManager(const std::shared_ptr<DQ_Kinematics>& robot,
+                           const std::shared_ptr<VFIConfigurationFile>& config_file_reader,
+                           const std::string &yaml_file_path,
+                           const bool& verbosity = false,
+                           const VFI_manager::LEVEL& level = VFI_manager::LEVEL::VELOCITIES);
 
 
     int get_number_of_vfi_constraints() const;
@@ -146,6 +167,8 @@ public:
     VFI_manager::VFI_BUILD_DATA get_vfi_build_data(const std::string& tag) const;
 
     VFIConfigurationFile::Data get_data(const std::string& tag) const;
+    VFIConfigurationFile::DataV3 get_data_v3(const std::string& tag) const;
+    VFIConfigurationFile::Document get_document() const;
 
     //Methods to obtaint data from a VFIConfigurationFile::Data type
     double get_buffer(const std::string& tag) const;
@@ -155,8 +178,13 @@ public:
     std::string get_vfi_direction(const std::string& tag) const;
     std::string get_vfi_type(const std::string& tag) const;
 
+    [[deprecated("This method is deprecated. Use get_entity_one_or_entity_environment_names() instead.")]]
     std::vector<std::string> get_coppeliasim_entity_one_or_entity_environment_names(const std::string& tag) const;
+    [[deprecated("This method is deprecated. Use get_entity_two_or_entity_robot_names() instead.")]]
     std::vector<std::string> get_coppeliasim_entity_two_or_entity_robot_names(const std::string& tag) const;
+
+    std::vector<std::string> get_entity_one_or_entity_environment_names(const std::string& tag) const;
+    std::vector<std::string> get_entity_two_or_entity_robot_names(const std::string& tag) const;
 
 
 
@@ -167,9 +195,13 @@ public:
     void show_vfi_build_data(const std::string& tag) const;
     void update_vfi_workspace_pose(const std::string& tag, const DQ& workspace_pose);
     void update_vfi_workspace_derivative(const std::string& tag, const DQ& workspace_derivative);
+    void update_environment_entity_pose(const std::string& name, const DQ& pose);
+    void update_environment_entity_derivative(const std::string& name, const DQ& derivative);
     void update_vfi_buffer(const std::string& tag, const double& buffer);
 
     void set_vfi_status(const std::string& tag, const bool& status);
+    void enable_vfi(const std::string& tag);
+    void disable_vfi(const std::string& tag);
 
     std::tuple<VectorXd, VectorXd> get_configuration_limits() const;
     std::tuple<VectorXd, VectorXd> get_configuration_velocity_limits() const;
