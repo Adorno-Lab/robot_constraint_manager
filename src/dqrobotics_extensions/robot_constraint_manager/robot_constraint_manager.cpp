@@ -209,6 +209,16 @@ void RobotConstraintManager::_add_build_data(const VFI_manager::VFI_BUILD_DATA &
 }
 
 /**
+ * @brief RobotConstraintManager::_create_build_data creates the build data of the VFIs defined in a
+ *        version 2 configuration file. This method is deprecated and kept for backward compatibility.
+ *        Use _create_build_data_v2() instead.
+ */
+void RobotConstraintManager::_create_build_data()
+{
+    _create_build_data_v2();
+}
+
+/**
  * @brief RobotConstraintManager::_create_build_data_v2 creates the build data of the VFIs defined in a
  *        version 2 configuration file. The primitive offsets and the workspace poses are obtained from CoppeliaSim.
  */
