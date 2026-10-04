@@ -198,6 +198,8 @@ public:
     void update_vfi_buffer(const std::string& tag, const double& buffer);
 
     void set_vfi_status(const std::string& tag, const bool& status);
+    void enable_vfi(const std::string& tag);
+    void disable_vfi(const std::string& tag);
 
     std::tuple<VectorXd, VectorXd> get_configuration_limits() const;
     std::tuple<VectorXd, VectorXd> get_configuration_velocity_limits() const;

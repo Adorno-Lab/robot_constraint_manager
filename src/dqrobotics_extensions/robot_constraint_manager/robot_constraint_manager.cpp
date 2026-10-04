@@ -1023,6 +1023,28 @@ void RobotConstraintManager::set_vfi_status(const std::string& tag, const bool &
     }
 }
 
+/**
+ * @brief RobotConstraintManager::enable_vfi enables a VFI constraint by its tag. It is equivalent to
+ *        set_vfi_status(tag, true).
+ * @param tag VFI constraint identifier (must exist in the system)
+ * @throws std::runtime_error if tag doesn't exist
+ */
+void RobotConstraintManager::enable_vfi(const std::string &tag)
+{
+    set_vfi_status(tag, true);
+}
+
+/**
+ * @brief RobotConstraintManager::disable_vfi disables a VFI constraint by its tag. It is equivalent to
+ *        set_vfi_status(tag, false).
+ * @param tag VFI constraint identifier (must exist in the system)
+ * @throws std::runtime_error if tag doesn't exist
+ */
+void RobotConstraintManager::disable_vfi(const std::string &tag)
+{
+    set_vfi_status(tag, false);
+}
+
 
 /**
  * @brief RobotConstraintManager::get_configuration_limits returns the configuration limits.
