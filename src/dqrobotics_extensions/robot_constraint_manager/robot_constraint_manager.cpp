@@ -23,6 +23,7 @@
 
 #include <dqrobotics_extensions/robot_constraint_manager/robot_constraint_manager.hpp>
 #include <dqrobotics_extensions/robot_constraint_editor/utils.hpp>
+#include <dqrobotics_extensions/robot_constraint_editor/vfi_configuration_file_v3.hpp>
 #include <yaml-cpp/yaml.h>
 
 
@@ -128,13 +129,64 @@ RobotConstraintManager::RobotConstraintManager(const std::shared_ptr<DQ_Coppelia
 
 }
 
+/**
+ * @brief RobotConstraintManager::RobotConstraintManager constructor of the class. It requires a version 3
+ *        configuration file, which contains the poses and offsets of the entities. Therefore, CoppeliaSim is not required.
+ * @param robot The kinematic model used to build the constraints.
+ * @param config_file_reader The object used to read the configuration file.
+ * @param yaml_file_path The path of the version 3 configuration file.
+ * @param verbosity
+ * @param level
+ */
 RobotConstraintManager::RobotConstraintManager(const std::shared_ptr<DQ_Kinematics> &robot,
                                                const std::shared_ptr<VFIConfigurationFile> &config_file_reader,
                                                const std::string &yaml_file_path,
                                                const bool &verbosity,
                                                const VFI_Framework::LEVEL &level)
+    :config_path_{yaml_file_path},
+    level_{level},
+    robot_{robot},
+    config_file_reader_{config_file_reader},
+    rce_compatible_{true},
+    configuration_limit_constraint_gain_{1},
+    verbosity_{verbosity}
 {
+    if (!robot_)
+        throw std::runtime_error("RobotConstraintManager: The robot cannot be a null pointer.");
+    if (!config_file_reader_)
+        throw std::runtime_error("RobotConstraintManager: The config_file_reader cannot be a null pointer.");
 
+    VFI_M_ = std::make_shared<DQ_robotics_extensions::VFI_manager>(robot_->get_dim_configuration_space());
+    try {
+        config_file_reader_->load_data(config_path_);
+    } catch (const std::exception& e) {
+        throw std::runtime_error(e.what());
+    }
+
+    vfi_file_version_ = config_file_reader_->get_vfi_file_version();
+    if (vfi_file_version_ != 3)
+        throw std::runtime_error("RobotConstraintManager: The configuration file " + config_path_ + " uses the version "
+                                 + std::to_string(vfi_file_version_) + ". This constructor requires the version 3. "
+                                 "Use the constructor that requires CoppeliaSim instead.");
+
+    document_v3_ = std::get<VFIConfigurationFile::DOCUMENT_V3>(config_file_reader_->get_document());
+
+    // The reader is not required to validate the document. Rule 2 is completed below.
+    try {
+        VFIConfigurationFileV3::validate(document_v3_);
+    } catch (const std::exception& e) {
+        throw std::runtime_error("RobotConstraintManager: Invalid configuration file " + config_path_ + ". " + e.what());
+    }
+
+    const int dim_configuration = document_v3_.robots.at(0).dim_configuration;
+    if (dim_configuration != robot_->get_dim_configuration_space())
+        throw std::runtime_error("RobotConstraintManager: The configuration file " + config_path_ + " defines a robot with "
+                                 + std::to_string(dim_configuration) + " DoF, but the kinematic model has "
+                                 + std::to_string(robot_->get_dim_configuration_space()) + " DoF.");
+
+    vfi_zero_indexed_ = document_v3_.zero_indexed;
+    robot_index_convention_ = vfi_zero_indexed_ ? 0 : 1;
+    number_of_constraints_ = document_v3_.vfi_array.size();
 }
 
 /**

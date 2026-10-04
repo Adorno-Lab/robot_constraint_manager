@@ -74,6 +74,7 @@ private:
 
     std::vector<VFIConfigurationFile::Data> data_list_;
     std::unordered_map<std::string, VFIConfigurationFile::Data> data_map_;
+    VFIConfigurationFile::DOCUMENT_V3 document_v3_;
 
 protected:
 
@@ -120,6 +121,8 @@ public:
                            const bool& verbosity = false,
                            const VFI_manager::LEVEL& level = VFI_manager::LEVEL::VELOCITIES);
 
+    [[deprecated("This constructor is deprecated. Use a version 3 configuration file with the constructor "
+                 "that does not require CoppeliaSim.")]]
     RobotConstraintManager(const std::shared_ptr<DQ_CoppeliaSimInterface>& coppelia_interface,
                            const std::shared_ptr<DQ_CoppeliaSimRobot>& coppeliasim_robot,
                            const std::shared_ptr<DQ_Kinematics>& robot,
@@ -129,7 +132,6 @@ public:
                            const VFI_manager::LEVEL& level = VFI_manager::LEVEL::VELOCITIES);
 
 
-    // New constructor without CoppeliaSim
     RobotConstraintManager(const std::shared_ptr<DQ_Kinematics>& robot,
                            const std::shared_ptr<VFIConfigurationFile>& config_file_reader,
                            const std::string &yaml_file_path,
