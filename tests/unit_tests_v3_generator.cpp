@@ -314,6 +314,7 @@ TEST_F(VFIConfigurationFileV3GeneratorTest, UpdateFromSceneFillsTemplate)
     EXPECT_EQ(find_robot_entity(document, "rsphere").joint_index, 7);
     EXPECT_EQ(document.vfi_array.size(), template_document.vfi_array.size());
     EXPECT_EQ(document.metadata.description, template_document.metadata.description);
+    EXPECT_EQ(document.metadata.generated_by, "robot_constraint_manager (VFIConfigurationFileV3Generator)");
 }
 
 TEST_F(VFIConfigurationFileV3GeneratorTest, UpdateFromSceneRejectsMissingObject)

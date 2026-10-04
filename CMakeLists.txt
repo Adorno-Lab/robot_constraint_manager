@@ -54,6 +54,7 @@ add_library(${PROJECT_NAME} SHARED
     src/dqrobotics_extensions/robot_constraint_manager/utils.cpp
     src/dqrobotics_extensions/robot_constraint_manager/data_recorder.cpp
     src/dqrobotics_extensions/robot_constraint_manager/vfi_configuration_file_v3_generator.cpp
+    src/dqrobotics_extensions/robot_constraint_manager/vfi_coppeliasim_scene.cpp
 )
 
 target_include_directories(${PROJECT_NAME} PRIVATE
@@ -90,6 +91,7 @@ INSTALL(FILES
     include/dqrobotics_extensions/robot_constraint_manager/vfi_manager.hpp
     include/dqrobotics_extensions/robot_constraint_manager/data_recorder.hpp
     include/dqrobotics_extensions/robot_constraint_manager/vfi_configuration_file_v3_generator.hpp
+    include/dqrobotics_extensions/robot_constraint_manager/vfi_coppeliasim_scene.hpp
 
     DESTINATION "include/dqrobotics_extensions/robot_constraint_manager")
 

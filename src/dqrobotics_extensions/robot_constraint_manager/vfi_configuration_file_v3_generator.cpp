@@ -234,7 +234,8 @@ VFIConfigurationFile::DOCUMENT_V3 VFIConfigurationFileV3Generator::create_from_v
 /**
  * @brief VFIConfigurationFileV3Generator::update_from_scene updates the pose of every environment entity and the
  *        offset of every robot entity of a version 3 configuration file, using the scene objects with the same names.
- *        The rest of the file (e.g., the joint indexes, the attached directions, and the VFIs) is not modified.
+ *        The rest of the file (e.g., the joint indexes, the attached directions, and the VFIs) is not modified,
+ *        except the field generated_by of the metadata.
  *        This method can be used to create configuration files from a template, in which the poses and offsets are
  *        placeholders.
  * @param document The version 3 configuration file.
@@ -251,6 +252,7 @@ VFIConfigurationFile::DOCUMENT_V3 VFIConfigurationFileV3Generator::update_from_s
 
     const VectorXd q = _get_configuration();
     VFIConfigurationFile::DOCUMENT_V3 output = document;
+    output.metadata.generated_by = "robot_constraint_manager (VFIConfigurationFileV3Generator)";
     for (auto& entity : output.environment_entities)
         entity.pose = _get_environment_entity_pose(entity.name);
     for (auto& entity : output.robot_entities)
