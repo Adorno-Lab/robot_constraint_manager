@@ -187,6 +187,12 @@ RobotConstraintManager::RobotConstraintManager(const std::shared_ptr<DQ_Kinemati
     vfi_zero_indexed_ = document_v3_.zero_indexed;
     robot_index_convention_ = vfi_zero_indexed_ ? 0 : 1;
     number_of_constraints_ = document_v3_.vfi_array.size();
+    for (const auto& data_item : document_v3_.vfi_array)
+    {
+        std::string tag;
+        std::visit([&tag](const auto& d){tag = d.tag;}, data_item);
+        data_v3_map_.try_emplace(tag, data_item);
+    }
     _create_build_data_v3();
 }
 
@@ -543,18 +549,21 @@ VFI_manager::VFI_BUILD_DATA RobotConstraintManager::get_vfi_build_data(const std
 RobotConstraintManager::YAML_RAW_DATA RobotConstraintManager::get_raw_yaml_data(const std::string &tag) const
 {
     if (rce_compatible_)
-        throw std::runtime_error("Invalid call. This method is not available for version 2.0");
+        throw std::runtime_error("Invalid call. This method is not available for versions 2 and 3.");
 
     return yaml_raw_data_map_.at(tag);
 }
 
 /**
- * @brief RobotConstraintManager::get_data returns the data from the YAML file.
+ * @brief RobotConstraintManager::get_data returns the data from a version 2 configuration file.
+ *        For version 3 files, use get_data_v3().
  * @param tag The tag of the constraint.
  * @return the data of the constraint.
  */
 VFIConfigurationFile::Data RobotConstraintManager::get_data(const std::string& tag) const
 {
+    if (vfi_file_version_ == 3)
+        throw std::runtime_error("Invalid call. get_data() supports only version 2 files. Use get_data_v3() instead.");
 
     try {
         return data_map_.at(tag);
@@ -565,6 +574,52 @@ VFIConfigurationFile::Data RobotConstraintManager::get_data(const std::string& t
 }
 
 /**
+ * @brief RobotConstraintManager::get_data_v3 returns the data from a version 3 configuration file.
+ *        For version 2 files, use get_data().
+ * @param tag The tag of the constraint.
+ * @return the data of the constraint.
+ */
+VFIConfigurationFile::DataV3 RobotConstraintManager::get_data_v3(const std::string& tag) const
+{
+    if (vfi_file_version_ != 3)
+        throw std::runtime_error("Invalid call. get_data_v3() supports only version 3 files. Use get_data() instead.");
+
+    try {
+        return data_v3_map_.at(tag);
+    }catch (const std::exception& e){
+        std::cerr<<"Tag "+tag+" not found!"<<std::endl;
+        throw std::runtime_error(e.what());
+    }
+}
+
+/**
+ * @brief RobotConstraintManager::get_document returns the complete content of the configuration file.
+ * @return A DOCUMENT_V2 or a DOCUMENT_V3, depending on the file version.
+ */
+VFIConfigurationFile::Document RobotConstraintManager::get_document() const
+{
+    if (!rce_compatible_)
+        throw std::runtime_error("Invalid call. This method requires the version 2 or 3 of the configuration File Specification");
+
+    if (vfi_file_version_ == 3)
+        return document_v3_;
+    return VFIConfigurationFile::DOCUMENT_V2{vfi_zero_indexed_, data_list_};
+}
+
+/**
+ * @brief RobotConstraintManager::_get_base_data returns the data shared by every VFI type and file version.
+ * @param tag The tag of the constraint.
+ * @return The BASE_DATA of the constraint.
+ */
+VFIConfigurationFile::BASE_DATA RobotConstraintManager::_get_base_data(const std::string &tag) const
+{
+    auto to_base_data = [](const auto& d) -> VFIConfigurationFile::BASE_DATA { return d; };
+    if (vfi_file_version_ == 3)
+        return std::visit(to_base_data, get_data_v3(tag));
+    return std::visit(to_base_data, get_data(tag));
+}
+
+/**
  * @brief RobotConstraintManager::get_buffer
  * @param tag The tag of the constraint.
  * @return the buffer
@@ -572,7 +627,7 @@ VFIConfigurationFile::Data RobotConstraintManager::get_data(const std::string& t
 double RobotConstraintManager::get_buffer(const std::string &tag) const
 {
     try {
-        return std::visit([](const auto& d) { return d.buffer; }, get_data(tag));
+        return _get_base_data(tag).buffer;
     }catch (const std::exception& e) {
         throw std::runtime_error(e.what());
     }
@@ -586,7 +641,7 @@ double RobotConstraintManager::get_buffer(const std::string &tag) const
 double RobotConstraintManager::get_safe_distance(const std::string &tag) const
 {
     try {
-        return std::visit([](const auto& d) { return d.safe_distance; }, get_data(tag));
+        return _get_base_data(tag).safe_distance;
     }catch (const std::exception& e) {
         throw std::runtime_error(e.what());
     }
@@ -600,7 +655,7 @@ double RobotConstraintManager::get_safe_distance(const std::string &tag) const
 double RobotConstraintManager::get_vfi_gain(const std::string &tag) const
 {
     try {
-        return std::visit([](const auto& d) { return d.vfi_gain; }, get_data(tag));
+        return _get_base_data(tag).vfi_gain;
     }catch (const std::exception& e) {
         throw std::runtime_error(e.what());
     }
@@ -614,7 +669,7 @@ double RobotConstraintManager::get_vfi_gain(const std::string &tag) const
 std::string RobotConstraintManager::get_vfi_direction(const std::string &tag) const
 {
     try {
-        return std::visit([](const auto& d) { return d.direction; }, get_data(tag));
+        return _get_base_data(tag).direction;
     }catch (const std::exception& e) {
         throw std::runtime_error(e.what());
     }
@@ -628,7 +683,7 @@ std::string RobotConstraintManager::get_vfi_direction(const std::string &tag) co
 std::string RobotConstraintManager::get_vfi_type(const std::string &tag) const
 {
     try {
-        return std::visit([](const auto& d) { return d.vfi_type; }, get_data(tag));
+        return _get_base_data(tag).vfi_type;
     }catch (const std::exception& e) {
         throw std::runtime_error(e.what());
     }
@@ -636,41 +691,85 @@ std::string RobotConstraintManager::get_vfi_type(const std::string &tag) const
 
 /**
  * @brief RobotConstraintManager::get_coppeliasim_entity_one_or_entity_environment_names
+ *        This method is deprecated. Use get_entity_one_or_entity_environment_names() instead.
  * @param tag The tag of the constraint.
  * @return A vector of strings containing the names of the entity one or entity environment names(according to the VFI type)
  */
 std::vector<std::string> RobotConstraintManager::get_coppeliasim_entity_one_or_entity_environment_names(const std::string &tag) const
 {
+    if (vfi_file_version_ == 3)
+        throw std::runtime_error("Invalid call. Version 3 files do not use CoppeliaSim names. "
+                                 "Use get_entity_one_or_entity_environment_names() instead.");
+    return get_entity_one_or_entity_environment_names(tag);
+}
+
+/**
+ * @brief RobotConstraintManager::get_coppeliasim_entity_two_or_entity_robot_names
+ *        This method is deprecated. Use get_entity_two_or_entity_robot_names() instead.
+ * @param tag The tag of the constraint.
+ * @return A vector of strings containing the names of the entity two or entity robot names(according to the VFI type)
+ */
+std::vector<std::string> RobotConstraintManager::get_coppeliasim_entity_two_or_entity_robot_names(const std::string &tag) const
+{
+    if (vfi_file_version_ == 3)
+        throw std::runtime_error("Invalid call. Version 3 files do not use CoppeliaSim names. "
+                                 "Use get_entity_two_or_entity_robot_names() instead.");
+    return get_entity_two_or_entity_robot_names(tag);
+}
+
+/**
+ * @brief RobotConstraintManager::get_entity_one_or_entity_environment_names
+ * @param tag The tag of the constraint.
+ * @return A vector of strings containing the names of the entity one or entity environment names (according to the VFI type).
+ *         These are CoppeliaSim object names in version 2 files, and entity names in version 3 files.
+ */
+std::vector<std::string> RobotConstraintManager::get_entity_one_or_entity_environment_names(const std::string &tag) const
+{
+    auto get_names = [](const auto& d) -> std::vector<std::string> {
+        using T = std::decay_t<decltype(d)>;
+        if constexpr (std::is_same_v<T, VFIConfigurationFile::ENVIRONMENT_TO_ROBOT_DATA>) {
+            return d.cs_entity_environment;
+        } else if constexpr (std::is_same_v<T, VFIConfigurationFile::ROBOT_TO_ROBOT_DATA>) {
+            return d.cs_entity_one;
+        } else if constexpr (std::is_same_v<T, VFIConfigurationFile::ENVIRONMENT_TO_ROBOT_DATA_V3>) {
+            return d.entity_environment;
+        } else {
+            return d.entity_one;
+        }
+    };
     try {
-        return std::visit([](const auto& d) -> std::vector<std::string> {
-            using T = std::decay_t<decltype(d)>;
-            if constexpr (std::is_same_v<T, VFIConfigurationFile::ENVIRONMENT_TO_ROBOT_DATA>) {
-                return d.cs_entity_environment;
-            } else {
-                return d.cs_entity_one;
-            }
-        }, get_data(tag));
+        if (vfi_file_version_ == 3)
+            return std::visit(get_names, get_data_v3(tag));
+        return std::visit(get_names, get_data(tag));
     } catch (const std::exception& e) {
         throw std::runtime_error(std::string("Failed to get entities for tag '") + tag + "': " + e.what());
     }
 }
 
 /**
- * @brief RobotConstraintManager::get_coppeliasim_entity_two_or_entity_robot_names
+ * @brief RobotConstraintManager::get_entity_two_or_entity_robot_names
  * @param tag The tag of the constraint.
- * @return A vector of strings containing the names of the entity two or entity robot names(according to the VFI type)
+ * @return A vector of strings containing the names of the entity two or entity robot names (according to the VFI type).
+ *         These are CoppeliaSim object names in version 2 files, and entity names in version 3 files.
  */
-std::vector<std::string> RobotConstraintManager::get_coppeliasim_entity_two_or_entity_robot_names(const std::string &tag) const
+std::vector<std::string> RobotConstraintManager::get_entity_two_or_entity_robot_names(const std::string &tag) const
 {
+    auto get_names = [](const auto& d) -> std::vector<std::string> {
+        using T = std::decay_t<decltype(d)>;
+        if constexpr (std::is_same_v<T, VFIConfigurationFile::ENVIRONMENT_TO_ROBOT_DATA>) {
+            return d.cs_entity_robot;
+        } else if constexpr (std::is_same_v<T, VFIConfigurationFile::ROBOT_TO_ROBOT_DATA>) {
+            return d.cs_entity_two;
+        } else if constexpr (std::is_same_v<T, VFIConfigurationFile::ENVIRONMENT_TO_ROBOT_DATA_V3>) {
+            return d.entity_robot;
+        } else {
+            return d.entity_two;
+        }
+    };
     try {
-        return std::visit([](const auto& d) -> std::vector<std::string> {
-            using T = std::decay_t<decltype(d)>;
-            if constexpr (std::is_same_v<T, VFIConfigurationFile::ENVIRONMENT_TO_ROBOT_DATA>) {
-                return d.cs_entity_robot;
-            } else {
-                return d.cs_entity_two;
-            }
-        }, get_data(tag));
+        if (vfi_file_version_ == 3)
+            return std::visit(get_names, get_data_v3(tag));
+        return std::visit(get_names, get_data(tag));
     } catch (const std::exception& e) {
         throw std::runtime_error(std::string("Failed to get entities for tag '") + tag + "': " + e.what());
     }

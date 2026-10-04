@@ -75,6 +75,9 @@ private:
     std::vector<VFIConfigurationFile::Data> data_list_;
     std::unordered_map<std::string, VFIConfigurationFile::Data> data_map_;
     VFIConfigurationFile::DOCUMENT_V3 document_v3_;
+    std::unordered_map<std::string, VFIConfigurationFile::DataV3> data_v3_map_;
+
+    VFIConfigurationFile::BASE_DATA _get_base_data(const std::string& tag) const;
 
 protected:
 
@@ -96,7 +99,7 @@ protected:
     std::shared_ptr<DQ_robotics_extensions::VFIConfigurationFile> config_file_reader_;
     bool rce_compatible_;
     int robot_index_convention_;
-    int vfi_file_version_;
+    int vfi_file_version_{0}; // 0: legacy file used by the deprecated constructor
     bool vfi_zero_indexed_;
 
     double configuration_limit_constraint_gain_;
@@ -157,6 +160,8 @@ public:
     VFI_manager::VFI_BUILD_DATA get_vfi_build_data(const std::string& tag) const;
 
     VFIConfigurationFile::Data get_data(const std::string& tag) const;
+    VFIConfigurationFile::DataV3 get_data_v3(const std::string& tag) const;
+    VFIConfigurationFile::Document get_document() const;
 
     //Methods to obtaint data from a VFIConfigurationFile::Data type
     double get_buffer(const std::string& tag) const;
@@ -166,8 +171,13 @@ public:
     std::string get_vfi_direction(const std::string& tag) const;
     std::string get_vfi_type(const std::string& tag) const;
 
+    [[deprecated("This method is deprecated. Use get_entity_one_or_entity_environment_names() instead.")]]
     std::vector<std::string> get_coppeliasim_entity_one_or_entity_environment_names(const std::string& tag) const;
+    [[deprecated("This method is deprecated. Use get_entity_two_or_entity_robot_names() instead.")]]
     std::vector<std::string> get_coppeliasim_entity_two_or_entity_robot_names(const std::string& tag) const;
+
+    std::vector<std::string> get_entity_one_or_entity_environment_names(const std::string& tag) const;
+    std::vector<std::string> get_entity_two_or_entity_robot_names(const std::string& tag) const;
 
 
 
