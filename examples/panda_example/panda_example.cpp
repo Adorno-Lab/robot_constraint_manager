@@ -59,8 +59,12 @@ int main()
         int ITERATIONS = 10000;
         std::string tag = "C5";
         int losses = 0;
+
+
+        //rcm.disable_vfi("C5");   // or rcm.set_vfi_status("C5", false) on the committed code
         for (int i=0;i<ITERATIONS;i++)
         {
+
 
             DQ xd = cs->get_object_pose("ReferenceFrame");
             auto q = panda->get_configuration();

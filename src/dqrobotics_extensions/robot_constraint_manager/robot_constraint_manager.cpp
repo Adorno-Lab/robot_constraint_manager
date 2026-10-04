@@ -433,27 +433,20 @@ std::tuple<MatrixXd, VectorXd> RobotConstraintManager::get_inequality_constraint
                                                                                   const bool &include_configuration_constraints,
                                                                                   const bool &include_configuration_velocity_constraints)
 {
-    const int n = vfi_build_data_map_.size();
-    //const int robot_dim = robot_->get_dim_configuration_space();
-    std::vector<VFI_manager::VFI_BUILD_DATA> vfi_build_data_list;
-    vfi_build_data_list.reserve(n);
-
-    for (auto& pair : vfi_build_data_map_)
-    {
-        auto data = pair.second;
-        if (vfi_enable_status_map_.at(data.tag))
-            vfi_build_data_list.push_back(pair.second);
-    }
-
-
-
     if (include_configuration_constraints)
         VFI_M_->add_configuration_limits(configuration_limit_constraint_gain_, q);
     if (include_configuration_velocity_constraints)
         VFI_M_->add_configuration_velocity_limits();
 
-    for (size_t i = 0; i<vfi_build_data_list.size(); i++)
-        VFI_M_->add_vfi_constraint(vfi_build_data_list.at(i),i,robot_,q,robot_,q);
+    // VFI_manager requires each tag to keep the same stack position across calls. Therefore, the position
+    // counts every VFI, including the disabled ones, so enabling or disabling a VFI does not shift the others.
+    int stack_position = 0;
+    for (const auto& [tag, data] : vfi_build_data_map_)
+    {
+        if (vfi_enable_status_map_.at(tag))
+            VFI_M_->add_vfi_constraint(data, stack_position, robot_, q, robot_, q);
+        stack_position++;
+    }
     /*
     for (int i = 0; i<n; i++)
     {
