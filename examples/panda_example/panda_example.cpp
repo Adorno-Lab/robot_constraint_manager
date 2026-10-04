@@ -31,9 +31,11 @@ int main()
 
 
 
+        // The version 3 file contains the poses and offsets of the entities. Therefore, CoppeliaSim is
+        // used only to simulate the robot, and the constraints are built from the kinematic model.
         auto vcr = std::make_shared<DQ_robotics_extensions::VFIConfigurationFileYaml>();
-        DQ_robotics_extensions::RobotConstraintManager rcm{cs, panda, panda_model, vcr,
-                                                            "vfi_constraints_2.yaml", true};
+        DQ_robotics_extensions::RobotConstraintManager rcm{panda_model, vcr,
+                                                            "vfi_constraints_v3.yaml", true};
 
         // The new format does not include the configuration limits or configuration velocity limits.
         // However, we can still added in the code
