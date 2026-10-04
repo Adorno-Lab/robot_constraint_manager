@@ -76,6 +76,8 @@ private:
     std::unordered_map<std::string, VFIConfigurationFile::Data> data_map_;
     VFIConfigurationFile::DOCUMENT_V3 document_v3_;
     std::unordered_map<std::string, VFIConfigurationFile::DataV3> data_v3_map_;
+    // For each environment entity, the (tag, index in environment_poses) of the VFIs that use it.
+    std::unordered_map<std::string, std::vector<std::pair<std::string, std::size_t>>> environment_entity_usage_;
 
     VFIConfigurationFile::BASE_DATA _get_base_data(const std::string& tag) const;
 
@@ -188,6 +190,8 @@ public:
     void show_vfi_build_data(const std::string& tag) const;
     void update_vfi_workspace_pose(const std::string& tag, const DQ& workspace_pose);
     void update_vfi_workspace_derivative(const std::string& tag, const DQ& workspace_derivative);
+    void update_environment_entity_pose(const std::string& name, const DQ& pose);
+    void update_environment_entity_derivative(const std::string& name, const DQ& derivative);
     void update_vfi_buffer(const std::string& tag, const double& buffer);
 
     void set_vfi_status(const std::string& tag, const bool& status);

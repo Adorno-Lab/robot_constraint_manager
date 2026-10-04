@@ -288,7 +288,10 @@ void RobotConstraintManager::_create_build_data_v3()
 {
     std::unordered_map<std::string, const VFIConfigurationFile::ENVIRONMENT_ENTITY*> environment_entities;
     for (const auto& entity : document_v3_.environment_entities)
+    {
         environment_entities.try_emplace(entity.name, &entity);
+        environment_entity_usage_.try_emplace(entity.name);
+    }
 
     std::unordered_map<std::string, const VFIConfigurationFile::ROBOT_ENTITY*> robot_entities;
     for (const auto& entity : document_v3_.robot_entities)
@@ -341,6 +344,8 @@ void RobotConstraintManager::_create_build_data_v3()
                     VFI_Framework::map_attached_direction_string_to_dq(environment_entity.attached_direction);
                 vfi_data.workspace_derivative = DQ(0);
                 vfi_data.environment_poses = get_poses(arg.entity_environment);
+                for (std::size_t i = 0; i < arg.entity_environment.size(); i++)
+                    environment_entity_usage_.at(arg.entity_environment.at(i)).emplace_back(arg.tag, i);
                 vfi_data.tag = arg.tag;
                 _add_build_data(vfi_data);
 
@@ -887,6 +892,60 @@ void RobotConstraintManager::update_vfi_workspace_pose(const std::string &tag, c
         std::cerr<<e.what()<<std::endl;
         throw std::runtime_error("RobotConstraintManager::update_vfi_workspace: Fail to update the VFI data!");
     }
+}
+
+/**
+ * @brief RobotConstraintManager::update_environment_entity_pose updates the pose of an environment entity
+ *        in every VFI that uses it, including the disabled ones. The attached direction of the entity is constant
+ *        and expressed in the entity frame. Therefore, it is applied to the updated pose.
+ *        The loaded configuration file and the document returned by get_document() are not modified.
+ *        This method requires a version 3 configuration file.
+ * @param name The name of the environment entity, as defined in the configuration file.
+ * @param pose The new pose of the entity, expressed in the same frame as DQ_Kinematics::fkm().
+ */
+void RobotConstraintManager::update_environment_entity_pose(const std::string &name, const DQ &pose)
+{
+    if (vfi_file_version_ != 3)
+        throw std::runtime_error("RobotConstraintManager::update_environment_entity_pose: This method requires a "
+                                 "version 3 configuration file. Use update_vfi_workspace_pose() instead.");
+
+    const auto usage = environment_entity_usage_.find(name);
+    if (usage == environment_entity_usage_.end())
+        throw std::runtime_error("RobotConstraintManager::update_environment_entity_pose: '" + name +
+                                 "' is not an environment entity.");
+
+    for (const auto& [tag, index] : usage->second)
+        vfi_build_data_map_.at(tag).environment_poses.at(index) = pose;
+}
+
+/**
+ * @brief RobotConstraintManager::update_environment_entity_derivative updates the time derivative of the pose of an
+ *        environment entity in every VFI that uses it, including the disabled ones.
+ *        The loaded configuration file and the document returned by get_document() are not modified.
+ *        This method requires a version 3 configuration file.
+ * @param name The name of the environment entity, as defined in the configuration file.
+ * @param derivative The new derivative of the entity.
+ */
+void RobotConstraintManager::update_environment_entity_derivative(const std::string &name, const DQ &derivative)
+{
+    if (vfi_file_version_ != 3)
+        throw std::runtime_error("RobotConstraintManager::update_environment_entity_derivative: This method requires a "
+                                 "version 3 configuration file. Use update_vfi_workspace_derivative() instead.");
+
+    const auto usage = environment_entity_usage_.find(name);
+    if (usage == environment_entity_usage_.end())
+        throw std::runtime_error("RobotConstraintManager::update_environment_entity_derivative: '" + name +
+                                 "' is not an environment entity.");
+
+    // Each VFI stores a single workspace derivative, which corresponds to its first environment entity.
+    for (const auto& [tag, index] : usage->second)
+        if (index != 0)
+            throw std::runtime_error("RobotConstraintManager::update_environment_entity_derivative: '" + name +
+                                     "' is not the first environment entity of the VFI " + tag +
+                                     ". Its derivative is not supported.");
+
+    for (const auto& [tag, index] : usage->second)
+        vfi_build_data_map_.at(tag).workspace_derivative = derivative;
 }
 
 /**
