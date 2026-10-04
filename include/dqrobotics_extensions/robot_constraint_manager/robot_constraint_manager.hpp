@@ -109,7 +109,8 @@ protected:
     void _initial_settings();
     //void _set_vfi_configuration_constraints_gain(const double& vfi_position_constraints_gain);
     void _check_unit(const std::string& unit);
-    void _create_build_data();
+    void _create_build_data_v2();
+    void _add_build_data(const VFI_manager::VFI_BUILD_DATA& vfi_data);
 public:
     [[deprecated("This constructor is deprecated")]]
     RobotConstraintManager(const std::shared_ptr<DQ_CoppeliaSimInterface>& coppelia_interface,
@@ -127,6 +128,13 @@ public:
                            const bool& verbosity = false,
                            const VFI_manager::LEVEL& level = VFI_manager::LEVEL::VELOCITIES);
 
+
+    // New constructor without CoppeliaSim
+    RobotConstraintManager(const std::shared_ptr<DQ_Kinematics>& robot,
+                           const std::shared_ptr<VFIConfigurationFile>& config_file_reader,
+                           const std::string &yaml_file_path,
+                           const bool& verbosity = false,
+                           const VFI_manager::LEVEL& level = VFI_manager::LEVEL::VELOCITIES);
 
 
     int get_number_of_vfi_constraints() const;

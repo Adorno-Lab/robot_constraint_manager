@@ -105,6 +105,10 @@ RobotConstraintManager::RobotConstraintManager(const std::shared_ptr<DQ_Coppelia
         throw std::runtime_error(e.what());
     }
 
+    if (config_file_reader_->get_vfi_file_version() == 3)
+        throw std::runtime_error("RobotConstraintManager: The configuration file " + config_path_ + " uses the version 3. "
+                                 "Use the constructor that does not require CoppeliaSim.");
+
     if (!config_file_reader_->is_zero_indexed())
         robot_index_convention_ = 1;
     else
@@ -120,11 +124,36 @@ RobotConstraintManager::RobotConstraintManager(const std::shared_ptr<DQ_Coppelia
         std::visit([&tag](const auto& d){tag = d.tag;}, data_item);
         data_map_.try_emplace(tag, data_item);
     }
-    _create_build_data();
+    _create_build_data_v2();
 
 }
 
-void RobotConstraintManager::_create_build_data()
+RobotConstraintManager::RobotConstraintManager(const std::shared_ptr<DQ_Kinematics> &robot,
+                                               const std::shared_ptr<VFIConfigurationFile> &config_file_reader,
+                                               const std::string &yaml_file_path,
+                                               const bool &verbosity,
+                                               const VFI_Framework::LEVEL &level)
+{
+
+}
+
+/**
+ * @brief RobotConstraintManager::_add_build_data stores the build data of a VFI and enables it.
+ * @param vfi_data The build data of the VFI.
+ */
+void RobotConstraintManager::_add_build_data(const VFI_manager::VFI_BUILD_DATA &vfi_data)
+{
+    vfi_build_data_map_.try_emplace(vfi_data.tag, vfi_data);
+    vfi_enable_status_map_.try_emplace(vfi_data.tag, true);
+    if (verbosity_)
+        show_vfi_build_data(vfi_data.tag);
+}
+
+/**
+ * @brief RobotConstraintManager::_create_build_data_v2 creates the build data of the VFIs defined in a
+ *        version 2 configuration file. The primitive offsets and the workspace poses are obtained from CoppeliaSim.
+ */
+void RobotConstraintManager::_create_build_data_v2()
 {
     if (!rce_compatible_)
         throw std::runtime_error("Invalid call. This private method requires the version 2 of the configuration File Specification");
@@ -156,10 +185,7 @@ void RobotConstraintManager::_create_build_data()
                 vfi_data.workspace_derivative = DQ(0);
                 vfi_data.environment_poses = _get_workspace_poses(arg.cs_entity_environment);
                 vfi_data.tag = arg.tag;
-                vfi_build_data_map_.try_emplace(vfi_data.tag, vfi_data);
-                vfi_enable_status_map_.try_emplace(vfi_data.tag, true);
-                if (verbosity_)
-                    show_vfi_build_data(vfi_data.tag);
+                _add_build_data(vfi_data);
 
             }else if constexpr (std::is_same_v<T, VFIConfigurationFile::ROBOT_TO_ROBOT_DATA>){
                 VFI_manager::VFI_BUILD_DATA vfi_data;
@@ -182,12 +208,7 @@ void RobotConstraintManager::_create_build_data()
                 vfi_data.workspace_derivative = DQ(0);
                 vfi_data.environment_poses = {DQ(-1)};
                 vfi_data.tag = arg.tag;
-
-                //vfi_build_data_list_.push_back(vfi_data);
-                vfi_build_data_map_.try_emplace(vfi_data.tag, vfi_data);
-                vfi_enable_status_map_.try_emplace(vfi_data.tag, true);
-                if (verbosity_)
-                    show_vfi_build_data(vfi_data.tag);
+                _add_build_data(vfi_data);
             }else {
                 throw std::runtime_error("Unsupported VFI TYPE!");
             }
