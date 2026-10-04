@@ -853,7 +853,7 @@ void RobotConstraintManager::show_vfi_build_data(const std::string &tag) const
         std::cout<<"workspace derivative:            "<<data.workspace_derivative<<std::endl;
         std::cout<<"cs_entity_environment_pose:      "<<data.environment_poses.at(0)<<std::endl;
         std::cout<<"---------------------------------------------"<<std::endl;
-    } catch (const std::runtime_error& e) {
+    } catch (const std::exception& e) {
         std::cerr<<e.what()<<std::endl;
         throw std::runtime_error("RobotConstraintManager::show_vfi_build_data: VFI TAG not found!");
 }
@@ -867,11 +867,12 @@ void RobotConstraintManager::show_vfi_build_data(const std::string &tag) const
  */
 void RobotConstraintManager::update_vfi_workspace_derivative(const std::string &tag, const DQ &workspace_derivative)
 {
+    _warn_if_shared_environment_entity(tag, "update_vfi_workspace_derivative");
     try{
         VFI_manager::VFI_BUILD_DATA data = vfi_build_data_map_.at(tag);
         data.workspace_derivative = workspace_derivative;
         vfi_build_data_map_.insert_or_assign(tag,data);
-    } catch (const std::runtime_error& e) {
+    } catch (const std::exception& e) {
         std::cerr<<e.what()<<std::endl;
         throw std::runtime_error("RobotConstraintManager::update_vfi_workspace_derivative: Fail to update the VFI data!");
     }
@@ -884,11 +885,12 @@ void RobotConstraintManager::update_vfi_workspace_derivative(const std::string &
  */
 void RobotConstraintManager::update_vfi_workspace_pose(const std::string &tag, const DQ &workspace_pose)
 {
+    _warn_if_shared_environment_entity(tag, "update_vfi_workspace_pose");
     try{
         VFI_manager::VFI_BUILD_DATA data = vfi_build_data_map_.at(tag);
         data.environment_poses.at(0) = workspace_pose;
         vfi_build_data_map_.insert_or_assign(tag,data);
-    } catch (const std::runtime_error& e) {
+    } catch (const std::exception& e) {
         std::cerr<<e.what()<<std::endl;
         throw std::runtime_error("RobotConstraintManager::update_vfi_workspace: Fail to update the VFI data!");
     }
@@ -914,8 +916,46 @@ void RobotConstraintManager::update_environment_entity_pose(const std::string &n
         throw std::runtime_error("RobotConstraintManager::update_environment_entity_pose: '" + name +
                                  "' is not an environment entity.");
 
+    if (!is_unit(pose))
+        throw std::runtime_error("RobotConstraintManager::update_environment_entity_pose: The pose of '" + name +
+                                 "' must be a unit dual quaternion.");
+
     for (const auto& [tag, index] : usage->second)
         vfi_build_data_map_.at(tag).environment_poses.at(index) = pose;
+}
+
+/**
+ * @brief RobotConstraintManager::_warn_if_shared_environment_entity shows a warning, once per tag, if the
+ *        first environment entity of the VFI is used by other VFIs. In that case, a per-tag update does
+ *        not update the other VFIs. This check applies only to version 3 configuration files.
+ * @param tag The tag of the constraint.
+ * @param method_name The name of the per-tag method, used in the warning.
+ */
+void RobotConstraintManager::_warn_if_shared_environment_entity(const std::string &tag, const std::string &method_name)
+{
+    if (vfi_file_version_ != 3 || shared_entity_warned_tags_.count(tag))
+        return;
+
+    const auto data = data_v3_map_.find(tag);
+    if (data == data_v3_map_.end())
+        return;
+    const auto* env_data = std::get_if<VFIConfigurationFile::ENVIRONMENT_TO_ROBOT_DATA_V3>(&data->second);
+    if (!env_data)
+        return;
+
+    const std::string& name = env_data->entity_environment.at(0);
+    std::vector<std::string> other_tags;
+    for (const auto& [other_tag, index] : environment_entity_usage_.at(name))
+        if (other_tag != tag)
+            other_tags.push_back(other_tag);
+    if (other_tags.empty())
+        return;
+
+    shared_entity_warned_tags_.insert(tag);
+    std::cerr<<"Warning: RobotConstraintManager::"<<method_name<<": The environment entity '"<<name
+             <<"' of the VFI "<<tag<<" is also used by other VFIs ("<<join_vector(other_tags)<<"), which are not updated. "
+             <<"Use the update_environment_entity_* methods to update all of them. "
+             <<"This warning is shown once per tag."<<std::endl;
 }
 
 /**
@@ -960,7 +1000,7 @@ void RobotConstraintManager::update_vfi_buffer(const std::string& tag, const dou
         VFI_manager::VFI_BUILD_DATA data = vfi_build_data_map_.at(tag);
         data.buffer = buffer;
         vfi_build_data_map_.insert_or_assign(tag, data);
-    } catch (const std::runtime_error& e) {
+    } catch (const std::exception& e) {
         std::cerr<<e.what()<<std::endl;
         throw std::runtime_error("RobotConstraintManager::update_vfi_buffer: Fail to update the VFI data!");
     }
@@ -977,7 +1017,7 @@ void RobotConstraintManager::set_vfi_status(const std::string& tag, const bool &
 {
     try{
         vfi_enable_status_map_.at(tag) = status;
-    } catch (const std::runtime_error& e) {
+    } catch (const std::exception& e) {
         std::cerr<<e.what()<<std::endl;
         throw std::runtime_error("RobotConstraintManager::set_vfi_status: Fail to update the VFI data!");
     }

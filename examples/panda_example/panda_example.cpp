@@ -90,8 +90,12 @@ int main()
             DQ xsphere = 1 + 0.5*E_*z;
             cs->set_object_pose("/obs_sphere", xsphere);
 
-            rcm.update_vfi_workspace_pose(ctag, xsphere);
-            rcm.update_vfi_workspace_derivative(ctag, z_dot);
+            // Update every VFI that uses the obs_sphere entity (version 3 files)
+            rcm.update_environment_entity_pose("obs_sphere", xsphere);
+            rcm.update_environment_entity_derivative("obs_sphere", z_dot);
+            // Alternatively, update only the VFI with the tag ctag
+            // rcm.update_vfi_workspace_pose(ctag, xsphere);
+            // rcm.update_vfi_workspace_derivative(ctag, z_dot);
 
 
            // rcm.get_buffer("X90");

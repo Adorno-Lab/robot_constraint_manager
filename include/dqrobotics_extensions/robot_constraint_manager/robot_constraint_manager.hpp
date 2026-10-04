@@ -30,6 +30,7 @@
 #include <dqrobotics/utils/DQ_Math.h>
 #include <memory>
 #include <unordered_map>
+#include <unordered_set>
 
 using namespace Eigen;
 using namespace DQ_robotics;
@@ -78,6 +79,8 @@ private:
     std::unordered_map<std::string, VFIConfigurationFile::DataV3> data_v3_map_;
     // For each environment entity, the (tag, index in environment_poses) of the VFIs that use it.
     std::unordered_map<std::string, std::vector<std::pair<std::string, std::size_t>>> environment_entity_usage_;
+    std::unordered_set<std::string> shared_entity_warned_tags_;
+    void _warn_if_shared_environment_entity(const std::string& tag, const std::string& method_name);
 
     VFIConfigurationFile::BASE_DATA _get_base_data(const std::string& tag) const;
 
