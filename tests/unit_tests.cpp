@@ -37,7 +37,7 @@ protected:
 
         vcr_ = std::make_shared<DQ_robotics_extensions::VFIConfigurationFileYaml>();
         rcm_ = std::make_shared<DQ_robotics_extensions::RobotConstraintManager>(cs_, panda_, robot_model_, vcr_,
-                                                                                "vfi_constraints_3.yaml", true);
+                                                                                "vfi_constraints_2.yaml", true);
     }
 
     ~InterfaceUnitTests() override {

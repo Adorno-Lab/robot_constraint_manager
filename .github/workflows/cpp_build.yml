@@ -57,6 +57,12 @@ jobs:
       - name: Install
         run: sh ./cpp/.github/scripts/macos/install.sh
 
+      - name: Run unit tests for version 3 files (no CoppeliaSim)
+        run: |
+             cmake -S . -B build_tests
+             cmake --build build_tests --target unit_tests_v3
+             ./build_tests/unit_tests_v3
+
       - name: Build examples (panda_example)
         run: |
              cd examples/panda_example

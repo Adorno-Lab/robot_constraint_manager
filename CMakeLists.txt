@@ -104,8 +104,22 @@ target_link_libraries(unit_tests
      robot_constraint_editor
 )
 
+# Unit tests for version 3 configuration files. CoppeliaSim is not required.
+add_executable(unit_tests_v3
+    tests/unit_tests_v3.cpp)
+
+target_compile_definitions(unit_tests_v3 PRIVATE
+    V3_TEST_CONFIG_FILE="${CMAKE_CURRENT_SOURCE_DIR}/tests/cfg/vfi_constraints_v3.yaml")
+
+target_link_libraries(unit_tests_v3
+    dqrobotics
+    gtest_main
+    ${PROJECT_NAME}
+    robot_constraint_editor
+)
+
 # COPY the Yaml config file to the build folder
-set(YAML_FILE ${CMAKE_CURRENT_SOURCE_DIR}/examples/panda_example/cfg/vfi_constraints_3.yaml)
+set(YAML_FILE ${CMAKE_CURRENT_SOURCE_DIR}/examples/panda_example/cfg/vfi_constraints_2.yaml)
 
 
 add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
