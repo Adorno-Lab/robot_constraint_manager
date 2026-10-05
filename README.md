@@ -163,7 +163,7 @@ The unit tests of version 3 files do not require CoppeliaSim:
 ./build/unit_tests_v3
 ```
 
-The unit tests in `build/unit_tests` require CoppeliaSim with the scene of the [panda_example](examples/panda_example).
+The unit tests in `build/unit_tests` require CoppeliaSim with the scene of the [panda_example](https://github.com/Adorno-Lab/robot_constraint_manager/tree/main/examples/panda_example).
 
 
 # Usage
@@ -227,5 +227,5 @@ returns the configuration as it was loaded.
 
 # Examples
 
-- [panda_example](examples/panda_example): version 3 configuration file. CoppeliaSim is used only to simulate the robot.
-- [panda_example_old_format](examples/panda_example_old_format): legacy configuration file (deprecated).
+- [panda_example](https://github.com/Adorno-Lab/robot_constraint_manager/tree/main/examples/panda_example): version 3 configuration file. CoppeliaSim is used only to simulate the robot.
+- [panda_example_old_format](https://github.com/Adorno-Lab/robot_constraint_manager/tree/main/examples/panda_example_old_format): legacy configuration file (deprecated).
