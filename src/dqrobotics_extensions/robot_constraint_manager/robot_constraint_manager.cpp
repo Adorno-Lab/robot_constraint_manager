@@ -50,8 +50,7 @@ public:
  * @param coppeliasim_robot
  * @param robot
  * @param yaml_file_path
- * @param configuration_limits
- * @param configuration_velocity_limits
+ * @param verbosity
  * @param level
  */
 RobotConstraintManager::RobotConstraintManager(const std::shared_ptr<DQ_CoppeliaSimInterface> &coppelia_interface,
@@ -529,7 +528,7 @@ std::tuple<double, double, double, double, double, std::string> RobotConstraintM
 /**
  * @brief RobotConstraintManager::get_primitive_index_and_offset returns the index and offset of the primitive related to the constraint defined
  *              by the specific tag.
- * @param The tag of the constraint.
+ * @param tag The tag of the constraint.
  * @return {joint_index_one, primitive_offset_one, joint_index_two, primitive_offset_two}
  */
 std::tuple<int, DQ, int, DQ> RobotConstraintManager::get_primitive_index_and_offset(const std::string &tag) const
@@ -1080,7 +1079,7 @@ void RobotConstraintManager::set_configuration_limits(const std::tuple<VectorXd,
 
 /**
 * @brief RobotConstraintManager::set_configuration_velocity_limits sets the configuration velocity limits
-* @param configuration_velocity_limits. A tuple containing the configuration velocity limits.
+* @param configuration_velocity_limits A tuple containing the configuration velocity limits.
 *                      Example: {q_dot_lower_bound, q_dot_upper_bound}
 */
 void RobotConstraintManager::set_configuration_velocity_limits(const std::tuple<VectorXd, VectorXd> &configuration_velocity_limits)

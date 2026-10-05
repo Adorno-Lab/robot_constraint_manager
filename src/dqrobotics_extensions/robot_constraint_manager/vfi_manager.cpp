@@ -29,8 +29,6 @@ namespace DQ_robotics_extensions  {
 /**
  * @brief VFI_manager::VFI_manager constructor of the class.
  * @param dim_configuration The dimension of the configuration space
- * @param configuration_limits The configuration limits: {q_lower_bound, q_upper_bound}
- * @param configuration_velocity_limits The configuration velocity limits: {q_dot_lower_bound, q_dot_upper_bound}
  * @param level The desired level. Use VELOCITIES for first order kinematics, or
                                    ACCELERATIONS for second order kinematics.
  */
@@ -49,6 +47,7 @@ VFI_manager::VFI_manager(const int &dim_configuration,
 /**
  * @brief VFI_manager::_update_map
  * @param tag
+ * @param stack_position
  * @param vfi_parameters
  */
 void VFI_manager::_update_vfi_parameters_map(const std::string &tag,
@@ -271,7 +270,7 @@ void VFI_manager::add_vfi_rpoint_to_rpoint(const std::string &tag,
  * @param stack_position The position in the constraint stack. You can use any integer. However, once the tag
  *                       is associated with the tag, you need to keep using the same stack_position.
  * @param direction The direction of the VFI. Use KEEP_ROBOT_OUTSIDE or KEEP_ROBOT_INSIDE.
- * @param vfi_type The VFI type.
+ * @param vfi_class The VFI class.
  * @param safe_distance The safe distance
  * @param vfi_gain The VFI gain
  * @param robot_pose_jacobian The robot pose Jacobian
@@ -680,7 +679,7 @@ void VFI_manager::set_configuration_limits(const std::tuple<VectorXd, VectorXd>&
 
 /**
  * @brief VFI_manager::set_configuration_velocity_limits sets the configuration velocity limits
- * @param configuration_velocity_limits. A tuple containing the configuration velocity limits.
+ * @param configuration_velocity_limits A tuple containing the configuration velocity limits.
  *                      Example: {q_dot_lower_bound, q_dot_upper_bound}
  */
 void VFI_manager::set_configuration_velocity_limits(const std::tuple<VectorXd, VectorXd> &configuration_velocity_limits)
