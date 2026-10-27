@@ -393,6 +393,30 @@ TEST_F(RobotConstraintManagerV3Test, EnableAndDisableVfi)
     EXPECT_THROW(rcm->enable_vfi("missing"), std::runtime_error);
 }
 
+TEST_F(RobotConstraintManagerV3Test, LogDataOfVfiNotComputedYetIsNaN)
+{
+    const auto rcm = make_rcm();
+    rcm->disable_vfi("C1");
+    rcm->disable_vfi("C5");
+    rcm->get_inequality_constraints(q_home_, false, false);
+
+    const auto [d, sq_d, d_error, sq_d_error, angle, vfi_class] = rcm->get_vfi_log_data("C5");
+    EXPECT_TRUE(std::isnan(d));
+    EXPECT_TRUE(std::isnan(sq_d));
+    EXPECT_TRUE(std::isnan(d_error));
+    EXPECT_TRUE(std::isnan(sq_d_error));
+    EXPECT_TRUE(std::isnan(angle));
+    EXPECT_EQ(vfi_class, "RPOINT_TO_POINT");
+    EXPECT_TRUE(std::isnan(rcm->get_vfi_distance_error("C5")));
+    EXPECT_TRUE(std::isnan(rcm->get_line_to_line_angle("C1")));
+
+    rcm->enable_vfi("C5");
+    rcm->get_inequality_constraints(q_home_, false, false);
+    const DQ p = rsphere_position(q_home_);
+    EXPECT_NEAR(rcm->get_vfi_distance_error("C5"), vec3(p - obs_sphere_position_).norm() - 0.1, 1e-12);
+    EXPECT_THROW(rcm->get_vfi_log_data("missing"), std::exception);
+}
+
 TEST_F(RobotConstraintManagerV3Test, TogglingVfisMatchesFreshManager)
 {
     // Regression test: enabling or disabling a VFI between calls must not shift the stack position of the others.

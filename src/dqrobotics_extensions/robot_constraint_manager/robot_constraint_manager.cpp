@@ -25,6 +25,7 @@
 #include <dqrobotics_extensions/robot_constraint_editor/utils.hpp>
 #include <dqrobotics_extensions/robot_constraint_editor/vfi_configuration_file_v3.hpp>
 #include <yaml-cpp/yaml.h>
+#include <limits>
 
 
 namespace DQ_robotics_extensions{
@@ -462,7 +463,10 @@ std::tuple<MatrixXd, VectorXd> RobotConstraintManager::get_inequality_constraint
     for (const auto& [tag, data] : vfi_build_data_map_)
     {
         if (vfi_enable_status_map_.at(tag))
+        {
             VFI_M_->add_vfi_constraint(data, stack_position, robot_, q, robot_, q);
+            computed_vfi_tags_.insert(tag);
+        }
         stack_position++;
     }
     /*
@@ -531,7 +535,17 @@ std::tuple<MatrixXd, VectorXd> RobotConstraintManager::get_inequality_constraint
  */
 std::tuple<double, double, double, double, double, std::string> RobotConstraintManager::get_vfi_log_data(const std::string &tag) const
 {
+    if (_is_known_and_not_computed(tag))
+    {
+        const double nan = std::numeric_limits<double>::quiet_NaN();
+        return {nan, nan, nan, nan, nan, VFI_Framework::map_vfiClass_to_string(vfi_build_data_map_.at(tag).vfi_class)};
+    }
     return VFI_M_->get_vfi_log_data(tag);
+}
+
+bool RobotConstraintManager::_is_known_and_not_computed(const std::string &tag) const
+{
+    return vfi_build_data_map_.count(tag) && !computed_vfi_tags_.count(tag);
 }
 
 /**
@@ -818,6 +832,8 @@ std::vector<std::string> RobotConstraintManager::get_vfi_tags() const
  */
 double RobotConstraintManager::get_vfi_distance_error(const std::string &tag) const
 {
+    if (_is_known_and_not_computed(tag))
+        return std::numeric_limits<double>::quiet_NaN();
     return VFI_M_->get_vfi_distance_error(tag);
 }
 
@@ -835,6 +851,9 @@ double RobotConstraintManager::get_vfi_distance_error(const std::string &tag) co
  */
 double RobotConstraintManager::get_line_to_line_angle(const std::string &tag) const
 {
+    if (_is_known_and_not_computed(tag)
+        && vfi_build_data_map_.at(tag).vfi_class == VFI_Framework::VFI_CLASS::RLINE_TO_LINE_ANGLE)
+        return std::numeric_limits<double>::quiet_NaN();
     return VFI_M_->get_line_to_line_angle(tag);
 }
 

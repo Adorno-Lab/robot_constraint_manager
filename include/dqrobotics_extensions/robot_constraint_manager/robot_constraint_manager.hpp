@@ -92,6 +92,8 @@ protected:
     //----Deprecated--------------------------------------------------
     std::unordered_map<std::string, VFI_manager::VFI_BUILD_DATA> vfi_build_data_map_;
     std::unordered_map<std::string, bool> vfi_enable_status_map_;
+    std::unordered_set<std::string> computed_vfi_tags_;
+    bool _is_known_and_not_computed(const std::string& tag) const;
     std::vector<YAML_RAW_DATA> yaml_raw_data_list_;
     std::unordered_map<std::string, YAML_RAW_DATA> yaml_raw_data_map_;
     //-----------------------------------------------------------------
