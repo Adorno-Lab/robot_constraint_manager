@@ -29,6 +29,7 @@
 #include <dqrobotics_extensions/robot_constraint_editor/vfi_configuration_file.hpp>
 #include <dqrobotics/utils/DQ_Math.h>
 #include <memory>
+#include <tuple>
 #include <unordered_map>
 #include <unordered_set>
 
@@ -79,6 +80,7 @@ private:
     std::unordered_map<std::string, VFIConfigurationFile::DataV3> data_v3_map_;
     // For each environment entity, the (tag, index in environment_poses) of the VFIs that use it.
     std::unordered_map<std::string, std::vector<std::pair<std::string, std::size_t>>> environment_entity_usage_;
+    std::unordered_map<std::string, std::vector<std::tuple<std::string, bool, std::size_t>>> robot_entity_usage_;
     std::unordered_set<std::string> shared_entity_warned_tags_;
     void _warn_if_shared_environment_entity(const std::string& tag, const std::string& method_name);
 
@@ -197,6 +199,7 @@ public:
     void update_vfi_workspace_derivative(const std::string& tag, const DQ& workspace_derivative);
     void update_environment_entity_pose(const std::string& name, const DQ& pose);
     void update_environment_entity_derivative(const std::string& name, const DQ& derivative);
+    void update_robot_entity_offset(const std::string& name, const DQ& offset);
     void update_vfi_buffer(const std::string& tag, const double& buffer);
 
     void set_vfi_status(const std::string& tag, const bool& status);

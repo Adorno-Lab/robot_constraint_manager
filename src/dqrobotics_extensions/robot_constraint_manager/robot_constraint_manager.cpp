@@ -304,7 +304,10 @@ void RobotConstraintManager::_create_build_data_v3()
 
     std::unordered_map<std::string, const VFIConfigurationFile::ROBOT_ENTITY*> robot_entities;
     for (const auto& entity : document_v3_.robot_entities)
+    {
         robot_entities.try_emplace(entity.name, &entity);
+        robot_entity_usage_.try_emplace(entity.name);
+    }
 
     // The document is validated in the constructor. Therefore, every entity name exists in its table, and the
     // entities of a LINESEGMENT have the same robot_index and joint_index.
@@ -355,6 +358,8 @@ void RobotConstraintManager::_create_build_data_v3()
                 vfi_data.environment_poses = get_poses(arg.entity_environment);
                 for (std::size_t i = 0; i < arg.entity_environment.size(); i++)
                     environment_entity_usage_.at(arg.entity_environment.at(i)).emplace_back(arg.tag, i);
+                for (std::size_t i = 0; i < arg.entity_robot.size(); i++)
+                    robot_entity_usage_.at(arg.entity_robot.at(i)).emplace_back(arg.tag, true, i);
                 vfi_data.tag = arg.tag;
                 _add_build_data(vfi_data);
 
@@ -382,6 +387,10 @@ void RobotConstraintManager::_create_build_data_v3()
                 vfi_data.workspace_derivative = DQ(0);
                 vfi_data.environment_poses = {DQ(-1)};
                 vfi_data.tag = arg.tag;
+                for (std::size_t i = 0; i < arg.entity_one.size(); i++)
+                    robot_entity_usage_.at(arg.entity_one.at(i)).emplace_back(arg.tag, true, i);
+                for (std::size_t i = 0; i < arg.entity_two.size(); i++)
+                    robot_entity_usage_.at(arg.entity_two.at(i)).emplace_back(arg.tag, false, i);
                 _add_build_data(vfi_data);
             }else {
                 throw std::runtime_error("Unsupported VFI TYPE!");
@@ -988,6 +997,28 @@ void RobotConstraintManager::update_environment_entity_derivative(const std::str
 
     for (const auto& [tag, index] : usage->second)
         vfi_build_data_map_.at(tag).workspace_derivative = derivative;
+}
+
+void RobotConstraintManager::update_robot_entity_offset(const std::string &name, const DQ &offset)
+{
+    if (vfi_file_version_ != 3)
+        throw std::runtime_error("RobotConstraintManager::update_robot_entity_offset: This method requires a "
+                                 "version 3 configuration file.");
+
+    const auto usage = robot_entity_usage_.find(name);
+    if (usage == robot_entity_usage_.end())
+        throw std::runtime_error("RobotConstraintManager::update_robot_entity_offset: '" + name +
+                                 "' is not a robot entity.");
+
+    if (!is_unit(offset))
+        throw std::runtime_error("RobotConstraintManager::update_robot_entity_offset: The offset of '" + name +
+                                 "' must be a unit dual quaternion.");
+
+    for (const auto& [tag, entity_one, index] : usage->second)
+    {
+        auto& data = vfi_build_data_map_.at(tag);
+        (entity_one ? data.primitive_offsets_one : data.primitive_offsets_two).at(index) = offset;
+    }
 }
 
 /**

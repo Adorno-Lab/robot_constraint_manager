@@ -323,6 +323,43 @@ TEST_F(RobotConstraintManagerV3Test, EntityDerivativeUpdateReachesEveryVfi)
     EXPECT_THROW(rcm->update_environment_entity_derivative("missing", 0.2*k_), std::runtime_error);
 }
 
+TEST_F(RobotConstraintManagerV3Test, RobotEntityOffsetUpdateReachesEveryVfiIncludingDisabled)
+{
+    const auto rcm = make_rcm();
+    rcm->disable_vfi("C5");
+
+    const DQ offset = 1 + 0.5*E_*(0.08*k_);
+    rcm->update_robot_entity_offset("rsphere", offset);
+    EXPECT_EQ(rcm->get_vfi_build_data("C2").primitive_offsets_two.at(0), offset);
+    EXPECT_EQ(rcm->get_vfi_build_data("C3").primitive_offsets_one.at(0), offset);
+    EXPECT_EQ(rcm->get_vfi_build_data("C4").primitive_offsets_one.at(0), offset);
+    EXPECT_EQ(rcm->get_vfi_build_data("C5").primitive_offsets_one.at(0), offset);
+    EXPECT_EQ(rcm->get_vfi_build_data("C2").primitive_offsets_one.at(0), r_base_sphere_offset_);
+    EXPECT_EQ(rcm->get_vfi_build_data("C6").primitive_offsets_one.at(0), r_base_sphere_offset_);
+}
+
+TEST_F(RobotConstraintManagerV3Test, RobotEntityOffsetUpdateChangesDistances)
+{
+    const auto rcm = make_rcm();
+    const DQ offset = 1 + 0.5*E_*(0.08*k_);
+    rcm->update_robot_entity_offset("rsphere", offset);
+    rcm->get_inequality_constraints(q_home_, false, false);
+
+    const DQ p = (robot_->fkm(q_home_, 6)*offset).translation();
+    EXPECT_NEAR(rcm->get_vfi_distance_error("C5"), vec3(p - obs_sphere_position_).norm() - 0.1, 1e-12);
+    EXPECT_NEAR(rcm->get_vfi_distance_error("C2"),
+                vec3(p - r_base_sphere_position(q_home_)).norm() - 0.3, 1e-12);
+}
+
+TEST_F(RobotConstraintManagerV3Test, RobotEntityOffsetUpdateRejectsInvalidArguments)
+{
+    const auto rcm = make_rcm();
+    const DQ offset = 1 + 0.5*E_*(0.08*k_);
+    EXPECT_THROW(rcm->update_robot_entity_offset("obs_sphere", offset), std::runtime_error);
+    EXPECT_THROW(rcm->update_robot_entity_offset("missing", offset), std::runtime_error);
+    EXPECT_THROW(rcm->update_robot_entity_offset("rsphere", 2*offset), std::runtime_error);
+}
+
 TEST_F(RobotConstraintManagerV3Test, PerTagUpdateWarnsOnceForSharedEntity)
 {
     const auto rcm = make_rcm();
