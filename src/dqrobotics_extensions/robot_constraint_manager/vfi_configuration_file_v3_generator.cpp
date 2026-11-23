@@ -105,15 +105,12 @@ VFIConfigurationFile::POSE VFIConfigurationFileV3Generator::_get_robot_entity_of
 
 /**
  * @brief VFIConfigurationFileV3Generator::_get_configuration returns the configuration of the robot in the scene.
+ *        Its size is checked by the kinematic model (fkm), since it can differ from the dimension of the
+ *        configuration space (e.g., a floating base: vec8 of the base pose and the joints).
  */
 VectorXd VFIConfigurationFileV3Generator::_get_configuration() const
 {
-    const VectorXd q = scene_->get_configuration();
-    if (q.size() != robot_->get_dim_configuration_space())
-        throw std::runtime_error("VFIConfigurationFileV3Generator: The robot in the scene has " + std::to_string(q.size()) +
-                                 " DoF, but the kinematic model has " +
-                                 std::to_string(robot_->get_dim_configuration_space()) + " DoF.");
-    return q;
+    return scene_->get_configuration();
 }
 
 /**
