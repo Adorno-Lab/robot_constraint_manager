@@ -394,7 +394,7 @@ void VFI_manager::add_vfi_constraint(const std::string &tag,
         const MatrixXd Jfphi = DQ_Kinematics::line_to_line_angle_jacobian(Jl,robot_line,workspace_line);
         const double fsafe = 2-2*cos(safe_angle);
         const double phi = DQ_Geometry::line_to_line_angle(robot_line, workspace_line);
-        const double f = 2-2*cos(phi);
+        const double f = vec4(robot_line - workspace_line).squaredNorm();   // = 2 - 2 cos(phi), without acos
         const double ferror = f-fsafe;
         const double residual = DQ_Kinematics::line_to_line_angle_residual(robot_line,workspace_line,-workspace_derivative);
         VectorXd b = DQ_robotics_extensions::CVectorXd({vfi_gain*(ferror) + residual});
@@ -591,7 +591,7 @@ void VFI_manager::add_vfi_constraint(const VFI_BUILD_DATA& build_data,
                 const double fsafe   = 2-2*cos(safe_angle);
                 const double fbuffer = 2-2*cos(buffer_angle);
                 const double phi = DQ_Geometry::line_to_line_angle(robot_line, workspace_line);
-                const double f = 2-2*cos(phi);
+                const double f = vec4(robot_line - workspace_line).squaredNorm();   // = 2 - 2 cos(phi), without acos
                 const double ferror = f-fsafe;
                 const double residual = DQ_Kinematics::line_to_line_angle_residual(robot_line,workspace_line,-workspace_derivative);
                 //VectorXd b = DQ_robotics_extensions::CVectorXd({vfi_gain*(ferror) + residual});
