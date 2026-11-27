@@ -22,6 +22,7 @@
 */
 
 #include <dqrobotics_extensions/robot_constraint_manager/vfi_manager.hpp>
+#include <cmath>
 
 namespace DQ_robotics_extensions  {
 
@@ -393,7 +394,9 @@ void VFI_manager::add_vfi_constraint(const std::string &tag,
         const DQ robot_line = r*(robot_line_direction)*r.conj();
         const MatrixXd Jfphi = DQ_Kinematics::line_to_line_angle_jacobian(Jl,robot_line,workspace_line);
         const double fsafe = 2-2*cos(safe_angle);
-        const double phi = DQ_Geometry::line_to_line_angle(robot_line, workspace_line);
+        // Not DQ_Geometry::line_to_line_angle(): its acos has no clamp, so it gives NaN when the lines coincide.
+        const double phi = std::atan2(vec4(cross(robot_line, workspace_line)).norm(),
+                                      static_cast<double>(dot(robot_line, workspace_line)));
         const double f = vec4(robot_line - workspace_line).squaredNorm();   // = 2 - 2 cos(phi), without acos
         const double ferror = f-fsafe;
         const double residual = DQ_Kinematics::line_to_line_angle_residual(robot_line,workspace_line,-workspace_derivative);
@@ -590,7 +593,9 @@ void VFI_manager::add_vfi_constraint(const VFI_BUILD_DATA& build_data,
                 const MatrixXd Jfphi = DQ_Kinematics::line_to_line_angle_jacobian(Jl,robot_line,workspace_line);
                 const double fsafe   = 2-2*cos(safe_angle);
                 const double fbuffer = 2-2*cos(buffer_angle);
-                const double phi = DQ_Geometry::line_to_line_angle(robot_line, workspace_line);
+                // Not DQ_Geometry::line_to_line_angle(): its acos has no clamp, so it gives NaN when the lines coincide.
+                const double phi = std::atan2(vec4(cross(robot_line, workspace_line)).norm(),
+                                              static_cast<double>(dot(robot_line, workspace_line)));
                 const double f = vec4(robot_line - workspace_line).squaredNorm();   // = 2 - 2 cos(phi), without acos
                 const double ferror = f-fsafe;
                 const double residual = DQ_Kinematics::line_to_line_angle_residual(robot_line,workspace_line,-workspace_derivative);
